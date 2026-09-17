@@ -21,7 +21,7 @@ export function PostNotFoundDiscoveryView({ postId }: PostNotFoundDiscoveryViewP
     <Container overrideDefaults className="flex flex-col gap-12">
       <PostNotFound postId={postId} />
       <Container overrideDefaults className="flex flex-col gap-2">
-        <Heading level={5} size="lg" className="font-light text-muted-foreground">
+        <Heading level={5} size="lg" className="font-medium text-muted-foreground">
           {'Trending posts'}
         </Heading>
         <TimelineFeed variant={TIMELINE_FEED_VARIANT.HOT} />

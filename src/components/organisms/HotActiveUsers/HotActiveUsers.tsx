@@ -74,7 +74,7 @@ export function HotActiveUsers({ limit = DEFAULT_USERS_LIMIT, className }: HotAc
 
   return (
     <Container overrideDefaults className={cn('flex w-full flex-col gap-2', className)} data-testid="hot-active-users">
-      <Heading level={5} size="lg" className="font-light text-muted-foreground">
+      <Heading level={5} size="lg" className="font-medium text-muted-foreground">
         {'Active users'}
       </Heading>
       {error ? (
@@ -86,7 +86,7 @@ export function HotActiveUsers({ limit = DEFAULT_USERS_LIMIT, className }: HotAc
           ))}
         </Container>
       ) : visibleUsers.length === 0 ? (
-        <Typography className="font-light text-muted-foreground">{'No users to show'}</Typography>
+        <Typography className="font-medium text-muted-foreground">{'No users to show'}</Typography>
       ) : (
         <Container className="gap-3.5 rounded-md py-2 lg:gap-3">
           {visibleUsers.map((user) => (

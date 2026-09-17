@@ -853,7 +853,7 @@ exports[`Header Components - Snapshots > matches snapshot for HeaderTitle 1`] = 
   data-testid="container"
 >
   <h2
-    class="text-2xl font-normal text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Test Title

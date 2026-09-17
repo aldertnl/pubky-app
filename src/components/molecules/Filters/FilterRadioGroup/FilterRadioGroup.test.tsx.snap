@@ -13,7 +13,7 @@ exports[`FilterRadioGroup - Snapshots > matches snapshot with default props 1`] 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Test Filter
@@ -111,7 +111,7 @@ exports[`FilterRadioGroup - Snapshots > matches snapshot with default value 1`] 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Test Filter
@@ -209,7 +209,7 @@ exports[`FilterRadioGroup - Snapshots > matches snapshot with disabled item 1`] 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Test Filter
@@ -308,7 +308,7 @@ exports[`FilterRadioGroup - Snapshots > matches snapshot with selected value 1`]
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Test Filter

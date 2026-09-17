@@ -53,6 +53,10 @@ const PROFILE_ROUTES_CONFIG: Record<
     route: PROFILE_ROUTES.UNIQUE_TAGS,
     subPath: '/tagged',
   },
+  [PROFILE_PAGE_TYPES.AWARDS]: {
+    route: PROFILE_ROUTES.AWARDS,
+    subPath: '/awards',
+  },
   [PROFILE_PAGE_TYPES.COLLECTIONS]: {
     route: PROFILE_ROUTES.COLLECTIONS,
     subPath: '/collections',
@@ -213,6 +217,7 @@ export function useProfileNavigation(): UseProfileNavigationReturn {
    */
   const navigateToPage = useCallback(
     (page: ProfilePageType) => {
+      if (page === PROFILE_PAGE_TYPES.AWARDS) window.dispatchEvent(new Event('profile-awards-overview'));
       const config = PROFILE_ROUTES_CONFIG[page];
 
       // For own profile, use static routes

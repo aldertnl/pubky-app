@@ -39,7 +39,7 @@ export function ProfilePageLinks({ links, isOwnProfile = false }: ProfilePageLin
   return (
     <>
       <Container>
-        <Heading level={2} size="lg" className="font-light text-muted-foreground">
+        <Heading level={2} size="lg" className="font-medium text-muted-foreground">
           {'Links'}
         </Heading>
 

@@ -41,7 +41,7 @@ describe('PostUnavailable', () => {
     const typography = screen.getByTestId('typography');
     expect(typography).toHaveAttribute('data-size', 'sm');
     expect(typography).toHaveClass('text-center');
-    expect(typography).toHaveClass('font-normal');
+    expect(typography).toHaveClass('font-medium');
     expect(typography).toHaveClass('text-muted-foreground');
   });
 

@@ -30,7 +30,7 @@ export function FeedbackCard() {
         data-testid="feedback-card"
         className="flex w-full max-w-(--filter-bar-width) flex-col gap-2"
       >
-        <Heading level={2} size="lg" className="font-light text-muted-foreground">
+        <Heading level={2} size="lg" className="font-medium text-muted-foreground">
           {'Feedback'}
         </Heading>
 

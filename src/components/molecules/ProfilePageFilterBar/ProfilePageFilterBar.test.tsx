@@ -10,6 +10,7 @@ const mockStats: ProfileStats = {
   posts: 4,
   replies: 7,
   collections: 3,
+  awards: 42,
   followers: 115,
   following: 27,
   friends: 10,
@@ -76,7 +77,7 @@ describe('ProfilePageFilterBar', () => {
     expect(screen.getByText('Notifications')).toBeInTheDocument();
     // Should show loading spinners when stats are undefined
     const spinners = screen.getAllByTestId('spinner');
-    expect(spinners.length).toBe(8); // One for each filter item with a count
+    expect(spinners.length).toBe(9); // One for each filter item with a count
   });
 
   it('renders with zero counts when stats are provided but individual values are zero', () => {
@@ -85,6 +86,7 @@ describe('ProfilePageFilterBar', () => {
       posts: 0,
       replies: 0,
       collections: 0,
+      awards: 0,
       followers: 0,
       following: 0,
       friends: 0,
@@ -100,7 +102,7 @@ describe('ProfilePageFilterBar', () => {
     expect(screen.getByText('Notifications')).toBeInTheDocument();
     // Should show 0 for all counts when stats are provided with zero values
     const counts = screen.getAllByText('0');
-    expect(counts.length).toBe(8);
+    expect(counts.length).toBe(9);
   });
 
   it('marks active item correctly', () => {
@@ -177,7 +179,7 @@ describe('ProfilePageFilterBar', () => {
 
     // Initially should show spinners
     let spinners = screen.getAllByTestId('spinner');
-    expect(spinners.length).toBe(8);
+    expect(spinners.length).toBe(9);
 
     // After stats are provided, should show counts
     rerender(
@@ -220,6 +222,7 @@ describe('ProfilePageFilterBar - Snapshots', () => {
       posts: 0,
       replies: 0,
       collections: 0,
+      awards: 0,
       followers: 0,
       following: 0,
       friends: 0,

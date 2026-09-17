@@ -160,7 +160,8 @@ export const PostAttachmentsImagesAndVideos = ({
                       'rounded-md',
                       isOnlyMedia
                         ? cn(
-                            isListVariant ? 'max-h-[theme(spacing.27)] w-fit' : 'max-h-96 max-w-full',
+                            isListVariant ? 'max-h-[theme(spacing.27)]' : 'max-h-96',
+                            'mx-auto h-auto w-auto max-w-full',
                             'object-contain',
                           )
                         : 'object-cover object-center',

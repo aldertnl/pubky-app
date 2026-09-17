@@ -1,0 +1,68 @@
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+.card {
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-width: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  padding: 16px 8px;
+  background: var(--card);
+  color: var(--card-foreground);
+  transition: background 0.18s;
+}
+.card:hover,
+.card:focus-visible {
+  background: var(--accent);
+}
+.card img {
+  width: clamp(60px, 12vw, 112px);
+  height: auto;
+  transition: transform 0.18s;
+}
+.detailArt,
+.recognitionCard img {
+  transition: transform 0.18s;
+}
+.card:hover img,
+.recognitionCard:hover img,
+.detailArt:hover {
+  transform: scale(1.2) rotate(-14deg);
+}
+@media (max-width: 380px) {
+  .gallery {
+    gap: 6px;
+  }
+  .card {
+    padding: 12px 4px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card img,
+  .recognitionCard img,
+  .detailArt {
+    transition: none;
+  }
+}
+
+.galleryUser {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.galleryUser img {
+  width: 88px;
+}
+@media (max-width: 480px) {
+  .galleryUser {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

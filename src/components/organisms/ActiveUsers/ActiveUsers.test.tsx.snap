@@ -10,7 +10,7 @@ exports[`ActiveUsers - Snapshots > matches snapshot when empty 1`] = `
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Active users
@@ -21,7 +21,7 @@ exports[`ActiveUsers - Snapshots > matches snapshot when empty 1`] = `
     data-testid="container"
   >
     <p
-      class="text-base font-light text-muted-foreground"
+      class="text-base font-medium text-muted-foreground"
       data-testid="typography"
     >
       No users to show
@@ -73,7 +73,7 @@ exports[`ActiveUsers - Snapshots > matches snapshot when loading 1`] = `
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Active users
@@ -196,7 +196,7 @@ exports[`ActiveUsers - Snapshots > matches snapshot with users 1`] = `
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Active users

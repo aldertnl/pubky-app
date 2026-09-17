@@ -282,7 +282,7 @@ export function DiscoverCollections() {
   return (
     <Container overrideDefaults data-cy="discover-collections-section" className="flex w-full flex-col gap-4">
       <Container overrideDefaults className="flex items-center gap-3">
-        <Heading level={2} size="lg" className="font-light text-muted-foreground">
+        <Heading level={2} size="lg" className="font-medium text-muted-foreground">
           {'Discover Collections'}
         </Heading>
         {showSkeletons ? <AvatarStackSkeleton count={3} size="md" /> : <AvatarStack pubkys={headerPubkys} />}

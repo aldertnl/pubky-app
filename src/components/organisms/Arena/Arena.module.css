@@ -29,7 +29,6 @@
   display: flex;
   align-items: center;
   align-self: center;
-  margin-left: auto;
 }
 .filterClause {
   display: inline-block;
@@ -43,11 +42,8 @@
 .filterClause > [data-arena-tag-picker],
 .filterClause > button,
 .filterClause > [data-slot='skeleton'] {
-  margin-inline: 4px;
+  margin-inline: 0 8px;
   vertical-align: middle;
-}
-.filterClause:last-child > button {
-  margin-inline-end: 0;
 }
 .stage {
   position: relative;
@@ -480,7 +476,9 @@
   box-shadow: none;
 }
 .conversationTarget {
-  scroll-margin-top: 96px;
+  margin-top: 32px;
+  min-height: calc(100dvh - 104px);
+  scroll-margin-top: calc(var(--header-height-mobile) + 16px);
   outline: none;
 }
 @media (hover: hover) and (pointer: fine) {
@@ -496,8 +494,8 @@
   translate: 0 1px;
 }
 .idea:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 3px;
+  outline: none;
+  box-shadow: inset 0 0 0 1px var(--ring);
 }
 .selected,
 .ideaCard.selected:hover {
@@ -828,9 +826,6 @@
   .filterClause > [data-slot='skeleton'] {
     margin-inline: 0 8px;
   }
-  .toolbarActions {
-    margin-left: 0;
-  }
   .viewActions {
     display: flex;
     align-items: center;
@@ -1086,8 +1081,9 @@
   border-radius: 50%;
   box-shadow: 0 8px 24px rgb(0 0 0 / 50%);
 }
-.person[aria-pressed='true'] .personPortrait {
-  outline: 2px solid var(--brand);
+.person[aria-pressed='true'] .personPortrait,
+.person:focus-visible .personPortrait {
+  outline: 2px solid var(--arena-topic-color, var(--brand));
   outline-offset: 5px;
 }
 .person[aria-pressed='true'] .personAvatar {
@@ -1119,8 +1115,8 @@
   pointer-events: auto;
 }
 .personPost:focus-visible {
-  outline: 2px solid white;
-  outline-offset: 3px;
+  outline: none;
+  border-color: white;
 }
 .personRank {
   position: absolute;
@@ -1143,7 +1139,8 @@
   outline-offset: 3px;
   box-shadow: 0 0 32px color-mix(in srgb, var(--arena-topic-color) 30%, transparent);
 }
-.peopleFloor .contender:first-child .personRank {
+.peopleFloor .contender:first-child .personRank,
+.person[aria-pressed='true'] .personRank {
   border-color: var(--arena-topic-color, var(--brand));
   color: var(--arena-topic-color, var(--brand));
 }
@@ -1169,8 +1166,7 @@
   white-space: nowrap;
 }
 .peopleFloor .person:focus-visible {
-  outline: 2px solid var(--brand);
-  outline-offset: 3px;
+  outline: none;
 }
 @media (hover: hover) and (pointer: fine) {
   .peopleFloor .personNode:hover {
@@ -1208,5 +1204,63 @@
 @media (prefers-reduced-motion: reduce) {
   .peopleFloor .personNode {
     transition: none;
+  }
+}
+
+.postAward {
+  position: absolute;
+  top: -16px;
+  right: 8px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+}
+.personAwardsButton {
+  position: absolute;
+  top: 0;
+  left: calc(50% - var(--arena-person-size) / 2 - 8px);
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.postAward,
+.personAwardsButton {
+  transition:
+    scale 180ms var(--arena-ease),
+    color 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .postAward:hover,
+  .personAwardsButton:hover {
+    color: white;
+    border-color: white;
+    box-shadow: 0 0 0 2px rgb(255 255 255 / 16%);
+    scale: 1.1;
+  }
+}
+.postAward:focus-visible,
+.personAwardsButton:focus-visible {
+  color: white;
+  border-color: white;
+  outline: none;
+  border-color: white;
+}
+@media (prefers-reduced-motion: reduce) {
+  .postAward,
+  .personAwardsButton {
+    transition: none;
+    scale: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  .conversationTarget {
+    scroll-margin-top: calc(var(--header-height) + 16px);
   }
 }

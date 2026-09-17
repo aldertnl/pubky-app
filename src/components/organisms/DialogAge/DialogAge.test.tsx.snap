@@ -38,7 +38,7 @@ exports[`DialogAge - Snapshots > matches snapshot for default DialogAge 1`] = `
         data-testid="container"
       >
         <p
-          class="font-normal text-muted-foreground"
+          class="font-medium text-muted-foreground"
           data-testid="typography"
         >
           You can only use Pubky if you are over 18 years old.

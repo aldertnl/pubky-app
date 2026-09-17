@@ -52,7 +52,7 @@ export const HeaderContainer = ({ children, className, classNameNav }: HeaderCon
 export const HeaderTitle = ({ currentTitle }: { currentTitle: string }) => {
   return (
     <Container className="hidden flex-1 md:flex">
-      <Heading level={2} size="lg" className="font-normal text-muted-foreground">
+      <Heading level={2} size="lg" className="font-medium text-muted-foreground">
         {currentTitle}
       </Heading>
     </Container>

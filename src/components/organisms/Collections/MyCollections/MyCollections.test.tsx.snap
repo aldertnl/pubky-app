@@ -15,7 +15,7 @@ exports[`MyCollections > MyCollections - Snapshots > matches the snapshot for th
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         My Collections
@@ -154,7 +154,7 @@ exports[`MyCollections > MyCollections - Snapshots > matches the snapshot for th
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         My Collections

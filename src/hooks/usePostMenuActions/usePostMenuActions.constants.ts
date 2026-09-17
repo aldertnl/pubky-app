@@ -3,6 +3,7 @@
  * Used to identify menu items in the post menu actions
  */
 export const POST_MENU_ACTION_IDS = {
+  RECOGNIZE: 'recognize',
   FOLLOW: 'follow',
   COPY_PUBKY: 'copy-pubky',
   COPY_LINK: 'copy-link',

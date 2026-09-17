@@ -13,7 +13,7 @@ exports[`FilterLayout - Snapshots > matches snapshot with Columns selected tab 1
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Layout
@@ -187,7 +187,7 @@ exports[`FilterLayout - Snapshots > matches snapshot with Wide selected tab 1`] 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Layout
@@ -361,7 +361,7 @@ exports[`FilterLayout - Snapshots > matches snapshot with default props 1`] = `
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Layout
@@ -535,7 +535,7 @@ exports[`FilterLayout - Snapshots > matches snapshot with disabled state 1`] = `
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Layout
@@ -712,7 +712,7 @@ exports[`FilterLayout - Snapshots > matches snapshot with hidden visual selectio
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Layout

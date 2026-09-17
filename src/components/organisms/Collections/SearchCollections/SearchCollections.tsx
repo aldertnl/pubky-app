@@ -70,7 +70,7 @@ function SearchCollectionsStream({ streamId }: { streamId: PostStreamId }) {
   return (
     <Container overrideDefaults data-cy="search-collections-section" className="flex w-full flex-col gap-4">
       <Container overrideDefaults className="flex items-center justify-between gap-3">
-        <Heading level={2} size="lg" className="font-light text-muted-foreground">
+        <Heading level={2} size="lg" className="font-medium text-muted-foreground">
           {'Collections'}
         </Heading>
         {showSeeAll && (

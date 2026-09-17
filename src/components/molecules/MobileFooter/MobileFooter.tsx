@@ -9,6 +9,7 @@ import { Button } from '@/atoms/Button/Button';
 import { Container } from '@/atoms/Container/Container';
 import { Typography } from '@/atoms/Typography/Typography';
 import { FileController } from '@/controllers/file/file';
+import { useAwardNotificationCount } from '@/hooks/useAwards/useAwards';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile/useCurrentUserProfile';
 import { useKeyboardOffset } from '@/hooks/useKeyboardOffset/useKeyboardOffset';
 import { usePublicRoute } from '@/hooks/usePublicRoute/usePublicRoute';
@@ -35,7 +36,8 @@ export function MobileFooter({ className }: MobileFooterProps) {
   const setShowSignInDialog = useAuthStore((state) => state.setShowSignInDialog);
   const { isPublicExploreRoute } = usePublicRoute();
   const { userDetails, currentUserPubky } = useCurrentUserProfile();
-  const unreadNotifications = useNotificationStore((state) => state.selectUnread());
+  const awardNotifications = useAwardNotificationCount();
+  const unreadNotifications = useNotificationStore((state) => state.selectUnread()) + awardNotifications;
   const localAvatarUrl = useLocalFilesStore((state) => state.profile);
   const { isKeyboardVisible, keyboardOffset } = useKeyboardOffset();
   // Get avatar URL and fallback initial - same logic as desktop header

@@ -11,7 +11,7 @@ exports[`DiscoverCollections > DiscoverCollections - Snapshots > matches the sna
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Discover Collections
@@ -41,7 +41,7 @@ exports[`DiscoverCollections > DiscoverCollections - Snapshots > matches the sna
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Discover Collections
@@ -93,7 +93,7 @@ exports[`DiscoverCollections > DiscoverCollections - Snapshots > matches the sna
     data-testid="container"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Discover Collections

@@ -8,6 +8,7 @@ export const PROFILE_PAGE_TYPES = {
   FRIENDS: 'friends',
   UNIQUE_TAGS: 'unique_tags',
   COLLECTIONS: 'collections',
+  AWARDS: 'awards',
 } as const;
 
 export type ProfilePageType =
@@ -18,6 +19,7 @@ export type ProfilePageType =
   | typeof PROFILE_PAGE_TYPES.FOLLOWERS
   | typeof PROFILE_PAGE_TYPES.FOLLOWING
   | typeof PROFILE_PAGE_TYPES.FRIENDS
+  | typeof PROFILE_PAGE_TYPES.AWARDS
   | typeof PROFILE_PAGE_TYPES.COLLECTIONS
   | typeof PROFILE_PAGE_TYPES.UNIQUE_TAGS;
 

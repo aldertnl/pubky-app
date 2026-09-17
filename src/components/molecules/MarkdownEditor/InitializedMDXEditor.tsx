@@ -409,7 +409,7 @@ export default function InitializedMDXEditor({
           placeholder={'Start writing your masterpiece'}
           maxLength={ARTICLE_MAX_CHARACTER_LENGTH}
           variant="inline"
-          className="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+          className="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
           data-testid="markdown-textarea"
           // Suppress the iOS keyboard autofill accessory bar (passwords/cards/contacts)
           autoComplete="off"

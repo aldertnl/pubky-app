@@ -20,6 +20,8 @@ import {
 import { cn, isPostDeleted } from '@/libs/utils/utils';
 import { parseCompositeId } from '@/models/models.utils';
 import { buildPostReplyStreamId } from '@/models/stream/post/postStream.types';
+import { AwardPostContext } from '@/organisms/Awards/AwardPostContext';
+import { PostAwards } from '@/organisms/Awards/PostAwards';
 import { PostMain } from '@/organisms/PostMain/PostMain';
 import { PostMainLayoutProvider } from '@/organisms/PostMain/PostMainLayoutContext';
 import { QuickReply } from '@/organisms/QuickReply/QuickReply';
@@ -34,6 +36,9 @@ interface ArenaConversationProps {
   selectedId: string;
   showMuted?: boolean;
   postLabel?: string;
+  eager?: boolean;
+  awardsUser?: string;
+  awardsScrollRequest?: number;
 }
 
 export function ArenaConversation(props: ArenaConversationProps) {
@@ -41,7 +46,7 @@ export function ArenaConversation(props: ArenaConversationProps) {
   const [ready, setReady] = useState(false);
   useEffect(() => {
     const placeholder = placeholderRef.current;
-    if (!placeholder || ready) return;
+    if (!placeholder || ready || props.eager) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -53,8 +58,8 @@ export function ArenaConversation(props: ArenaConversationProps) {
     );
     observer.observe(placeholder);
     return () => observer.disconnect();
-  }, [ready]);
-  if (ready) return <ArenaConversationContent {...props} />;
+  }, [ready, props.eager]);
+  if (ready || props.eager) return <ArenaConversationContent {...props} />;
   return (
     <div ref={placeholderRef} className={styles.dock}>
       <div className={styles.reader} role="status" aria-label="Loading conversation">
@@ -71,6 +76,8 @@ function ArenaConversationContent({
   postWindow,
   showMuted = false,
   postLabel = 'Original post',
+  awardsUser,
+  awardsScrollRequest,
 }: ArenaConversationProps) {
   const readerRef = useRef<HTMLDivElement>(null);
   const originalRef = useRef<HTMLDivElement>(null);
@@ -115,114 +122,124 @@ function ArenaConversationContent({
 
   return (
     <div className={styles.dock}>
-      <PostMainLayoutProvider tagsLayout="inline">
-        <div ref={readerRef} className={styles.reader}>
-          {canReply && (
-            <ArenaConversationConnectors
-              key={`${rootId}:${leadingReply?.id ?? ''}:${rankingLoading}:${!!replyError}`}
-              readerRef={readerRef}
-              originalRef={originalRef}
-              replyRef={replyRef}
-              composerRef={composerRef}
-            />
-          )}
-          <section aria-label={postLabel}>
-            <Typography
-              as="h3"
-              overrideDefaults
-              className={cn(
-                styles.readerHeading,
-                'text-xs leading-4 font-medium tracking-[0.075rem] whitespace-nowrap text-muted-foreground uppercase',
-              )}
-            >
-              <span className="inline-flex items-center gap-2">
-                <span>{postLabel}</span>
-                {originalPopularityScore !== null && (
-                  <ArenaStat kind="popular" count={originalPopularityScore} active />
-                )}
-              </span>
-            </Typography>
-            {rootIsMuted ? (
-              <p className="py-5 text-sm text-muted-foreground">Original hidden by your mute settings.</p>
-            ) : (
-              <div key={rootId} ref={originalRef} className={styles.readerContent}>
-                <PostMain postId={rootId} stackTagsAndActions />
-              </div>
-            )}
-          </section>
-          <section aria-label="Replies" aria-busy={rankingLoading}>
-            <Typography
-              as="h3"
-              overrideDefaults
-              className={cn(
-                styles.readerHeading,
-                'text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase',
-              )}
-            >
-              <span className="inline-flex items-center gap-2">
-                <span title="Most popular direct reply in the selected timeframe, using lifetime tags + (replies × 4) + (reposts × 3)">
-                  LEADING REPLY
-                </span>
-                {leadingReply && <ArenaStat kind="popular" count={leadingReply.score} active />}
-              </span>
-            </Typography>
-            {rankingLoading ? (
-              <div role="status" aria-label="Finding most popular reply">
-                <Skeleton className="h-48 w-full rounded-md" />
-                <span className="sr-only">Finding most popular reply…</span>
-              </div>
-            ) : replyError ? (
-              <p role="alert" className="py-3 text-sm text-muted-foreground">
-                Could not rank replies.{' '}
-                <Button size="sm" variant="ghost" onClick={() => void replyStream.refresh()}>
-                  Retry replies
-                </Button>
-              </p>
-            ) : leadingReply ? (
-              <div key={leadingReply.id} ref={replyRef} className={styles.readerContent}>
-                <PostMain postId={leadingReply.id} isNavigable={false} stackTagsAndActions />
-              </div>
-            ) : (
-              <p className="py-5 text-sm font-medium text-muted-foreground">
-                {isLoading
-                  ? 'Loading conversation…'
-                  : postWindow.timeframe === TIMEFRAME.ALL_TIME
-                    ? 'No replies yet. Start the conversation.'
-                    : 'No replies in this timeframe.'}
-              </p>
-            )}
-            {leadingReply && (
-              <div className="mt-3">
-                <Button asChild variant="secondary">
-                  <Link href={getPostHref(rootId)}>Show all {postCounts ? `${postCounts.replies} ` : ''}replies</Link>
-                </Button>
-              </div>
-            )}
+      <AwardPostContext.Provider value={true}>
+        <PostMainLayoutProvider tagsLayout="inline">
+          <div ref={readerRef} className={styles.reader}>
             {canReply && (
-              <div className="mt-6">
-                <Typography
-                  as="h3"
-                  overrideDefaults
-                  className={cn(
-                    styles.readerHeading,
-                    'text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase',
-                  )}
-                >
-                  JOIN THE BATTLE
-                </Typography>
-                <div ref={composerRef}>
-                  <QuickReply
-                    parentPostId={rootId}
-                    placeholder="Reply to original post"
-                    showConnector={false}
-                    onReplySubmitted={(id) => void replyStream.prependPosts(id)}
-                  />
-                </div>
-              </div>
+              <ArenaConversationConnectors
+                key={`${rootId}:${leadingReply?.id ?? ''}:${rankingLoading}:${!!replyError}`}
+                readerRef={readerRef}
+                originalRef={originalRef}
+                replyRef={replyRef}
+                composerRef={composerRef}
+              />
             )}
-          </section>
-        </div>
-      </PostMainLayoutProvider>
+            <section aria-label={postLabel}>
+              <Typography
+                as="h3"
+                overrideDefaults
+                className={cn(
+                  styles.readerHeading,
+                  'text-xs leading-4 font-medium tracking-[0.075rem] whitespace-nowrap text-muted-foreground uppercase',
+                )}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <span>{postLabel}</span>
+                  {originalPopularityScore !== null && (
+                    <ArenaStat kind="popular" count={originalPopularityScore} active />
+                  )}
+                </span>
+              </Typography>
+              {rootIsMuted ? (
+                <p className="py-5 text-sm text-muted-foreground">Original hidden by your mute settings.</p>
+              ) : (
+                <div key={rootId} ref={originalRef} className={styles.readerContent}>
+                  <PostMain postId={rootId} stackTagsAndActions />
+                </div>
+              )}
+              {!rootIsMuted && (
+                <PostAwards
+                  key={`awards:${awardsUser ?? rootId}`}
+                  postId={rootId}
+                  user={awardsUser}
+                  scrollRequest={awardsScrollRequest}
+                />
+              )}
+            </section>
+            <section aria-label="Replies" aria-busy={rankingLoading}>
+              <Typography
+                as="h3"
+                overrideDefaults
+                className={cn(
+                  styles.readerHeading,
+                  'text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase',
+                )}
+              >
+                <span className="inline-flex items-center gap-2">
+                  <span title="Most popular direct reply in the selected timeframe, using lifetime tags + (replies × 4) + (reposts × 3)">
+                    LEADING REPLY
+                  </span>
+                  {leadingReply && <ArenaStat kind="popular" count={leadingReply.score} active />}
+                </span>
+              </Typography>
+              {rankingLoading ? (
+                <div role="status" aria-label="Finding most popular reply">
+                  <Skeleton className="h-48 w-full rounded-md" />
+                  <span className="sr-only">Finding most popular reply…</span>
+                </div>
+              ) : replyError ? (
+                <p role="alert" className="py-3 text-sm text-muted-foreground">
+                  Could not rank replies.{' '}
+                  <Button size="sm" variant="ghost" onClick={() => void replyStream.refresh()}>
+                    Retry replies
+                  </Button>
+                </p>
+              ) : leadingReply ? (
+                <div key={leadingReply.id} ref={replyRef} className={styles.readerContent}>
+                  <PostMain postId={leadingReply.id} isNavigable={false} stackTagsAndActions />
+                </div>
+              ) : (
+                <p className="py-5 text-sm font-medium text-muted-foreground">
+                  {isLoading
+                    ? 'Loading conversation…'
+                    : postWindow.timeframe === TIMEFRAME.ALL_TIME
+                      ? 'No replies yet. Start the conversation.'
+                      : 'No replies in this timeframe.'}
+                </p>
+              )}
+              {leadingReply && (
+                <div className="mt-3">
+                  <Button asChild variant="secondary">
+                    <Link href={getPostHref(rootId)}>Show all {postCounts ? `${postCounts.replies} ` : ''}replies</Link>
+                  </Button>
+                </div>
+              )}
+              {canReply && (
+                <div className="mt-6">
+                  <Typography
+                    as="h3"
+                    overrideDefaults
+                    className={cn(
+                      styles.readerHeading,
+                      'text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase',
+                    )}
+                  >
+                    JOIN THE BATTLE
+                  </Typography>
+                  <div ref={composerRef}>
+                    <QuickReply
+                      parentPostId={rootId}
+                      placeholder="Reply to original post"
+                      showConnector={false}
+                      onReplySubmitted={(id) => void replyStream.prependPosts(id)}
+                    />
+                  </div>
+                </div>
+              )}
+            </section>
+          </div>
+        </PostMainLayoutProvider>
+      </AwardPostContext.Provider>
     </div>
   );
 }

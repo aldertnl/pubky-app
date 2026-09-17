@@ -77,7 +77,7 @@ exports[`BookmarksHero - Snapshots > matches the snapshot with count and avatar 
       </div>
     </div>
     <p
-      class="max-w-full text-xl leading-7 font-light text-muted-foreground md:text-2xl md:leading-8"
+      class="max-w-full text-xl leading-7 font-medium text-muted-foreground md:text-2xl md:leading-8"
       data-testid="typography"
     >
       Everything you saved for later.

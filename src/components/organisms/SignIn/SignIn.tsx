@@ -75,7 +75,7 @@ const SignInProgress = () => {
               <Typography
                 as="span"
                 className={cn(
-                  'text-base leading-normal font-light',
+                  'text-base leading-normal font-medium',
                   status === 'completed' && 'font-bold text-foreground',
                   status === 'running' && 'text-foreground',
                   status === 'pending' && 'text-muted-foreground',

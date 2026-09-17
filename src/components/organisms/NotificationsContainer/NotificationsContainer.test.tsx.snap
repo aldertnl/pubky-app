@@ -3,7 +3,7 @@
 exports[`NotificationsContainer > matches snapshot 1`] = `
 <div>
   <h5
-    class="leading-normal font-light text-muted-foreground lg:hidden"
+    class="leading-normal font-medium text-muted-foreground lg:hidden"
     data-testid="heading-5"
   >
     Notifications 

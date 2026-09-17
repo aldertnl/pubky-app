@@ -14,8 +14,8 @@ interface DialogTermsProps {
 }
 
 export function DialogTerms({ trigger }: DialogTermsProps) {
-  const baseCSS = 'text-muted-foreground text-base font-normal';
-  const baseCSSItalic = 'text-muted-foreground text-base font-normal italic';
+  const baseCSS = 'text-muted-foreground text-base font-medium';
+  const baseCSSItalic = 'text-muted-foreground text-base font-medium italic';
 
   const defaultTrigger = (
     <Typography as="span" size="sm" className="cursor-pointer font-medium text-brand">

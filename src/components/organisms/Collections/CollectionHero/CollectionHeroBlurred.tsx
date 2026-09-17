@@ -56,7 +56,7 @@ export function CollectionHeroBlurred({ compositeId, className }: CollectionHero
           {/* Description */}
           <Typography
             overrideDefaults
-            className="max-w-3xl text-xl leading-8 font-light wrap-anywhere text-white lg:text-2xl"
+            className="max-w-3xl text-xl leading-8 font-medium wrap-anywhere text-white lg:text-2xl"
           >
             Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et
             dolore magna aliqua.

@@ -3,6 +3,7 @@ export interface ProfileStats {
   posts: number;
   replies: number;
   collections: number;
+  awards?: number;
   followers: number;
   following: number;
   friends: number;

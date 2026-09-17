@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { Bell, HeartHandshake, Library, MessageCircle, StickyNote, Tag, UsersRound } from 'lucide-react';
+import { Bell, HeartHandshake, Library, Trophy, MessageCircle, StickyNote, Tag, UsersRound } from 'lucide-react';
 import { type FilterBarPageType, PROFILE_PAGE_TYPES } from '@/app/profile/types';
 import { Container } from '@/atoms/Container/Container';
 import { FilterItem, FilterItemIcon, FilterItemLabel } from '@/atoms/Filter/Filter';
@@ -107,6 +107,7 @@ const FILTER_ITEMS_CONFIG: Array<{
     pageType: PROFILE_PAGE_TYPES.COLLECTIONS,
     statKey: 'collections',
   },
+  { icon: Trophy, label: 'Awards', pageType: PROFILE_PAGE_TYPES.AWARDS, id: 'awards', statKey: 'awards' },
 ];
 export const getDefaultItems = (stats?: ProfileStats, isOwnProfile: boolean = true): ProfilePageFilterBarItem[] => {
   return FILTER_ITEMS_CONFIG.filter((config) => {
@@ -123,7 +124,13 @@ export const getDefaultItems = (stats?: ProfileStats, isOwnProfile: boolean = tr
     showCount: config.statKey !== undefined,
     // If stats not provided, count is undefined (loading state)
     // If stats provided, use the value or fallback to 0
-    count: config.statKey ? (stats ? (stats[config.statKey] ?? 0) : undefined) : undefined,
+    count: config.statKey
+      ? stats
+        ? config.statKey === 'awards'
+          ? stats.awards
+          : (stats[config.statKey] ?? 0)
+        : undefined
+      : undefined,
     ownProfileOnly: config.ownProfileOnly,
   }));
 };

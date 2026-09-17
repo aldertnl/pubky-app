@@ -47,7 +47,7 @@ export function ProfileTagged() {
 
   return (
     <Container className="gap-3">
-      <Heading level={5} size="lg" className="leading-normal font-light text-muted-foreground lg:hidden">
+      <Heading level={5} size="lg" className="leading-normal font-medium text-muted-foreground lg:hidden">
         Tagged ({count})
       </Heading>
       <TaggedSection

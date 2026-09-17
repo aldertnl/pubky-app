@@ -59,7 +59,7 @@ export function Search() {
             <SearchPeople />
             <SearchCollections />
             <Container overrideDefaults className="flex w-full flex-col gap-4">
-              <Heading level={2} size="lg" className="font-light text-muted-foreground">
+              <Heading level={2} size="lg" className="font-medium text-muted-foreground">
                 {'Posts'}
               </Heading>
               {feed}

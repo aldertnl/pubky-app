@@ -25,6 +25,7 @@ interface ArenaFilterMenuProps<T extends string> {
   onChange: (value: T) => void;
   separatorAfter?: T;
   lowercase?: boolean;
+  className?: string;
 }
 
 /** Collection picker presentation, composed from the same native menu and button atoms. */
@@ -35,6 +36,7 @@ export function ArenaFilterMenu<T extends string>({
   onChange,
   separatorAfter,
   lowercase = false,
+  className = '',
 }: ArenaFilterMenuProps<T>) {
   const [open, setOpen] = useState(false);
   const active = options.find((option) => option.value === value) ?? options[0];
@@ -44,7 +46,7 @@ export function ArenaFilterMenu<T extends string>({
       <DropdownMenuTrigger asChild>
         <SidebarButton
           icon={ActiveIcon}
-          className="w-auto focus-visible:border-border focus-visible:ring-0"
+          className={`w-auto focus-visible:border-border focus-visible:ring-0 ${className}`}
           aria-label={`${label}: ${active.label}`}
         >
           <Typography as="span" overrideDefaults>

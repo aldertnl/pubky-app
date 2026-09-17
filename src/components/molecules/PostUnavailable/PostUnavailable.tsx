@@ -40,7 +40,7 @@ export const PostUnavailable = ({
 
   return (
     <CardContent className="flex flex-1 flex-col items-center justify-center gap-3 py-2">
-      <Typography size="sm" className="text-center font-normal text-muted-foreground">
+      <Typography size="sm" className="text-center font-medium text-muted-foreground">
         {message}
       </Typography>
       {onRemove ? (

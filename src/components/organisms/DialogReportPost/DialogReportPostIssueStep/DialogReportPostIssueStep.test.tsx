@@ -31,6 +31,7 @@ describe('DialogReportPostIssueStep', () => {
       push: mockPush,
       replace: vi.fn(),
       prefetch: vi.fn(),
+      bfcacheId: 'test-bfcache',
       back: vi.fn(),
       forward: vi.fn(),
       refresh: vi.fn(),

@@ -4,6 +4,10 @@ Rules and patterns for developing UI components. Based on atomic design with Sha
 
 ## Core Principles
 
+Text uses medium (`font-medium`, 500) as its minimum weight. The app body supplies
+this default; use medium for explicit component styles and preserve semibold or
+bold for emphasis. Do not use light or normal font weights.
+
 ### 1. Shadcn First
 
 **ALWAYS check if Shadcn has an equivalent before creating custom components.**
@@ -55,7 +59,7 @@ Guests can open routes that do not require a session:
 
 | Kind           | Paths                                                                                             | `@/app/routes` helper  | `usePublicRoute()` flag |
 | -------------- | ------------------------------------------------------------------------------------------------- | ---------------------- | ----------------------- |
-| Core explore   | `/home`, `/arena`, `/search`, `/collections`                                                        | `isCoreExploreRoute`   | `isCoreExploreRoute`    |
+| Core explore   | `/home`, `/arena`, `/search`, `/collections`                                                      | `isCoreExploreRoute`   | `isCoreExploreRoute`    |
 | Dynamic public | `/post/[userId]/[postId]`, `/profile/[pubky]`, `/invite/[code]`, `/collections/[userId]/[postId]` | `isDynamicPublicRoute` | `isDynamicPublicRoute`  |
 | Either         | —                                                                                                 | `isPublicExploreRoute` | `isPublicExploreRoute`  |
 

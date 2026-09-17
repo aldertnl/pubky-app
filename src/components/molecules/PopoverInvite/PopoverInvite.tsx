@@ -25,7 +25,7 @@ export function PopoverInvite({ className = 'hover:bg-brand/10' }: PopoverInvite
             <Heading level={4} size="sm" className="text-popover-foreground">
               Don&apos;t have an invite yet?
             </Heading>
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               Ask the Pubky team!
             </Typography>
           </Container>

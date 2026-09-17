@@ -22,7 +22,7 @@ export function ProfilePageTaggedAs({ tags, isLoading = false, onTagClick, pubky
   };
   return (
     <Container data-cy="profile-tagged-section" overrideDefaults={true} className="flex flex-col gap-2">
-      <Heading level={2} size="lg" className="font-light text-muted-foreground">
+      <Heading level={2} size="lg" className="font-medium text-muted-foreground">
         {'Tagged as'}
       </Heading>
 

@@ -54,7 +54,7 @@ export function MyCollections() {
       {/* Header */}
       <Container overrideDefaults className="flex flex-wrap items-center justify-between gap-3">
         <Container overrideDefaults className="flex flex-wrap items-center gap-3">
-          <Heading level={2} size="lg" className="font-light text-muted-foreground">
+          <Heading level={2} size="lg" className="font-medium text-muted-foreground">
             {'My Collections'}
           </Heading>
           {currentUserPubky ? (

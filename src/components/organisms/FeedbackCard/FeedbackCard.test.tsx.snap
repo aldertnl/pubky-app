@@ -43,7 +43,7 @@ exports[`FeedbackCard - Snapshots > matches snapshot with authenticated user wit
   data-testid="feedback-card"
 >
   <div
-    class="font-light text-muted-foreground"
+    class="font-medium text-muted-foreground"
     data-level="2"
     data-size="lg"
     data-testid="heading"
@@ -92,7 +92,7 @@ exports[`FeedbackCard - Snapshots > matches snapshot with authenticated user wit
   data-testid="feedback-card"
 >
   <div
-    class="font-light text-muted-foreground"
+    class="font-medium text-muted-foreground"
     data-level="2"
     data-size="lg"
     data-testid="heading"
@@ -142,7 +142,7 @@ exports[`FeedbackCard - Snapshots > matches snapshot with long name (CSS truncat
   data-testid="feedback-card"
 >
   <div
-    class="font-light text-muted-foreground"
+    class="font-medium text-muted-foreground"
     data-level="2"
     data-size="lg"
     data-testid="heading"
@@ -192,7 +192,7 @@ exports[`FeedbackCard - Snapshots > matches snapshot with unauthenticated user 1
   data-testid="feedback-card"
 >
   <div
-    class="font-light text-muted-foreground"
+    class="font-medium text-muted-foreground"
     data-level="2"
     data-size="lg"
     data-testid="heading"

@@ -21,7 +21,7 @@ const TooltipContent = React.forwardRef<
     data-slot="tooltip-content"
     sideOffset={sideOffset}
     className={cn(
-      'z-50 max-w-sm rounded-md bg-primary px-3 py-1.5 text-xs leading-4 font-normal text-primary-foreground',
+      'z-50 max-w-sm rounded-md bg-primary px-3 py-1.5 text-xs leading-4 font-medium text-primary-foreground',
       'data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2',
       'data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95',
       'data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95',

@@ -58,7 +58,7 @@ export function DialogCollectionsIntro({ open, onOpenChange, onContinue }: Dialo
           className="mx-auto size-48"
         />
 
-        <Typography size="sm" className="font-normal text-muted-foreground">
+        <Typography size="sm" className="font-medium text-muted-foreground">
           {'Please note: collections are public and discoverable.'}
         </Typography>
 

@@ -46,29 +46,30 @@ const ideas = rankArenaIdeas(
 );
 
 describe('Arena floor', () => {
-  it.each([false, true])('offers a separate expand button only on the selected card (isList: %s)', (isList) => {
-    const onSelect = vi.fn();
-    const onExpand = vi.fn();
-    const props = { ideas, onSelect, onExpand, isList, metric: 'tags' as const };
-    const { rerender } = render(<ArenaFloor {...props} selectedId="a:1" />);
-    const expand = screen.getByRole('button', { name: 'See full post' });
-    const selected = screen.getByRole('button', { name: /Rank 2, Mira/ });
-    expect(selected.closest('[data-slot="card"]')).toContainElement(expand);
-    expect(selected).not.toContainElement(expand);
-    expect(expand).toHaveAttribute('data-variant', 'secondary');
-    expect(expand.querySelector('.lucide-eye')).not.toBeNull();
-    expect(screen.getByRole('img', { name: 'Award: Coming soon' })).toHaveAttribute('title', 'Coming soon');
-    fireEvent.click(expand);
-    expect(onExpand).toHaveBeenCalledOnce();
-    expect(onSelect).not.toHaveBeenCalled();
-
-    rerender(<ArenaFloor {...props} selectedId="b:2" />);
-    expect(screen.getByRole('button', { name: /Rank 1, Jules/ }).closest('[data-slot="card"]')).toContainElement(
-      screen.getByRole('button', { name: 'See full post' }),
-    );
-    rerender(<ArenaFloor {...props} selectedId={undefined} />);
-    expect(screen.queryByRole('button', { name: 'See full post' })).not.toBeInTheDocument();
-  });
+  it.each([false, true])(
+    'selects a post and opens the large view without an eye button (isList: %s)',
+    async (isList) => {
+      const onSelect = vi.fn();
+      const onExpand = vi.fn();
+      render(
+        <ArenaFloor
+          ideas={ideas}
+          onSelect={onSelect}
+          onExpand={onExpand}
+          isList={isList}
+          metric="tags"
+          selectedId="a:1"
+        />,
+      );
+      expect(screen.queryByRole('button', { name: 'See full post' })).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole('button', { name: /Rank 1, Jules/ }));
+      expect(onSelect).toHaveBeenCalledWith('b:2');
+      await waitFor(() => expect(onExpand).toHaveBeenCalledOnce());
+      fireEvent.click(screen.getByRole('button', { name: /Rank 2, Mira/ }));
+      expect(onSelect).toHaveBeenLastCalledWith('a:1');
+      await waitFor(() => expect(onExpand).toHaveBeenCalledTimes(2));
+    },
+  );
 
   it('shows the lead below the winning preview even when another post is selected', () => {
     const ranked = rankArenaIdeas(ideas, 'popular');

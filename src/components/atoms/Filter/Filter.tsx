@@ -38,7 +38,7 @@ function FilterHeader({
       className="m-0 gap-2 p-0"
       {...props}
     >
-      <Heading level={2} size="lg" className={cn('font-light text-muted-foreground', className)}>
+      <Heading level={2} size="lg" className={cn('font-medium text-muted-foreground', className)}>
         {title}
       </Heading>
       {subtitle && (

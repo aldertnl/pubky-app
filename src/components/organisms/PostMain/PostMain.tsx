@@ -187,7 +187,7 @@ export function PostMain({
                       actionsClassName={
                         stackTagsAndActions
                           ? 'w-full shrink-0 justify-start'
-                          : 'w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!'
+                          : 'w-full shrink-0 justify-start'
                       }
                     />
                   </>

@@ -29,8 +29,8 @@ export function GenericPreview({ url }: GenericPreviewProps) {
   const { url: displayUrl, title, image, type } = metadata;
   if (type === 'image')
     return (
-      <Link overrideDefaults href={url}>
-        <Image src={url} alt="Image preview" className="w-full rounded-md object-contain" />
+      <Link overrideDefaults href={url} className="block w-fit max-w-full overflow-hidden rounded-md">
+        <Image src={url} alt="Image preview" className="block h-auto w-auto max-w-full rounded-md" />
       </Link>
     );
   if (type === 'video') return <Video src={url} className="w-full cursor-auto object-contain" />;

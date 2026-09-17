@@ -6,6 +6,7 @@ import {
   CircleUserRound,
   HeartHandshake,
   Library,
+  Trophy,
   MessageCircle,
   StickyNote,
   Tag,
@@ -71,6 +72,7 @@ export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
     label: 'Collections',
     pageType: PROFILE_PAGE_TYPES.COLLECTIONS,
   },
+  { icon: Trophy, label: 'Awards', pageType: PROFILE_PAGE_TYPES.AWARDS },
 ];
 export interface ProfilePageMobileMenuProps {
   activePage: ProfilePageType;

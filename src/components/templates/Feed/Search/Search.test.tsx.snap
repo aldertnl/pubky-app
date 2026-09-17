@@ -32,7 +32,7 @@ exports[`Search - Mobile Snapshots > matches snapshot on mobile viewport 1`] = `
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         Posts
@@ -171,7 +171,7 @@ exports[`Search - Snapshots > matches snapshot with tags present 1`] = `
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         Posts

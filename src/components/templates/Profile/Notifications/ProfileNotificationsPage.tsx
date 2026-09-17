@@ -1,5 +1,5 @@
 import { Container } from '@/atoms/Container/Container';
-import { NotificationsContainer } from '@/organisms/NotificationsContainer/NotificationsContainer';
+import { NotificationsWithAwards } from '@/organisms/Awards/NotificationsWithAwards';
 
 /**
  * Template for the notifications page.
@@ -8,7 +8,7 @@ import { NotificationsContainer } from '@/organisms/NotificationsContainer/Notif
 export function ProfileNotificationsPage() {
   return (
     <Container className="mt-6 gap-4 lg:mt-0">
-      <NotificationsContainer />
+      <NotificationsWithAwards />
     </Container>
   );
 }

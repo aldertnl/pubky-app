@@ -4,6 +4,7 @@
 
 body {
   font-family: 'Inter Tight', sans-serif;
+  font-weight: 500;
   min-width: 375px;
   min-height: 100vh;
   overflow-x: hidden;
@@ -376,6 +377,30 @@ body {
 }
 
 @layer base {
+  :where(
+    button,
+    a[href],
+    summary,
+    select,
+    input[type='button'],
+    input[type='submit'],
+    input[type='reset'],
+    input[type='checkbox'],
+    input[type='radio'],
+    [role='button'],
+    [role='link'],
+    [role='tab'],
+    [role='menuitem'],
+    [role='menuitemcheckbox'],
+    [role='menuitemradio'],
+    [role='checkbox'],
+    [role='radio'],
+    [role='switch'],
+    [role='combobox']
+  ):not(:disabled):not([aria-disabled='true']) {
+    cursor: pointer;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
@@ -978,4 +1003,16 @@ body {
   .h-screen-without-page-header-onboarding {
     min-height: calc(100dvh - var(--header-offset-onboarding));
   }
+}
+
+/* Keep third-party text at the app's minimum medium weight. */
+body .react-tweet-theme {
+  font-weight: 500;
+  --tweet-body-font-weight: 500;
+  --tweet-quoted-body-font-weight: 500;
+}
+
+body [class*='propertyPanelTitle_'],
+body [class*='propertyEditorLabelCell_'] {
+  font-weight: 500;
 }

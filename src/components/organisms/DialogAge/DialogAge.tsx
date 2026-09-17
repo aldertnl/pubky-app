@@ -16,7 +16,7 @@ export function DialogAge() {
         </DialogHeader>
         <Container className="h-full overflow-y-auto pr-4">
           <Container className="gap-4">
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               You can only use Pubky if you are over 18 years old.
             </Typography>
           </Container>

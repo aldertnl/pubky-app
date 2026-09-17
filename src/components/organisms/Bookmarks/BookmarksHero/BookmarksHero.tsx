@@ -52,7 +52,7 @@ export function BookmarksHero({
 
         <Typography
           overrideDefaults
-          className="max-w-full text-xl leading-7 font-light text-muted-foreground md:text-2xl md:leading-8"
+          className="max-w-full text-xl leading-7 font-medium text-muted-foreground md:text-2xl md:leading-8"
         >
           {'Everything you saved for later.'}
         </Typography>

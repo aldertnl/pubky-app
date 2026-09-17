@@ -50,7 +50,7 @@ export function ProfileFollowers() {
   if (isLoading) {
     return (
       <Container data-cy="profile-followers-list" className="gap-4">
-        <Heading level={5} size="lg" className="leading-normal font-light text-muted-foreground lg:hidden">
+        <Heading level={5} size="lg" className="leading-normal font-medium text-muted-foreground lg:hidden">
           Followers
         </Heading>
         <Container
@@ -75,7 +75,7 @@ export function ProfileFollowers() {
 
   return (
     <Container data-cy="profile-followers-list" className="gap-4">
-      <Heading level={5} size="lg" className="leading-normal font-light text-muted-foreground lg:hidden">
+      <Heading level={5} size="lg" className="leading-normal font-medium text-muted-foreground lg:hidden">
         Followers {count > 0 && `(${count})`}
       </Heading>
       <Container

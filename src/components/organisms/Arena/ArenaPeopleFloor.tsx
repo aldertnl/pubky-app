@@ -1,7 +1,7 @@
 'use client';
 
 import { type CSSProperties } from 'react';
-import { StickyNote, Trophy } from 'lucide-react';
+import { StickyNote } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '@/atoms/Button/Button';
 import { Skeleton } from '@/atoms/Skeleton/Skeleton';
@@ -9,6 +9,7 @@ import type { UserStreamUser } from '@/hooks/useUserStream/useUserStream.types';
 import { ARENA_PEOPLE_LIMIT, type ArenaPeopleMetric } from '@/libs/arena/people';
 import { cn, formatPublicKey } from '@/libs/utils/utils';
 import { AvatarWithFallback } from '@/organisms/AvatarWithFallback/AvatarWithFallback';
+import { AwardTrophy } from '@/organisms/Awards/AwardTrophy';
 import { ARENA_PLACEMENTS } from './Arena.constants';
 import styles from './Arena.module.css';
 import { ArenaStat } from './ArenaStats';
@@ -21,12 +22,14 @@ export function ArenaPeopleFloor({
   selectedId,
   onSelect,
   onExpand,
+  onAwards,
 }: {
   users: UserStreamUser[];
   isList: boolean;
   metric: ArenaPeopleMetric;
   loading?: boolean;
   selectedId?: string;
+  onAwards?: (user: string, postId?: string) => void;
   onSelect: (id: string) => void;
   onExpand: () => void;
 }) {
@@ -80,16 +83,6 @@ export function ArenaPeopleFloor({
                         size="xl"
                         className={styles.personAvatar}
                       />
-                      {index === 0 && !isList && (
-                        <span
-                          className={cn(styles.awardIcon, styles.personAward)}
-                          role="img"
-                          aria-label="Award: Coming soon"
-                          title="Coming soon"
-                        >
-                          <Trophy className="size-4" aria-hidden="true" />
-                        </span>
-                      )}
                       <span className={styles.personRank}>#{index + 1}</span>
                     </span>
                     <span className={styles.personName}>{name}</span>
@@ -102,6 +95,13 @@ export function ArenaPeopleFloor({
                       )}
                     </span>
                   </Button>
+                  {user.id === selectedId && (
+                    <AwardTrophy
+                      onActivate={onAwards ? () => onAwards(user.id) : undefined}
+                      user={user.id}
+                      className={cn(styles.awardIcon, styles.personAwardsButton)}
+                    />
+                  )}
                   {user.id === selectedId && (
                     <Button
                       overrideDefaults

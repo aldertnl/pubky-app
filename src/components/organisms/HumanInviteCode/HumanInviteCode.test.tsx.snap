@@ -22,7 +22,7 @@ exports[`HumanInviteCode - Snapshots > matches snapshot for complete code state 
       data-testid="container"
     >
       <h2
-        class="text-xl leading-normal font-light text-muted-foreground lg:text-2xl"
+        class="text-xl leading-normal font-medium text-muted-foreground lg:text-2xl"
       >
         Phone or payment verification not available? Ask us for an invite code.
       </h2>
@@ -378,7 +378,7 @@ exports[`HumanInviteCode - Snapshots > matches snapshot for empty state 1`] = `
       data-testid="container"
     >
       <h2
-        class="text-xl leading-normal font-light text-muted-foreground lg:text-2xl"
+        class="text-xl leading-normal font-medium text-muted-foreground lg:text-2xl"
       >
         Phone or payment verification not available? Ask us for an invite code.
       </h2>

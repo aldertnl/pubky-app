@@ -12,7 +12,7 @@ exports[`SearchCollections - Snapshots > matches snapshot in the collapsed previ
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         Collections
@@ -68,7 +68,7 @@ exports[`SearchCollections - Snapshots > matches snapshot while loading 1`] = `
       data-testid="container"
     >
       <h2
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="heading-2"
       >
         Collections

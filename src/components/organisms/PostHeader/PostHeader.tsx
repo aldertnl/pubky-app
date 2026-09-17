@@ -10,6 +10,7 @@ import { isPostDeleted } from '@/libs/utils/utils';
 import { cn } from '@/libs/utils/utils';
 import { PostHeaderTimestamp } from '@/molecules/PostHeaderTimestamp/PostHeaderTimestamp';
 import { PostHeaderUserInfo } from '@/molecules/PostHeaderUserInfo/PostHeaderUserInfo';
+import { AwardTrophy } from '@/organisms/Awards/AwardTrophy';
 import { PostHeaderSkeleton } from './PostHeader.skeleton';
 import type { PostHeaderProps } from './PostHeader.types';
 
@@ -105,7 +106,20 @@ export function PostHeader({
           {characterLimit.count}/{characterLimit.max}
         </Typography>
       ) : (
-        timeAgo && timeAgoPlacement === 'top-right' && <PostHeaderTimestamp timeAgo={timeAgo} indexedAt={indexedAt} />
+        timeAgo &&
+        timeAgoPlacement === 'top-right' && (
+          <div className="flex items-center gap-2">
+            {!isReplyInput && (
+              <AwardTrophy
+                user={userId}
+                postId={postId}
+                showCount
+                className="group flex cursor-pointer items-center justify-center gap-1 text-muted-foreground outline-none"
+              />
+            )}
+            <PostHeaderTimestamp timeAgo={timeAgo} indexedAt={indexedAt} />
+          </div>
+        )
       )}
     </Container>
   );

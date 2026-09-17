@@ -67,7 +67,7 @@ export function SettingsInfo({ className, hideFAQ = false }: SettingsInfoProps) 
 
       {/* Version Section */}
       <Container overrideDefaults className="flex flex-col gap-2">
-        <Typography as="span" size="lg" className="font-light text-muted-foreground">
+        <Typography as="span" size="lg" className="font-medium text-muted-foreground">
           {'Version'}
         </Typography>
         <Typography as="span" size="md" overrideDefaults className="text-base font-medium text-secondary-foreground">

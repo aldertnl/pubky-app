@@ -515,6 +515,43 @@ function expectContendersToFit() {
 }
 
 describe('Hot — visual regression', () => {
+  it.each([VRT_VIEWPORT_DESKTOP, VRT_VIEWPORT_MOBILE])(
+    'scrolls to the original post on the first card click at $width px',
+    async (viewport) => {
+      await renderForVRT(<HotWithHeader />, { viewport });
+      // Screenshots clip this wrapper; navigation checks need a real scrolling document.
+      const root = document.querySelector<HTMLElement>('[data-testid="vrt-root"]')!;
+      root.style.height = 'auto';
+      root.style.overflow = 'visible';
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      await page.getByRole('button', { name: /^Rank 1,/ }).click();
+      await expect.poll(() => document.activeElement?.getAttribute('aria-label')).toBe('Original post conversation');
+      await expect
+        .poll(
+          () => {
+            const target = document.querySelector('[aria-label="Original post conversation"]')!;
+            const top = target.getBoundingClientRect().top;
+            return Math.abs(top - 104);
+          },
+          { timeout: 5000 },
+        )
+        .toBeLessThan(8);
+      // Clicking a different card must also work without a second click.
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      await page.getByRole('button', { name: /^Rank 2,/ }).click();
+      await expect
+        .poll(
+          () => {
+            const target = document.querySelector('[aria-label="Original post conversation"]')!;
+            const top = target.getBoundingClientRect().top;
+            return Math.abs(top - 104);
+          },
+          { timeout: 5000 },
+        )
+        .toBeLessThan(8);
+    },
+  );
+
   it('maps My network to WoT for topics and untagged idea candidates', async () => {
     const { useHotStore } = await import('@/stores/hot/hot.store');
     const { useHotTags } = await import('@/hooks/useHotTags/useHotTags');

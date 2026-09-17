@@ -14,7 +14,7 @@ exports[`CollectionDeleted - Snapshots > matches snapshot with default props 1`]
       data-testid="card-content"
     >
       <p
-        class="text-center font-normal text-muted-foreground"
+        class="text-center font-medium text-muted-foreground"
         data-size="sm"
         data-testid="typography"
       >

@@ -12,7 +12,7 @@ export function SettingsSwitchItem({ id, label, description, checked, disabled, 
           {label}
         </Typography>
         {description && (
-          <Typography size="sm" className="font-normal text-muted-foreground">
+          <Typography size="sm" className="font-medium text-muted-foreground">
             {description}
           </Typography>
         )}

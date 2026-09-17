@@ -370,7 +370,7 @@ describe('FeedbackCard', () => {
 
       const heading = screen.getByText('Feedback');
       expect(heading).toBeInTheDocument();
-      expect(heading).toHaveClass('font-light', 'text-muted-foreground');
+      expect(heading).toHaveClass('font-medium', 'text-muted-foreground');
     });
 
     it('renders feedback question button', async () => {

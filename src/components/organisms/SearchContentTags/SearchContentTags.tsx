@@ -26,7 +26,7 @@ export function SearchContentTags() {
 
   return (
     <Container overrideDefaults data-cy="search-content-tags-section" className="flex w-full flex-col gap-4">
-      <Heading level={2} size="lg" className="font-light text-muted-foreground">
+      <Heading level={2} size="lg" className="font-medium text-muted-foreground">
         {'Tags'}
       </Heading>
       <Container overrideDefaults className="flex flex-wrap gap-2">

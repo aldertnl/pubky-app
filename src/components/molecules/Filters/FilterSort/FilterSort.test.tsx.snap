@@ -13,7 +13,7 @@ exports[`FilterSort - Snapshots > matches snapshot with Popularity content selec
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Sort
@@ -134,7 +134,7 @@ exports[`FilterSort - Snapshots > matches snapshot with Recent content selected 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Sort
@@ -255,7 +255,7 @@ exports[`FilterSort - Snapshots > matches snapshot with default props 1`] = `
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Sort
@@ -376,7 +376,7 @@ exports[`FilterSort - Snapshots > matches snapshot with disabled state 1`] = `
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Sort

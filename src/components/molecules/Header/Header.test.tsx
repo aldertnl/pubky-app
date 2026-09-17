@@ -158,6 +158,7 @@ describe('Header Components', () => {
     refresh: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
+    bfcacheId: 'test-bfcache',
   };
 
   beforeEach(() => {
@@ -254,7 +255,7 @@ describe('Header Components', () => {
       render(<HeaderTitle currentTitle="Test Title" />);
 
       const title = screen.getByText('Test Title');
-      expect(title).toHaveClass('text-muted-foreground', 'font-normal');
+      expect(title).toHaveClass('text-muted-foreground', 'font-medium');
     });
 
     it('applies correct heading attributes', () => {
@@ -606,6 +607,7 @@ describe('Header Components - Snapshots', () => {
     refresh: vi.fn(),
     replace: vi.fn(),
     prefetch: vi.fn(),
+    bfcacheId: 'test-bfcache',
   };
 
   beforeEach(() => {

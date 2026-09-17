@@ -366,7 +366,7 @@ exports[`Breadcrumb - Snapshots > BreadcrumbPage > matches snapshot with custom 
     <span
       aria-current="page"
       aria-disabled="true"
-      class="font-normal text-foreground custom-page"
+      class="font-medium text-foreground custom-page"
       role="link"
     >
       Current Page
@@ -386,7 +386,7 @@ exports[`Breadcrumb - Snapshots > BreadcrumbPage > matches snapshot with default
     <span
       aria-current="page"
       aria-disabled="true"
-      class="font-normal text-foreground"
+      class="font-medium text-foreground"
       role="link"
     >
       Current Page
@@ -830,7 +830,7 @@ exports[`Breadcrumb - Snapshots > Complete Breadcrumb Examples > matches snapsho
     <span
       aria-current="page"
       aria-disabled="true"
-      class="font-normal text-foreground"
+      class="font-medium text-foreground"
       role="link"
     >
       Product Details
@@ -887,7 +887,7 @@ exports[`Breadcrumb - Snapshots > Complete Breadcrumb Examples > matches snapsho
     <span
       aria-current="page"
       aria-disabled="true"
-      class="font-normal text-foreground"
+      class="font-medium text-foreground"
       role="link"
     >
       Current
@@ -981,7 +981,7 @@ exports[`Breadcrumb - Snapshots > Complete Breadcrumb Examples > matches snapsho
     <span
       aria-current="page"
       aria-disabled="true"
-      class="font-normal text-foreground"
+      class="font-medium text-foreground"
       role="link"
     >
       Current

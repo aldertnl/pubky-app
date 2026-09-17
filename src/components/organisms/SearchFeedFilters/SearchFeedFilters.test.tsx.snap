@@ -22,7 +22,7 @@ exports[`SearchFeedFilters - Mobile Snapshots > matches full-text sidebar filter
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Layout
@@ -193,7 +193,7 @@ exports[`SearchFeedFilters - Mobile Snapshots > matches full-text sidebar filter
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Content
@@ -574,7 +574,7 @@ exports[`SearchFeedFilters - Snapshots > matches full-text drawer filters snapsh
         id="radix-normalized"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           Layout
@@ -806,7 +806,7 @@ exports[`SearchFeedFilters - Snapshots > matches full-text drawer filters snapsh
         id="radix-normalized"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           Content
@@ -1190,7 +1190,7 @@ exports[`SearchFeedFilters - Snapshots > matches full-text filters snapshot with
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Layout
@@ -1422,7 +1422,7 @@ exports[`SearchFeedFilters - Snapshots > matches full-text filters snapshot with
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Content
@@ -1803,7 +1803,7 @@ exports[`SearchFeedFilters - Snapshots > matches full-text mobile-shell filters 
         id="radix-normalized"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           Content
@@ -2183,7 +2183,7 @@ exports[`SearchFeedFilters - Snapshots > matches tag-search filters snapshot 1`]
         id="radix-normalized"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           Sort
@@ -2305,7 +2305,7 @@ exports[`SearchFeedFilters - Snapshots > matches tag-search filters snapshot 1`]
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Layout
@@ -2537,7 +2537,7 @@ exports[`SearchFeedFilters - Snapshots > matches tag-search filters snapshot 1`]
           id="radix-normalized"
         >
           <h2
-            class="text-2xl font-light text-muted-foreground"
+            class="text-2xl font-medium text-muted-foreground"
             data-testid="heading-2"
           >
             Content

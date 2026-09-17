@@ -1,6 +1,8 @@
 'use client';
+import { scrollToArenaTarget } from '@/libs/arena/scrollToArenaTarget';
+import { ArenaAwardsSection } from './ArenaAwardsSection';
 
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
+import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
   Activity,
@@ -50,6 +52,7 @@ import { AvatarGroup } from '@/molecules/AvatarGroup/AvatarGroup';
 import { CONTENT_FILTER_OPTIONS } from '@/molecules/Filters/FilterContent/FilterContent.constants';
 import { REACH_FILTER_META } from '@/molecules/Filters/FilterReach/FilterReach';
 import { PostTag } from '@/molecules/PostTag/PostTag';
+import { AwardsEntry } from '@/organisms/Awards/AwardsEntry';
 import { type NexusHotTag, UserStreamReach } from '@/services/nexus/nexus.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { CONTENT, type ContentType, REACH, type ReachType } from '@/stores/home/home.types';
@@ -126,6 +129,7 @@ const RANK_OPTIONS = [
 type PostWindow = { timeframe: TimeframeType; now: number };
 
 type StageProps = {
+  muteControlTarget: HTMLDivElement | null;
   topics: NexusHotTag[];
   postWindow: PostWindow;
   topic: ArenaTopicFilter;
@@ -133,7 +137,6 @@ type StageProps = {
   isList: boolean;
   metric: ArenaRanking;
   content: ArenaContent;
-  muteControlTarget: HTMLDivElement | null;
 };
 
 export function Arena() {
@@ -143,9 +146,9 @@ export function Arena() {
   const { requireAuth } = useRequireAuth();
   const isPhone = useIsMobile({ breakpoint: 'sm' });
   const [isList, setIsList] = useState(false);
+  const [muteControlTarget, setMuteControlTarget] = useState<HTMLDivElement | null>(null);
   const displayAsGrid = isPhone || isList;
   const [resetCount, setResetCount] = useState(0);
-  const [muteControlTarget, setMuteControlTarget] = useState<HTMLDivElement | null>(null);
   const [metric, setMetric] = useState<ArenaRanking>('popular');
   const [content, setContent] = useState<ArenaContent>(CONTENT.ALL);
   const contentIndicator = POST_CONTENT_OPTIONS.find((option) => option.value === content) ?? CONTENT_INDICATOR;
@@ -197,7 +200,6 @@ export function Arena() {
       <div className={styles.toolbar}>
         <div className={cn(styles.filters, 'font-medium')} role="group" aria-label="Arena filters">
           <div className={styles.filterClause}>
-            <span className="hidden text-xs font-bold sm:inline">Show</span>{' '}
             <ArenaFilterMenu
               label="Timeframe"
               value={timeframe}
@@ -211,7 +213,6 @@ export function Arena() {
                 );
                 setTimeframe(value);
               }}
-              lowercase
             />
           </div>{' '}
           <div className={styles.filterClause}>
@@ -269,9 +270,13 @@ export function Arena() {
               </Button>
             </div>
           </div>
+          <div className="ml-auto shrink-0">
+            <AwardsEntry />
+          </div>
         </div>
       </div>
       <ArenaTopics
+        muteControlTarget={muteControlTarget}
         key={`${scope}:${resetCount}`}
         reach={effectiveReach}
         timeframe={timeframe}
@@ -281,7 +286,6 @@ export function Arena() {
         isList={displayAsGrid}
         metric={metric}
         content={content}
-        muteControlTarget={muteControlTarget}
       />
       <details className="mt-6 text-xs text-muted-foreground">
         <summary className="w-fit cursor-pointer text-xs leading-4 font-medium tracking-[0.075rem] uppercase">
@@ -575,6 +579,12 @@ function ArenaPeopleResults({
   stage: StageProps;
   people: ReturnType<typeof useArenaPeople>;
 }) {
+  const [awardTarget, setAwardTarget] = useState<{ user: string; postId?: string; request: number }>();
+  const [personScrollRequest, setPersonScrollRequest] = useState(0);
+  useLayoutEffect(() => {
+    if (!personScrollRequest) return;
+    return scrollToArenaTarget(conversationRef.current);
+  }, [personScrollRequest]);
   const conversationRef = useRef<HTMLDivElement>(null);
   const [chosen, setChosen] = useState<string | null>(null);
   const metric = props.metric as ArenaPeopleMetric;
@@ -602,20 +612,22 @@ function ArenaPeopleResults({
           </div>
         ) : (
           <ArenaPeopleFloor
+            onAwards={(user) => {
+              setAwardTarget((previous) => ({ user, request: (previous?.request ?? 0) + 1 }));
+            }}
             users={users}
             isList={props.isList}
             metric={metric}
             loading={loading}
             selectedId={selected?.id}
-            onSelect={setChosen}
+            onSelect={(id) => {
+              setChosen(id);
+              setPersonScrollRequest((request) => request + 1);
+            }}
             onExpand={() => {
               const target = conversationRef.current;
               if (!target) return;
-              target.focus({ preventScroll: true });
-              target.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                block: 'start',
-              });
+              scrollToArenaTarget(target);
             }}
           />
         )}
@@ -629,6 +641,8 @@ function ArenaPeopleResults({
         >
           <ArenaPersonConversation
             key={selected.id}
+            awardsScrollRequest={awardTarget?.user === selected.id ? awardTarget.request : 0}
+            eager={personScrollRequest > 0}
             author={selected.id}
             authorName={selected.name}
             postWindow={props.postWindow}
@@ -642,7 +656,15 @@ function ArenaPeopleResults({
 function ArenaTopic(
   props: Omit<StageProps, 'metric' | 'content'> & { reach: ReachType; metric: ArenaMetric; content: ContentType },
 ) {
+  const [awardTarget, setAwardTarget] = useState<{ user: string; postId?: string; request: number }>();
   const conversationRef = useRef<HTMLDivElement>(null);
+  const [scrollRequest, setScrollRequest] = useState(0);
+  useLayoutEffect(() => {
+    if (!scrollRequest) return;
+    const target = conversationRef.current;
+    if (!target) return;
+    return scrollToArenaTarget(target);
+  }, [scrollRequest]);
   const [showMuted, setShowMuted] = useState(false);
   const { isMuted } = useMutedUsers();
   const streamId = getArenaCandidateStreamId(
@@ -697,8 +719,8 @@ function ArenaTopic(
   }, [error, hasMore, ideas.length, loadMore, loading, loadingMore, needsMoreCandidates, postIds.length, stream.error]);
   return (
     <>
-      {props.muteControlTarget &&
-        (showMuted || (hiddenByMute && ranked.length > 0)) &&
+      {showMuted &&
+        props.muteControlTarget &&
         createPortal(
           <Button
             type="button"
@@ -706,15 +728,10 @@ function ArenaTopic(
             variant="ghost"
             className="text-xs text-muted-foreground"
             aria-pressed={showMuted}
-            onClick={() => setShowMuted(!showMuted)}
-            title="Temporarily show muted authors for these Arena filters"
+            onClick={() => setShowMuted(false)}
           >
-            {showMuted ? (
-              <EyeOff className="size-3.5" aria-hidden="true" />
-            ) : (
-              <Eye className="size-3.5" aria-hidden="true" />
-            )}
-            <span>{showMuted ? 'Hide muted' : 'Show muted'}</span>
+            <EyeOff className="size-3.5" aria-hidden="true" />
+            <span>Hide muted</span>
           </Button>,
           props.muteControlTarget,
         )}
@@ -735,7 +752,7 @@ function ArenaTopic(
                 <p>Posts are hidden by your mute settings.</p>
                 <Button className="mt-4" variant="secondary" onClick={() => setShowMuted(true)}>
                   <Eye className="size-4" aria-hidden="true" />
-                  <span>Show muted</span>
+                  <span>Muted</span>
                 </Button>
               </>
             ) : props.topic === null ? (
@@ -746,17 +763,19 @@ function ArenaTopic(
           </div>
         ) : (
           <ArenaFloor
+            onAwards={(user, postId) => {
+              const existing = postId ? document.getElementById(`post-awards-${postId}`) : null;
+              if (existing) {
+                scrollToArenaTarget(existing);
+                return;
+              }
+              setAwardTarget((previous) => ({ user, postId, request: (previous?.request ?? 0) + 1 }));
+            }}
             ideas={ranked}
             selectedId={selected?.id}
-            onSelect={setChosen}
-            onExpand={() => {
-              const target = conversationRef.current;
-              if (!target) return;
-              target.focus({ preventScroll: true });
-              target.scrollIntoView({
-                behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
-                block: 'start',
-              });
+            onSelect={(id) => {
+              setChosen(id);
+              setScrollRequest((request) => request + 1);
             }}
             isList={props.isList}
             metric={props.metric}
@@ -775,6 +794,7 @@ function ArenaTopic(
         >
           <ArenaConversation
             key={rootId}
+            eager={scrollRequest > 0}
             postWindow={props.postWindow}
             rootId={rootId}
             selectedId={selected.id}
@@ -782,6 +802,7 @@ function ArenaTopic(
           />
         </div>
       )}
+      {awardTarget && <ArenaAwardsSection {...awardTarget} />}
     </>
   );
 }

@@ -73,7 +73,7 @@ describe('CollectionDeleted', () => {
   it('applies muted-foreground centered text styling', () => {
     render(<CollectionDeleted />);
     const typography = screen.getByTestId('typography');
-    expect(typography).toHaveClass('text-center', 'font-normal', 'text-muted-foreground');
+    expect(typography).toHaveClass('text-center', 'font-medium', 'text-muted-foreground');
   });
 
   it('merges a caller-provided className onto the outer container', () => {

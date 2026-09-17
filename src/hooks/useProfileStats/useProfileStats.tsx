@@ -1,7 +1,9 @@
 'use client';
 
 import { UserController } from '@/controllers/user/user';
+import { useAwardNotificationCount, useAwards } from '@/hooks/useAwards/useAwards';
 import { isLocalFirstQueryEnabled, useLocalFirstQuery } from '@/hooks/useLocalFirstQuery/useLocalFirstQuery';
+import { isAwardVisible } from '@/libs/awards/visibility';
 import type { NexusUserCounts } from '@/services/nexus/nexus.types';
 import { useNotificationStore } from '@/stores/notification/notification.store';
 import { ProfileStats, UseProfileStatsOptions, UseProfileStatsResult } from './useProfileStats.types';
@@ -34,6 +36,8 @@ export function useProfileStats(userId: string, options?: UseProfileStatsOptions
   });
 
   // Get unread notifications count reactively from Zustand store
+  const awardNotifications = useAwardNotificationCount();
+  const awards = useAwards(userId, enabled);
   const unreadNotificationsCount = useNotificationStore((state) => state.selectUnread());
 
   // Build stats object from user counts
@@ -47,10 +51,12 @@ export function useProfileStats(userId: string, options?: UseProfileStatsOptions
   const actualPostsCount = Math.max(0, totalPosts - repliesCount - collectionsCount);
 
   const stats: ProfileStats = {
-    notifications: unreadNotificationsCount,
+    notifications: unreadNotificationsCount + awardNotifications,
     posts: actualPostsCount,
     replies: repliesCount,
     collections: collectionsCount,
+    awards: awards.state?.awards.filter((award) => isAwardVisible(awards.state?.choices[award.id]))
+      .length,
     followers: userCounts?.followers ?? 0,
     following: userCounts?.following ?? 0,
     friends: userCounts?.friends ?? 0,

@@ -55,7 +55,7 @@ export function ActiveUsers() {
           length: USERS_LIMIT,
         }).map((_, index) => <CompactUserListItemSkeleton key={`active-users-skeleton-${index}`} />)
       ) : users.length === 0 ? (
-        <Typography className="font-light text-muted-foreground">{'No users to show'}</Typography>
+        <Typography className="font-medium text-muted-foreground">{'No users to show'}</Typography>
       ) : (
         users.map((user) => (
           <UserListItem

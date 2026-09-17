@@ -28,11 +28,11 @@ export function CopyrightForm() {
               {'Copyright Removal Request'}
             </Typography>
 
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               {`Date: ${currentDate}`}
             </Typography>
 
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               {'Synonym Software, S.A. de C.V. ("Synonym")'}
               <br />
               87 avenida norte, calle El Mirador, edificio Torre Futura, oficina 06, nivel 11, colonia Escalón, del
@@ -42,7 +42,7 @@ export function CopyrightForm() {
             <Container overrideDefaults className="my-3 h-px w-full bg-border" aria-hidden="true" />
 
             <Container className="gap-6 rounded-lg bg-muted p-4">
-              <Typography size="sm" className="font-normal text-muted-foreground">
+              <Typography size="sm" className="font-medium text-muted-foreground">
                 {'Dear Synonym:'}
                 <br />
                 <br />
@@ -78,7 +78,7 @@ export function CopyrightForm() {
             />
 
             {roleError && (
-              <Typography id="copyright-role-error" size="sm" className="font-normal text-destructive" role="alert">
+              <Typography id="copyright-role-error" size="sm" className="font-medium text-destructive" role="alert">
                 {roleError}
               </Typography>
             )}
@@ -101,7 +101,7 @@ export function CopyrightForm() {
             <Container overrideDefaults className="my-3 h-px w-full bg-border" aria-hidden="true" />
 
             <Container className="gap-6 rounded-lg bg-muted p-4">
-              <Typography size="sm" className="font-normal text-muted-foreground">
+              <Typography size="sm" className="font-medium text-muted-foreground">
                 We hereby provide notice of copyright infringements pursuant to the terms of the Digital Millennium
                 Copyright Act (the &quot;Act&quot;) and the Pubky Terms and Conditions. Copyright Owner is the owner of
                 the copyrights in the following work(s) (collectively, the &quot;Work(s)&quot;):
@@ -133,7 +133,7 @@ export function CopyrightForm() {
             <Container overrideDefaults className="my-3 h-px w-full bg-border" aria-hidden="true" />
 
             <Container className="gap-6 rounded-lg bg-muted p-4">
-              <Typography size="sm" className="font-normal text-muted-foreground">
+              <Typography size="sm" className="font-medium text-muted-foreground">
                 It has come to Copyright Owner&apos;s attention that your platform (the &quot;Platform&quot;) displays,
                 provides access to or caches materials that infringe Copyright Owner&apos;s copyrights in the Work(s).
                 The following is a list of the infringing material(s) and the URL(s), if applicable, at which the
@@ -156,7 +156,7 @@ export function CopyrightForm() {
             <Container overrideDefaults className="my-3 h-px w-full bg-border" aria-hidden="true" />
 
             <Container className="gap-6 rounded-lg bg-muted p-4">
-              <Typography size="sm" className="font-normal text-muted-foreground">
+              <Typography size="sm" className="font-medium text-muted-foreground">
                 We have a good faith belief that the use of the Works described in this letter are not authorized by
                 Copyright Owner, any agent of Copyright Owner or any applicable law. The information in this
                 notification is accurate. We swear under penalty of perjury that we are authorized to act on behalf of

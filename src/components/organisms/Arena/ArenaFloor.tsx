@@ -1,7 +1,6 @@
 'use client';
 
 import { type CSSProperties, useEffect, useState } from 'react';
-import { Eye, Trophy } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Badge } from '@/atoms/Badge/Badge';
 import { Button } from '@/atoms/Button/Button';
@@ -27,8 +26,10 @@ import {
 } from '@/molecules/PostHeaderUserInfo/PostHeaderUserInfo.utils';
 import { POST_BODY_TYPOGRAPHY_CLASS } from '@/molecules/PostText/PostText.constants';
 import { AvatarWithFallback } from '@/organisms/AvatarWithFallback/AvatarWithFallback';
+import { AwardTrophy } from '@/organisms/Awards/AwardTrophy';
 import { ARENA_PLACEMENTS } from './Arena.constants';
 import styles from './Arena.module.css';
+import { ArenaPostPreview } from './ArenaPostPreview';
 import { ArenaStat } from './ArenaStats';
 
 const ARENA_GRID_IDEAS = 9;
@@ -89,6 +90,7 @@ export function ArenaFloor({
   selectedId,
   onSelect,
   onExpand,
+  onAwards,
   isList,
   metric,
   topic = '',
@@ -97,6 +99,7 @@ export function ArenaFloor({
 }: {
   ideas: RankedArenaIdea[];
   selectedId?: string;
+  onAwards?: (user: string, postId?: string) => void;
   onSelect: (id: string) => void;
   onExpand?: () => void;
   isList: boolean;
@@ -204,7 +207,11 @@ export function ArenaFloor({
                 overrideDefaults
                 type="button"
                 className={styles.idea}
-                onClick={() => onSelect(idea.id)}
+                onClick={() => {
+                  onSelect(idea.id);
+                  // Wait for the selected conversation to render before scrolling to it.
+                  if (onExpand) requestAnimationFrame(() => onExpand());
+                }}
                 aria-pressed={selectedId === idea.id}
                 aria-label={`${metric === 'newest' ? 'Position' : 'Rank'} ${idea.rank}, ${name}: ${idea.preview}. ${idea.tags} tags, ${idea.replies} replies${showAllStats ? `, ${idea.reposts} reposts, ${popularityScore} popularity points` : ''}${leading && lead ? `. ${lead}` : ''}`}
               >
@@ -242,24 +249,14 @@ export function ArenaFloor({
                     </span>
                   </div>
                   {leading ? (
-                    <>
-                      <Badge
-                        variant="outline"
-                        className={cn(styles.rankPill, styles.rank, styles.leadingRank, 'uppercase')}
-                        aria-live="polite"
-                      >
-                        #{idea.rank}
-                        <span className="hidden sm:inline">{` ${topic === null ? 'All' : topic} ${contentLabel}`}</span>
-                      </Badge>
-                      <span
-                        className={cn(styles.awardIcon, styles.postAward)}
-                        role="img"
-                        aria-label="Award: Coming soon"
-                        title="Coming soon"
-                      >
-                        <Trophy className="size-4" aria-hidden="true" />
-                      </span>
-                    </>
+                    <Badge
+                      variant="outline"
+                      className={cn(styles.rankPill, styles.rank, styles.leadingRank, 'uppercase')}
+                      aria-live="polite"
+                    >
+                      #{idea.rank}
+                      <span className="hidden sm:inline">{` ${topic === null ? 'All' : topic} ${contentLabel}`}</span>
+                    </Badge>
                   ) : (
                     <Badge variant="outline" className={cn(styles.rankPill, styles.rank)}>
                       #{idea.rank}
@@ -276,7 +273,7 @@ export function ArenaFloor({
                     leading && lead && styles.previewWithLead,
                   )}
                 >
-                  {idea.preview}
+                  <ArenaPostPreview text={idea.preview} />
                 </Typography>
                 {leading && lead && (
                   <Typography as="span" overrideDefaults className={styles.leadMargin}>
@@ -284,19 +281,12 @@ export function ArenaFloor({
                   </Typography>
                 )}
               </Button>
-              {selectedId === idea.id && onExpand && (
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="icon"
-                  className={cn(styles.awardIcon, styles.expandPost)}
-                  aria-label="See full post"
-                  title="See full post"
-                  onClick={onExpand}
-                >
-                  <Eye className="size-4" aria-hidden="true" />
-                </Button>
-              )}
+              <AwardTrophy
+                onActivate={onAwards ? () => onAwards(idea.author, idea.id) : undefined}
+                user={idea.author}
+                postId={idea.id}
+                className={cn(styles.awardIcon, styles.postAward)}
+              />
             </Card>
           </motion.li>
         );

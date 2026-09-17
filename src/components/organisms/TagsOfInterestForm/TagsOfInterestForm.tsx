@@ -74,17 +74,17 @@ export const TagsOfInterestForm = () => {
             <Heading level={3} size="xl" className="text-2xl">
               {'Popular interests'}
               {!arePopularTagsLoading && (
-                <span className="font-normal text-muted-foreground">{` (${selectedPopularCount} selected)`}</span>
+                <span className="font-medium text-muted-foreground">{` (${selectedPopularCount} selected)`}</span>
               )}
             </Heading>
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               {'Select which topics you find interesting.'}
             </Typography>
           </Container>
           {arePopularTagsLoading ? (
             <PopularInterestTagsSkeleton />
           ) : popularTags.length === 0 ? (
-            <Typography size="sm" className="font-normal text-muted-foreground" data-testid="popular-interests-empty">
+            <Typography size="sm" className="font-medium text-muted-foreground" data-testid="popular-interests-empty">
               {'Popular interests are unavailable. You can still add your own.'}
             </Typography>
           ) : (
@@ -113,7 +113,7 @@ export const TagsOfInterestForm = () => {
             <Heading level={3} size="xl" className="text-2xl">
               {'Your interests'}
             </Heading>
-            <Typography size="sm" className="font-normal text-muted-foreground">
+            <Typography size="sm" className="font-medium text-muted-foreground">
               {'Add other topics you like.'}
             </Typography>
           </Container>

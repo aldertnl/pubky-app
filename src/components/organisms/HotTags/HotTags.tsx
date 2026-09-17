@@ -45,7 +45,7 @@ export function HotTags({ className }: HotTagsProps) {
       {isLoading ? (
         <HotTagsSkeleton />
       ) : displayTags.length === 0 ? (
-        <Typography className="font-light text-muted-foreground">{'No tags to show'}</Typography>
+        <Typography className="font-medium text-muted-foreground">{'No tags to show'}</Typography>
       ) : (
         <Container overrideDefaults className="flex w-full flex-col gap-2" data-cy="hot-tags-list">
           {displayTags.map((tag, index) => (

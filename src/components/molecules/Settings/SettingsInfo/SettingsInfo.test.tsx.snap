@@ -17,7 +17,7 @@ exports[`SettingsInfo - Snapshots > matches snapshot 1`] = `
         data-testid="filter-header"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           Terms of Service & Privacy
@@ -135,7 +135,7 @@ exports[`SettingsInfo - Snapshots > matches snapshot 1`] = `
         data-testid="filter-header"
       >
         <h2
-          class="text-2xl font-light text-muted-foreground"
+          class="text-2xl font-medium text-muted-foreground"
           data-testid="heading-2"
         >
           FAQ
@@ -408,7 +408,7 @@ exports[`SettingsInfo - Snapshots > matches snapshot 1`] = `
       data-testid="container"
     >
       <span
-        class="text-2xl font-light text-muted-foreground"
+        class="text-2xl font-medium text-muted-foreground"
         data-testid="typography"
       >
         Version

@@ -21,7 +21,7 @@ exports[`PostAttachmentsImagesAndVideos - Snapshots > matches snapshot with GIF 
       >
         <img
           alt="animated.gif"
-          class="rounded-md max-h-96 max-w-full object-contain"
+          class="rounded-md max-h-96 mx-auto h-auto w-auto max-w-full object-contain"
           data-fill="false"
           data-testid="image"
           src="https://example.com/animated.gif"
@@ -443,7 +443,7 @@ exports[`PostAttachmentsImagesAndVideos - Snapshots > matches snapshot with dial
       >
         <img
           alt="dialog-image.jpg"
-          class="rounded-md max-h-96 max-w-full object-contain"
+          class="rounded-md max-h-96 mx-auto h-auto w-auto max-w-full object-contain"
           data-fill="false"
           data-testid="image"
           src="https://example.com/dialog-feed.jpg"
@@ -1108,7 +1108,7 @@ exports[`PostAttachmentsImagesAndVideos - Snapshots > matches snapshot with sing
       >
         <img
           alt="snapshot-image.jpg"
-          class="rounded-md max-h-96 max-w-full object-contain"
+          class="rounded-md max-h-96 mx-auto h-auto w-auto max-w-full object-contain"
           data-fill="false"
           data-testid="image"
           src="https://example.com/snapshot-feed.jpg"

@@ -15,6 +15,7 @@ export interface PostMenuActionItem {
 
 export interface UsePostMenuActionsOptions {
   /** Callback when report action is clicked - opens the report dialog */
+  onRecognizeClick?: () => void;
   onReportClick: () => void;
   /** Callback when edit action is clicked - opens the edit dialog */
   onEditClick: () => void;

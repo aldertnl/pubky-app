@@ -6,7 +6,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with custom links 1`] =
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -57,7 +57,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with empty links 1`] = 
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -82,7 +82,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with empty links and is
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -141,7 +141,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with isOwnProfile true 
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -299,7 +299,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with links 1`] = `
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -423,7 +423,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with mailto link 1`] = 
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -478,7 +478,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with tel link 1`] = `
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links
@@ -526,7 +526,7 @@ exports[`ProfilePageLinks - Snapshots > matches snapshot with undefined links 1`
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Links

@@ -36,7 +36,7 @@ export function SidebarSection({
     >
       {/* Header */}
       <Container overrideDefaults className="flex w-full items-center justify-between">
-        <Heading level={2} size="lg" className="font-light text-muted-foreground">
+        <Heading level={2} size="lg" className="font-medium text-muted-foreground">
           {title}
         </Heading>
         {HeaderActionIcon && onHeaderAction && (

@@ -83,3 +83,6 @@ public/sw.js.map
 
 # AI PR Descriptions
 .prs
+
+# Local Arena awards ledger
+.arena/

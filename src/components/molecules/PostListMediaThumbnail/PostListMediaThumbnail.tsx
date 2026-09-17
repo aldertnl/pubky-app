@@ -38,7 +38,7 @@ export function PostListMediaThumbnail({ postId }: PostListMediaThumbnailProps) 
           overrideDefaults
           type="button"
           aria-label="Open media preview"
-          className={cn('relative shrink-0 cursor-pointer overflow-hidden', 'hidden h-10 w-[71px] rounded-sm md:block')}
+          className={cn('relative shrink-0 cursor-pointer overflow-hidden', 'hidden h-10 w-[71px] rounded-md md:block')}
           onClick={(event) => {
             event.stopPropagation();
             openPreview(previewIndex, event);

@@ -275,7 +275,7 @@ export const PostText = memo(function PostText({
                 {...rest}
                 className={cn(
                   className,
-                  'text-[16.5px] leading-6 font-light text-muted-foreground',
+                  'text-[16.5px] leading-6 font-medium text-muted-foreground',
                   // @tailwindcss/typography styles h1-h4 only, so give h5/h6 the same
                   // margin scale as prose h4 in full articles; without it they would
                   // sit flush between paragraphs now that pre-line no longer applies.
@@ -294,7 +294,7 @@ export const PostText = memo(function PostText({
                 {...rest}
                 className={cn(
                   className,
-                  'text-[16.25px] leading-6 font-light text-muted-foreground',
+                  'text-[16.25px] leading-6 font-medium text-muted-foreground',
                   fullArticle && 'mt-[1.5em] mb-[0.5em]',
                 )}
               >

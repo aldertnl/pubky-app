@@ -14,12 +14,14 @@ export function PostMenuActionsContent({
   postId,
   variant,
   onActionComplete,
+  onRecognizeClick,
   onReportClick,
   onEditClick,
   onDeleteClick,
   isDeleting,
 }: PostMenuActionsContentProps) {
   const { menuItems, isLoading } = usePostMenuActions(postId, {
+    onRecognizeClick,
     onReportClick,
     onEditClick,
     onDeleteClick,

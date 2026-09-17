@@ -23,6 +23,7 @@ import { parseStatus } from '@/libs/status/status';
 import { cn, formatPublicKey } from '@/libs/utils/utils';
 import { PostText } from '@/molecules/PostText/PostText';
 import { StatusPickerWrapper } from '@/molecules/StatusPicker/StatusPickerWrapper/StatusPickerWrapper';
+import { ProfileAwards } from '@/organisms/Awards/ProfileAwards';
 import { AvatarWithFallback } from '../AvatarWithFallback/AvatarWithFallback';
 import { ProfileMenuActions } from '../ProfileMenuActions/ProfileMenuActions';
 import type { ProfilePageHeaderProps } from './ProfilePageHeader.types';
@@ -125,13 +126,10 @@ export function ProfilePageHeader({ profile, actions, isOwnProfile = true, userI
         <Container
           overrideDefaults={true}
           className={cn(
-            'col-start-2 row-start-1 flex min-w-0 flex-col items-start gap-1 self-center lg:col-auto lg:row-auto lg:self-auto lg:text-left',
+            'col-start-2 row-start-1 flex w-full min-w-0 flex-col items-start gap-1 self-center lg:col-auto lg:row-auto lg:self-auto lg:text-left',
           )}
         >
-          <Container
-            overrideDefaults
-            className="max-width-profile-page-header flex w-full min-w-0 items-center gap-2 sm:max-w-xl lg:max-w-full lg:gap-3"
-          >
+          <Container overrideDefaults className="flex w-full min-w-0 items-center gap-2 lg:gap-3">
             {/* leading-none + ellipsis clips Inter Tight descenders. Bottom padding keeps the
                 missing ~9px inside the clip box (overflow clips at the padding edge) and the
                 negative margin cancels it out of layout, so the 60px line and the emoji
@@ -170,6 +168,7 @@ export function ProfilePageHeader({ profile, actions, isOwnProfile = true, userI
                 </TooltipPortal>
               </Tooltip>
             )}
+            <ProfileAwards user={userId} />
           </Container>
           <Container overrideDefaults className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1 lg:hidden">
             <Container overrideDefaults className="flex min-w-0 items-center gap-1">

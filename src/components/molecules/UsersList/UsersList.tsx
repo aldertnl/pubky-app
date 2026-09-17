@@ -28,7 +28,7 @@ export function UsersList({ users, onFollow, onSeeAll, className, title, maxUser
   return (
     <Container className={cn('flex flex-col gap-2 bg-background', className)} {...props}>
       {title && (
-        <Heading level={2} size="lg" className={cn('font-light text-muted-foreground', className)}>
+        <Heading level={2} size="lg" className={cn('font-medium text-muted-foreground', className)}>
           {title}
         </Heading>
       )}

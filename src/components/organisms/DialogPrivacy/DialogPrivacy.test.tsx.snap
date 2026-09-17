@@ -38,13 +38,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
         data-testid="container"
       >
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Effective Date: January 29, 2026
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           SCOPE
@@ -52,7 +52,7 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
            This Privacy Policy (“Policy“) describes how Synonym Software Ltd. treats personal information on the Pubky progressive web application and the products, services and features made available as part of the application (collectively, the “Platform“).
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           POLICY SUMMARY
@@ -60,7 +60,7 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
            This summary offers a concise overview of how Synonym Software Ltd. (“Synonym“) collects, uses, shares, and protects your personal information on the Pubky platform. For full details, please read the complete Privacy Policy.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           NOTICE AT COLLECTION
@@ -68,19 +68,19 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           We collect, and in the past 12 months have collected, the following categories of information from and about you: identifiers (such as your public key, IP address, account identifiers and cryptographic keys), internet or similar network activity (such as device information, log data, and usage information) and communications (where you contact us directly). We collect these categories of information from you in order to provide our services to you, to run our business, to communicate with you, and as required by law. We may have disclosed each of these categories of personal information for a business purpose as described below. We have not “sold” or “shared” personal information in the past 12 months, as those terms are defined by the California Consumer Privacy Act (“CCPA”) or General Data Protection Regulation (“GDPR”). For a description of your rights under the CCPA or GDPR, and instructions on how to exercise your rights, please see the Your Privacy Rights section below.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We will retain each of these categories of personal information for as long as it is necessary for the purposes for which it was collected. Retention periods are determined based on: (i) duration of the user relationship; (ii) legal and regulatory requirements; (iii) security and fraud-prevention needs; and (iv) dispute resolution obligations. When data is no longer required, it is securely deleted or anonymized.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           TYPES OF INFORMATION WE COLLECT
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We collect information from you and about you. Here are some examples of the information we may collect:
@@ -144,13 +144,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           LEGAL BASIS
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We must have a lawful basis (a valid legal reason) for using your information, and more specifically personal data. Our legal basis will be one of the following:
@@ -190,13 +190,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           HOW WE COLLECT YOUR INFORMATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We collect your information in different ways. Below are some examples of how we may collect your information.
@@ -236,13 +236,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           HOW WE USE YOUR INFORMATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Examples of how we may use your information include:
@@ -281,19 +281,19 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           HUMAN VERIFICATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           To prevent spam and verify you are not a robot, we offer the following verification options:
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           <strong>
@@ -318,13 +318,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Phone number verifications are rate-limited to prevent abuse. SMS verification may not be available in all regions.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           <strong>
@@ -346,13 +346,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Lightning payments are processed through our own infrastructure. Lightning verification may not be available in all regions due to applicable laws and regulatory requirements.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           <strong>
@@ -361,7 +361,7 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
            You may also verify your account using an invite code provided by another user or by Synonym.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           <strong>
@@ -392,19 +392,19 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           This data remains on your device and syncs with our servers when you're online. You can clear this data through your browser settings.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           HOW WE SHARE YOUR INFORMATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We may share your information in the following ways:
@@ -454,13 +454,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           CHILDREN UNDER 18
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           The Platform where this Policy is located is meant for adults. We do not knowingly collect personally identifiable data from persons under the age of 18, and strive to comply with the provisions of COPPA (The Children’s Online Privacy Protection Act). If you are a parent or legal guardian and think your child under 18 has provided us with information, please contact us at
@@ -482,31 +482,31 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           .
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           CHOICES REGARDING YOUR INFORMATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           You have certain choices about how we use your information. Certain choices you make are browser and device specific.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           SMS Messages:
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           We may send you SMS messages in order to verify your identity as part of the account creation process. Note that message and data rates may apply. The frequency of messages may vary. You may reply “HELP” if you need assistance or “STOP” to stop receiving SMS messages. If you opt out, we may send you a confirmation SMS message to acknowledge your request. We do not sell or share phone numbers to third parties for their own marketing purposes.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Cookies & Other Tracking Technologies:
@@ -530,7 +530,7 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Our Do Not Track Policy:
@@ -550,13 +550,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           YOUR PRIVACY RIGHTS
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Based on your state or country of residence, you may have the rights listed below with respect to the personal information that we maintain about you. We may take steps to verify your identity, as permitted or required under applicable law, before we process your request. Verification may include asking you to provide information about yourself that we can match against information already in our possession.
@@ -636,19 +636,19 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           </li>
         </ul>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Agents that you have authorized to act on your behalf may also submit requests as instructed below. The agent must also provide evidence that they have your written permission to submit a request on your behalf. If we are unable to verify the authenticity of a request, we may ask you for more information or may deny the request.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Synonym or third-party providers may use machine learning models or automated decision-making technology (“ADMT”) to perform fraud detection and geoblocking, which might restrict data subjects’ access to the products, services, and features available through the Pubky platform. Data subjects have the right to obtain human intervention to express their point of view and contest such ADMT.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Individuals who wish to exercise their rights as provided in this section, including submitting a request to opt-out or to access information about our use of ADMT, can contact us at
@@ -669,67 +669,67 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           . In addition, you may delete your account or data associated with your account at any time by visiting the ‘Settings’ dashboard within the Pubky application.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Should you wish to report a complaint or if you feel that we have not addressed your concern in a satisfactory manner, you may contact the supervisory authority of your state or country.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           SECURITY
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           The Internet is not 100% secure. We cannot promise that your use of our Platform will be completely safe. We encourage you to use caution when using the Internet. While we use reasonable means to safeguard personal information under our control, due to the decentralized nature of the Platform, any information that you upload to the Platform may be shared in different locations and different servers. This may include servers not controlled or maintained by Synonym.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           STORAGE AND TRANSFER OF INFORMATION
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Due to the decentralized nature of the Platform, information we maintain may be stored or hosted in any jurisdiction, including the United States. If you live outside of the United States, you understand and agree that we may transfer your personal information to the United States. This Platform is subject to the laws of the United States, which may not provide the same level of protections as those in your own country. Personal information processed and stored in another country, including the United States, may be subject to disclosure or access requests by the governments, courts or law enforcement or regulatory agencies in that country according to its laws.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Where personal data is transferred outside the European Economic Area, such transfers are carried out on the basis of appropriate safeguards under Article 44-49 GDPR, including Standard Contractual Clauses via third-party service providers.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           LINKS
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           Our Platform may contain links to other third-party sites or platform that are not governed by this Policy. If you click on a link to a third-party site, you will be taken to a site we do not control. We are not responsible for the privacy practices used by third-party sites. We suggest that you read the privacy policies of those sites carefully.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           When you view posts containing links to video or social media platforms, your browser may load embedded content directly from those services (e.g., YouTube, Twitter/X, Vimeo). Those services may collect information according to their own privacy policies.
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           HOW TO CONTACT US
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           If you have any questions, comments or concerns with respect to our privacy practices or this Policy, or wish to update your information, please feel free to contact us at
@@ -743,13 +743,13 @@ exports[`DialogPrivacy - Snapshots > matches snapshot for default DialogPrivacy 
           .
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           CHANGES IN POLICY
         </p>
         <p
-          class="text-muted-foreground text-base font-normal"
+          class="text-muted-foreground text-base font-medium"
           data-testid="typography"
         >
           From time to time, we may change our Policy. We will notify you of any material changes to our Policy as required by law. We will also post an updated copy on our Platform. Please check our Platform periodically for updates.

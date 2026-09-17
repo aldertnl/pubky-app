@@ -82,7 +82,7 @@ export function HotTagsCardsSection({ className }: HotTagsCardsSectionProps) {
   if (error) {
     return (
       <Container overrideDefaults className={cn('flex w-full flex-col gap-2', className)}>
-        <Heading level={5} size="lg" className="font-light text-muted-foreground">
+        <Heading level={5} size="lg" className="font-medium text-muted-foreground">
           {'Hot tags'}
         </Heading>
         <Typography className="text-destructive">{'Failed to load tags'}</Typography>
@@ -93,7 +93,7 @@ export function HotTagsCardsSection({ className }: HotTagsCardsSectionProps) {
   if (isEffectivelyLoading) {
     return (
       <Container overrideDefaults className={cn('flex w-full flex-col gap-2', className)}>
-        <Heading level={5} size="lg" className="font-light text-muted-foreground">
+        <Heading level={5} size="lg" className="font-medium text-muted-foreground">
           {'Hot tags'}
         </Heading>
         <HotTagsCardsSectionSkeleton maxAvatars={maxAvatars} />
@@ -107,11 +107,11 @@ export function HotTagsCardsSection({ className }: HotTagsCardsSectionProps) {
       className={cn('flex w-full flex-col gap-2', className)}
       data-testid="hot-tags-cards-section"
     >
-      <Heading level={5} size="lg" className="font-light text-muted-foreground">
+      <Heading level={5} size="lg" className="font-medium text-muted-foreground">
         {'Hot tags'}
       </Heading>
       {featuredTags.length === 0 ? (
-        <Typography className="font-light text-muted-foreground">{'No tags to show'}</Typography>
+        <Typography className="font-medium text-muted-foreground">{'No tags to show'}</Typography>
       ) : (
         <Container overrideDefaults className="flex flex-col gap-3 sm:flex-row">
           {featuredTags.map((tag, index) => (

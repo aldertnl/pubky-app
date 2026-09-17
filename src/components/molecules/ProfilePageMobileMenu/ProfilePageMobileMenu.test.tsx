@@ -61,6 +61,7 @@ describe('ProfilePageMobileMenu', () => {
       'Friends',
       'Tagged',
       'Collections',
+      'Awards',
     ]);
   });
 
@@ -84,6 +85,7 @@ describe('ProfilePageMobileMenu', () => {
       'Friends',
       'Tagged',
       'Collections',
+      'Awards',
     ]);
   });
 

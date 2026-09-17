@@ -22,7 +22,7 @@ const MAX_UNPRODUCTIVE_AUTO_LOADS = 3;
  * - Infinite scroll pagination
  * - Loading/error/empty states
  */
-export function NotificationsContainer() {
+export function NotificationsContainer({ hideEmpty = false }: { hideEmpty?: boolean } = {}) {
   const {
     notifications,
     unreadNotifications,
@@ -79,12 +79,12 @@ export function NotificationsContainer() {
 
   // Empty state
   if (notifications.length === 0) {
-    return <NotificationsEmpty />;
+    return hideEmpty ? null : <NotificationsEmpty />;
   }
 
   return (
     <>
-      <Heading level={5} size="lg" className="leading-normal font-light text-muted-foreground lg:hidden">
+      <Heading level={5} size="lg" className="leading-normal font-medium text-muted-foreground lg:hidden">
         Notifications {unreadNotifications.length > 0 && `(${unreadNotifications.length})`}
       </Heading>
       <NotificationsList entries={entries} unreadNotifications={unreadNotifications} />

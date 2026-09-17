@@ -86,7 +86,8 @@ export const PostArticleDetail = ({ postId, content, attachments, isBlurred }: P
           postId={postId}
           onReplyClick={openReplyDialog}
           onRepostClick={openRepostDialog}
-          className="mt-3 mb-6"
+          className="mt-3 mb-6 md:flex-col md:items-start md:justify-start"
+          actionsClassName="justify-start"
         />
       ) : (
         <PostActionsBar

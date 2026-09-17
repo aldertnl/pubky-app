@@ -11,7 +11,7 @@ interface DialogPrivacyProps {
 }
 
 export function DialogPrivacy({ trigger }: DialogPrivacyProps) {
-  const baseCSS = 'text-muted-foreground text-base font-normal';
+  const baseCSS = 'text-muted-foreground text-base font-medium';
 
   const defaultTrigger = (
     <Typography as="span" size="sm" className="cursor-pointer font-medium text-brand">

@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { cva } from 'class-variance-authority';
-import { Ellipsis, MessageCircle, Repeat, Tag } from 'lucide-react';
+import { Ellipsis, MessageCircle, Repeat, Tag, Trophy } from 'lucide-react';
 import { Button } from '@/atoms/Button/Button';
 import { Container } from '@/atoms/Container/Container';
 import { Typography } from '@/atoms/Typography/Typography';
@@ -9,6 +10,8 @@ import { usePostCounts } from '@/hooks/usePostCounts/usePostCounts';
 import { usePostDetails } from '@/hooks/usePostDetails/usePostDetails';
 import { useRequireAuth } from '@/hooks/useRequireAuth/useRequireAuth';
 import { cn } from '@/libs/utils/utils';
+import { RecognizeDialog } from '@/organisms/Awards/RecognizeDialog';
+import { useAuthStore } from '@/stores/auth/auth.store';
 import { PostMenuActions } from '../PostMenuActions/PostMenuActions';
 import { PostSavePicker } from '../PostSavePicker/PostSavePicker';
 import { POST_ACTION_COUNT_TYPOGRAPHY_CLASS } from './PostActionsBar.constants';
@@ -46,6 +49,9 @@ export function PostActionsBar({
   className,
   variant = 'default',
 }: PostActionsBarProps) {
+  const [recognizeOpen, setRecognizeOpen] = useState(false);
+  const currentUser = useAuthStore((state) => state.currentUserPubky);
+  const isOwnPost = postId.split(':')[0] === currentUser;
   const { postCounts, isLoading: isCountsLoading } = usePostCounts(postId);
   const tagCountMode = usePostTagCountMode();
   const { postDetails } = usePostDetails(postId);
@@ -117,7 +123,21 @@ export function PostActionsBar({
         ),
       )}
       {!isCollection && <PostSavePicker postId={postId} buttonClassName={buttonClassName} />}
+      {!isOwnPost && (
+        <Button
+          {...commonButtonProps}
+          aria-label="Recognize contribution"
+          title="Recognize contribution"
+          onClick={(event) => {
+            event.stopPropagation();
+            requireAuth(() => setRecognizeOpen(true));
+          }}
+        >
+          <Trophy />
+        </Button>
+      )}
       <PostMenuActions postId={postId} trigger={moreButton} />
+      {recognizeOpen && <RecognizeDialog postId={postId} open onOpenChange={setRecognizeOpen} />}
     </Container>
   );
 }

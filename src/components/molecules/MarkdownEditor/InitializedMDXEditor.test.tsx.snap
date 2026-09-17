@@ -91,7 +91,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot in markdown mode 1`
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"
@@ -323,7 +323,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with approaching ma
       </div>
       <textarea
         autocomplete="off"
-        class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+        class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
         data-testid="markdown-textarea"
         maxlength="1000"
         placeholder="Start writing your masterpiece"
@@ -589,7 +589,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with custom classNa
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"
@@ -820,7 +820,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with default props 
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"
@@ -1051,7 +1051,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with emoji picker o
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"
@@ -1291,7 +1291,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with markdown conte
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"
@@ -1523,7 +1523,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with reached max le
       </div>
       <textarea
         autocomplete="off"
-        class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+        class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
         data-testid="markdown-textarea"
         maxlength="1000"
         placeholder="Start writing your masterpiece"
@@ -1791,7 +1791,7 @@ exports[`InitializedMDXEditor - Snapshots > matches snapshot with readOnly prop 
     </div>
     <textarea
       autocomplete="off"
-      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-normal text-foreground placeholder:text-muted-foreground/70"
+      class="max-h-[60dvh] min-h-11 rounded-none pt-4 font-medium text-foreground placeholder:text-muted-foreground/70"
       data-testid="markdown-textarea"
       maxlength="1000"
       placeholder="Start writing your masterpiece"

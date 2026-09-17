@@ -7,7 +7,7 @@ exports[`ProfilePageTaggedAs - Snapshots > matches snapshot with empty tags 1`] 
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Tagged as
@@ -70,7 +70,7 @@ exports[`ProfilePageTaggedAs - Snapshots > matches snapshot with tags 1`] = `
   data-testid="container"
 >
   <h2
-    class="text-2xl font-light text-muted-foreground"
+    class="text-2xl font-medium text-muted-foreground"
     data-testid="heading-2"
   >
     Tagged as

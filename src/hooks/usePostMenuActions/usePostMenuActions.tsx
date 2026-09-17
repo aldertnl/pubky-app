@@ -20,6 +20,7 @@ import {
   Megaphone,
   MegaphoneOff,
   Trash,
+  Trophy,
   UserRoundMinus,
   UserRoundPlus,
 } from 'lucide-react';
@@ -46,7 +47,7 @@ import type {
 } from './usePostMenuActions.types';
 
 export function usePostMenuActions(postId: string, options: UsePostMenuActionsOptions): UsePostMenuActionsResult {
-  const { onReportClick, onEditClick, onDeleteClick, isDeleting = false } = options;
+  const { onRecognizeClick, onReportClick, onEditClick, onDeleteClick, isDeleting = false } = options;
   const parsedId = parseCompositeId(postId);
   // Normalize author ID to ensure consistent format (strip pubky: or pk: prefix)
   // This is necessary because composite IDs may contain prefixed pubky IDs
@@ -78,6 +79,14 @@ export function usePostMenuActions(postId: string, options: UsePostMenuActionsOp
   const isLoading = isPostLoading || isAuthorLoading || isFollowingLoading || isMutedUsersLoading;
   const postUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}${POST_ROUTES.POST}/${parsedId.pubky}/${parsedId.id}`;
   const menuItems: PostMenuActionItem[] = [];
+  if (!isOwnPost && onRecognizeClick)
+    menuItems.push({
+      id: POST_MENU_ACTION_IDS.RECOGNIZE,
+      label: 'Recognize contribution',
+      icon: Trophy,
+      onClick: onRecognizeClick,
+      variant: POST_MENU_ACTION_VARIANTS.DEFAULT,
+    });
   if (!isOwnPost) {
     menuItems.push({
       id: POST_MENU_ACTION_IDS.FOLLOW,

@@ -13,7 +13,7 @@ exports[`FilterContent - Snapshots > matches snapshot with All content selected 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -386,7 +386,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Articles content sele
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -759,7 +759,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Collections content s
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -1132,7 +1132,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Files content selecte
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -1505,7 +1505,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Images content select
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -1878,7 +1878,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Links content selecte
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -2251,7 +2251,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Posts content selecte
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -2624,7 +2624,7 @@ exports[`FilterContent - Snapshots > matches snapshot with Videos content select
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -2997,7 +2997,7 @@ exports[`FilterContent - Snapshots > matches snapshot with default props 1`] = `
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
@@ -3370,7 +3370,7 @@ exports[`FilterContent - Snapshots > matches snapshot with disabled state 1`] = 
     id="radix-normalized"
   >
     <h2
-      class="text-2xl font-light text-muted-foreground"
+      class="text-2xl font-medium text-muted-foreground"
       data-testid="heading-2"
     >
       Content
