@@ -52,6 +52,7 @@ export function AwardsContent({
     awards.isOwn && !showcase
       ? (awards.state?.awards.filter((a) => !isAwardVisible(awards.state?.choices[a.id])) ?? [])
       : [];
+  const isEmptyGivenState = tab === 'awarded' && awards.state?.issued.length === 0;
   return (
     <div className="flex flex-col gap-4">
       {!embedded && (
@@ -126,7 +127,17 @@ export function AwardsContent({
                   </p>
                 )}
                 {owner && awards.state && !awards.state.issued.length && (
-                  <p className="py-8 text-center text-sm text-muted-foreground">No recognitions awarded yet.</p>
+                  <div className="py-8 text-center">
+                    <Gift className="mx-auto mb-3 size-7 text-muted-foreground" />
+                    <p className="text-base">No recognitions awarded yet.</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Give someone an award and tell them why their contribution made a difference.
+                      <span className="mt-1 block">
+                        You can hand out 3 recognition awards each week{' '}
+                        <span className="text-foreground">({awards.state.remaining} remaining)</span>.
+                      </span>
+                    </p>
+                  </div>
                 )}
               </>
             )}
@@ -138,8 +149,8 @@ export function AwardsContent({
             {tab === 'collection' && (!owner || awards.state) && !visibleAwards.length && (
               <div className="py-8 text-center">
                 <Trophy className="mx-auto mb-3 size-7 text-muted-foreground" />
-                <p className="text-sm">Your story starts with a contribution.</p>
-                <p className="mt-2 text-xs text-muted-foreground">
+                <p className="text-base">Your story starts with a contribution.</p>
+                <p className="mt-2 text-sm text-muted-foreground">
                   Contribute to earn an activity badge or receive recognition from someone.
                 </p>
                 {!currentUser && !showcase && (
@@ -164,7 +175,8 @@ export function AwardsContent({
                         badge: badges.find((badge) => badge.id === award.badge)!,
                         award,
                       }));
-              const showEmptyRecognition = source === 'user' && tab === 'collection' && !showcase && !!awards.state;
+              const showEmptyRecognition =
+                source === 'user' && tab === 'collection' && !showcase && !!awards.state && visibleAwards.length > 0;
               if (!items.length && !showEmptyRecognition) return null;
               return (
                 <section key={source}>
@@ -212,7 +224,10 @@ export function AwardsContent({
               </section>
             )}
           </div>
-          {!showcase && tab !== 'all' && (tab === 'awarded' ? !!currentUser : !awards.isOwn && !currentUser) && (
+          {!showcase &&
+            tab !== 'all' &&
+            !isEmptyGivenState &&
+            (tab === 'awarded' ? !!currentUser : !awards.isOwn && !currentUser) && (
             <div className="pt-4 text-base leading-6 text-muted-foreground">
               {awards.isOwn ? (
                 <p>

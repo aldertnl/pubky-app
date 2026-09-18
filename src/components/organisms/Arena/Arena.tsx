@@ -291,6 +291,7 @@ export function Arena() {
         key={`${scope}:${resetCount}`}
         reach={effectiveReach}
         timeframe={timeframe}
+        onReach={changeReach}
         data={topics}
         topic={topic}
         onTopic={(label) => setChosenTopic({ scope, label })}
@@ -364,6 +365,7 @@ function ArenaTopics({
   data,
   topic,
   onTopic,
+  onReach,
   ...display
 }: {
   reach: ReachType;
@@ -371,6 +373,7 @@ function ArenaTopics({
   data: ReturnType<typeof useHotTags>;
   topic?: ArenaTopicFilter;
   onTopic: StageProps['onTopic'];
+  onReach: (reach: ReachType) => void;
 } & Pick<StageProps, 'isList' | 'metric' | 'content' | 'muteControlTarget'>) {
   // The parent remounts this scope when its shared timeframe changes.
   const [now] = useState(Date.now);
@@ -388,7 +391,12 @@ function ArenaTopics({
   if (topic === undefined)
     return (
       <div className={styles.status} role="status">
-        No topics in this window. Try a wider timeframe.
+        <p>No topics in this window. Try a wider timeframe or reach.</p>
+        {reach !== REACH.ALL && (
+          <Button variant="secondary" size="sm" className="mt-4" onClick={() => onReach(REACH.ALL)}>
+            Show from everyone
+          </Button>
+        )}
       </div>
     );
   if (display.content === ARENA_PEOPLE) {

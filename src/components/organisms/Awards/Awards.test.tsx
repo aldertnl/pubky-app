@@ -70,6 +70,15 @@ describe('awards UI', () => {
     expect(screen.getByText('Your example helped me understand.')).toBeInTheDocument();
   });
 
+  it('hides the recognition section when My awards is totally empty', () => {
+    mocks.awards.mockReturnValue({ ...mocks.awards(), state: { ...structuredClone(state), awards: [] } });
+
+    render(<AwardsContent open embedded user={mocks.user} />);
+
+    expect(screen.getByText('Your story starts with a contribution.')).toBeInTheDocument();
+    expect(screen.queryByText('RECOGNITION')).not.toBeInTheDocument();
+  });
+
   it('lists given recognitions and remaining allowance without recipient controls', () => {
     const snapshot = structuredClone(state);
     snapshot.issued = [{ ...snapshot.awards[0], id: 'given', issuer: mocks.user, recipient: 'b'.repeat(52) }];
@@ -85,6 +94,18 @@ describe('awards UI', () => {
     expect(screen.getByText('Awarded to')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Accept' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Wear' })).not.toBeInTheDocument();
+  });
+
+  it('folds the remaining allowance into the empty Given description', () => {
+    const snapshot = structuredClone(state);
+    snapshot.remaining = 3;
+    mocks.awards.mockReturnValue({ ...mocks.awards(), state: snapshot });
+
+    render(<AwardsDialog open onOpenChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Given (0)' }));
+
+    expect(screen.getByText('No recognitions awarded yet.')).toBeInTheDocument();
+    expect(screen.getByText('No recognitions awarded yet.').parentElement).toHaveTextContent('(3 remaining)');
   });
 
   it('distinguishes inline loading, failure, and empty awards', () => {

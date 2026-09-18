@@ -487,6 +487,19 @@ describe('Arena filters and topic standings', () => {
     expect(screen.getByRole('button', { name: 'Reach: From everyone' })).toBeInTheDocument();
   });
 
+  it('offers everyone when the selected reach has no topics', async () => {
+    const user = userEvent.setup();
+    useAuthStore.setState({ currentUserPubky: 'viewer' });
+    useHotStore.setState({ reach: REACH.NETWORK, hasUserSetReach: true });
+    mocks.hotTags.mockReturnValue({ tags: [], rawTags: [], isLoading: false, error: null, refetch: vi.fn() });
+
+    render(<Arena />);
+
+    expect(screen.getByText('No topics in this window. Try a wider timeframe or reach.')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show from everyone' }));
+    expect(screen.getByRole('button', { name: 'Reach: From everyone' })).toBeInTheDocument();
+  });
+
   it('keeps an explicitly selected network reach for a small network', () => {
     useAuthStore.setState({ currentUserPubky: 'viewer' });
     useHotStore.setState({ reach: REACH.NETWORK, hasUserSetReach: true });
