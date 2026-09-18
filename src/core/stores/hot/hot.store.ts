@@ -18,6 +18,7 @@ export const useHotStore = create<HotStore>()(
         partialize: (state) => ({
           reach: state.reach,
           timeframe: state.timeframe,
+          hasUserSetReach: state.hasUserSetReach,
         }),
       },
     ),

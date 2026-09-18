@@ -4,7 +4,11 @@ import { HotActions, HotActionTypes, hotInitialState, HotStore } from './hot.typ
 // Actions/Mutators - State modification functions
 export const createHotActions = (set: ZustandSet<HotStore>): HotActions => ({
   setReach: (reach) => {
-    set({ reach }, false, HotActionTypes.SET_HOT_REACH);
+    set({ reach, hasUserSetReach: true }, false, HotActionTypes.SET_HOT_REACH);
+  },
+
+  applyDefaultReach: (reach) => {
+    set({ reach, hasUserSetReach: false }, false, HotActionTypes.SET_HOT_REACH);
   },
 
   setTimeframe: (timeframe) => {

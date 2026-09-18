@@ -1,7 +1,4 @@
 'use client';
-import { scrollToArenaTarget } from '@/libs/arena/scrollToArenaTarget';
-import { ArenaAwardsSection } from './ArenaAwardsSection';
-
 import { type CSSProperties, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import {
@@ -32,6 +29,7 @@ import { useBulkUserAvatars } from '@/hooks/useBulkUserAvatars/useBulkUserAvatar
 import { useHotTags } from '@/hooks/useHotTags/useHotTags';
 import { useIsMobile } from '@/hooks/useIsMobile/useIsMobile';
 import { useMutedUsers } from '@/hooks/useMutedUsers/useMutedUsers';
+import { useProfileStats } from '@/hooks/useProfileStats/useProfileStats';
 import { useRequireAuth } from '@/hooks/useRequireAuth/useRequireAuth';
 import { useStreamPagination } from '@/hooks/useStreamPagination/useStreamPagination';
 import {
@@ -47,6 +45,7 @@ import {
   shouldLoadMoreArenaCandidates,
 } from '@/libs/arena/arena';
 import { ARENA_PEOPLE, type ArenaPeopleMetric } from '@/libs/arena/people';
+import { scrollToArenaTarget } from '@/libs/arena/scrollToArenaTarget';
 import { cn, generateRandomColor, hexToRgba } from '@/libs/utils/utils';
 import { AvatarGroup } from '@/molecules/AvatarGroup/AvatarGroup';
 import { CONTENT_FILTER_OPTIONS } from '@/molecules/Filters/FilterContent/FilterContent.constants';
@@ -59,6 +58,7 @@ import { CONTENT, type ContentType, REACH, type ReachType } from '@/stores/home/
 import { useHotStore } from '@/stores/hot/hot.store';
 import { TIMEFRAME, type TimeframeType } from '@/stores/hot/hot.types';
 import styles from './Arena.module.css';
+import { ArenaAwardsSection } from './ArenaAwardsSection';
 import { ArenaConversation } from './ArenaConversation';
 import { ArenaFilterMenu } from './ArenaFilterMenu';
 import { ArenaFloor, ArenaFloorSkeleton } from './ArenaFloor';
@@ -108,6 +108,7 @@ const VIEW_OPTIONS = [
   { value: 'list' as const, label: 'In grid', icon: Grip },
 ];
 const TOPIC_AVATAR_LIMIT = 3;
+const SMALL_NETWORK_MAX_CONNECTIONS = 2;
 const CONTENT_INDICATOR = { label: 'Content', icon: Layers };
 const PEOPLE_INDICATOR = { label: 'People', icon: UsersRound };
 
@@ -140,9 +141,19 @@ type StageProps = {
 };
 
 export function Arena() {
-  const { reach, setReach, timeframe, setTimeframe } = useHotStore();
+  const { reach, setReach, applyDefaultReach, timeframe, setTimeframe, hasUserSetReach } = useHotStore();
   const currentUserPubky = useAuthStore((state) => state.currentUserPubky);
-  const effectiveReach = currentUserPubky ? reach : REACH.ALL;
+  const { stats, isLoading: isLoadingProfileStats } = useProfileStats(currentUserPubky ?? '', {
+    enabled: Boolean(currentUserPubky),
+  });
+  const hasSmallNetwork =
+    stats.followers <= SMALL_NETWORK_MAX_CONNECTIONS && stats.following <= SMALL_NETWORK_MAX_CONNECTIONS;
+  const effectiveReach =
+    currentUserPubky && !hasUserSetReach && !isLoadingProfileStats && hasSmallNetwork && reach === REACH.NETWORK
+      ? REACH.ALL
+      : currentUserPubky
+        ? reach
+        : REACH.ALL;
   const { requireAuth } = useRequireAuth();
   const isPhone = useIsMobile({ breakpoint: 'sm' });
   const [isList, setIsList] = useState(false);
@@ -192,7 +203,7 @@ export function Arena() {
     setTimeframe(TIMEFRAME.THIS_MONTH);
     setMetric('popular');
     setContent(CONTENT.ALL);
-    setReach(currentUserPubky ? REACH.NETWORK : REACH.ALL);
+    applyDefaultReach(currentUserPubky ? REACH.NETWORK : REACH.ALL);
     setIsList(false);
   }
   return (

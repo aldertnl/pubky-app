@@ -15,6 +15,7 @@ describe('HotStore', () => {
 
       expect(state.reach).toBe(REACH.NETWORK);
       expect(state.timeframe).toBe(TIMEFRAME.THIS_MONTH);
+      expect(state.hasUserSetReach).toBe(false);
     });
 
     it('should match hotInitialState', () => {
@@ -22,6 +23,7 @@ describe('HotStore', () => {
 
       expect(state.reach).toBe(hotInitialState.reach);
       expect(state.timeframe).toBe(hotInitialState.timeframe);
+      expect(state.hasUserSetReach).toBe(hotInitialState.hasUserSetReach);
     });
   });
 
@@ -31,6 +33,7 @@ describe('HotStore', () => {
 
       store.setReach(REACH.ALL);
       expect(useHotStore.getState().reach).toBe(REACH.ALL);
+      expect(useHotStore.getState().hasUserSetReach).toBe(true);
     });
 
     it('should set reach to following', () => {
@@ -117,6 +120,7 @@ describe('HotStore', () => {
       const state = useHotStore.getState();
       expect(state.reach).toBe(hotInitialState.reach);
       expect(state.timeframe).toBe(hotInitialState.timeframe);
+      expect(state.hasUserSetReach).toBe(false);
     });
   });
 

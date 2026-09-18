@@ -15,10 +15,12 @@ export type TimeframeType = (typeof TIMEFRAME)[keyof typeof TIMEFRAME];
 export interface HotState {
   reach: ReachType;
   timeframe: TimeframeType;
+  hasUserSetReach: boolean;
 }
 
 export interface HotActions {
   setReach: (reach: ReachType) => void;
+  applyDefaultReach: (reach: ReachType) => void;
   setTimeframe: (timeframe: TimeframeType) => void;
   reset: () => void;
 }
@@ -29,6 +31,7 @@ export type HotStore = HotState & HotActions;
 export const hotInitialState: HotState = {
   reach: REACH.NETWORK,
   timeframe: TIMEFRAME.THIS_MONTH,
+  hasUserSetReach: false,
 };
 
 // Action types for DevTools

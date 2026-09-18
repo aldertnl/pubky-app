@@ -18,6 +18,7 @@ const mocks = vi.hoisted(() => ({
   people: vi.fn<() => ReturnType<typeof useArenaPeople>>(),
   recentPeople: vi.fn<() => ReturnType<typeof useArenaPeople>>(),
   hotTags: vi.fn<() => UseHotTagsResult>(),
+  profileStats: vi.fn(),
   stream: vi.fn<() => UseStreamPaginationResult>(),
   avatars: vi.fn<(ids: string[]) => UseBulkUserAvatarsResult>(),
   ideas: vi.fn<() => { ideas: ArenaIdea[]; error: string | null }>(),
@@ -26,6 +27,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/hooks/useBulkUserAvatars/useBulkUserAvatars', () => ({ useBulkUserAvatars: mocks.avatars }));
 vi.mock('@/hooks/useMutedUsers/useMutedUsers', () => ({ useMutedUsers: () => ({ isMuted: mocks.isMuted }) }));
 vi.mock('@/hooks/useHotTags/useHotTags', () => ({ useHotTags: mocks.hotTags }));
+vi.mock('@/hooks/useProfileStats/useProfileStats', () => ({ useProfileStats: mocks.profileStats }));
 vi.mock('@/hooks/useStreamPagination/useStreamPagination', () => ({ useStreamPagination: mocks.stream }));
 vi.mock('@/hooks/useArenaPersonPost/useArenaPersonPost', () => ({ useArenaPersonPost: mocks.personPost }));
 vi.mock('@/hooks/useArenaPeople/useArenaPeople', () => ({ useArenaPeople: mocks.people }));
@@ -61,6 +63,10 @@ describe('Arena filters and topic standings', () => {
     mocks.people.mockReturnValue({ users: [], loading: false, error: null, retry: vi.fn() });
     mocks.recentPeople.mockReturnValue({ users: [], loading: false, error: null, retry: vi.fn() });
     mocks.isMuted.mockReturnValue(false);
+    mocks.profileStats.mockReturnValue({
+      stats: { followers: 10, following: 10 },
+      isLoading: false,
+    });
     mocks.ideas.mockReturnValue({ ideas: [], error: null });
     mocks.avatars.mockReturnValue({
       usersMap: new Map(),
@@ -68,7 +74,7 @@ describe('Arena filters and topic standings', () => {
       isLoading: false,
     });
     useAuthStore.setState({ currentUserPubky: null });
-    useHotStore.setState({ reach: REACH.ALL, timeframe: TIMEFRAME.THIS_MONTH });
+    useHotStore.setState({ reach: REACH.ALL, timeframe: TIMEFRAME.THIS_MONTH, hasUserSetReach: false });
     mocks.hotTags.mockReturnValue({
       tags: [{ name: 'pubky', count: 10 }],
       rawTags: [{ label: 'pubky', tagged_count: 10, taggers_count: 1, taggers_id: [] }],
@@ -469,5 +475,25 @@ describe('Arena filters and topic standings', () => {
       limit: 50,
       includeMuted: true,
     });
+  });
+
+  it('defaults a small network to From everyone', () => {
+    useAuthStore.setState({ currentUserPubky: 'viewer' });
+    useHotStore.setState({ reach: REACH.NETWORK, hasUserSetReach: false });
+    mocks.profileStats.mockReturnValue({ stats: { followers: 1, following: 1 }, isLoading: false });
+
+    render(<Arena />);
+
+    expect(screen.getByRole('button', { name: 'Reach: From everyone' })).toBeInTheDocument();
+  });
+
+  it('keeps an explicitly selected network reach for a small network', () => {
+    useAuthStore.setState({ currentUserPubky: 'viewer' });
+    useHotStore.setState({ reach: REACH.NETWORK, hasUserSetReach: true });
+    mocks.profileStats.mockReturnValue({ stats: { followers: 1, following: 1 }, isLoading: false });
+
+    render(<Arena />);
+
+    expect(screen.getByRole('button', { name: 'Reach: From my network' })).toBeInTheDocument();
   });
 });
