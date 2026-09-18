@@ -180,7 +180,7 @@ describe('Arena leading reply', () => {
     vi.mocked(useStreamPagination).mockReturnValue(stream());
     rerender(<ArenaConversation {...props} />);
     expect(screen.getByRole('article', { name: 'f:older-winner' })).toBeInTheDocument();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status', { name: 'Finding most popular reply' })).not.toBeInTheDocument();
   });
 
   it('stops pagination on failure and offers retry without declaring a partial leader', () => {

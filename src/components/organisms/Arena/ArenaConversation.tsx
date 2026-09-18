@@ -196,7 +196,7 @@ function ArenaConversationContent({
                 </p>
               ) : leadingReply ? (
                 <div key={leadingReply.id} ref={replyRef} className={styles.readerContent}>
-                  <PostMain postId={leadingReply.id} isNavigable={false} stackTagsAndActions />
+                  <PostMain postId={leadingReply.id} stackTagsAndActions />
                 </div>
               ) : (
                 <p className="py-5 text-sm font-medium text-muted-foreground">
