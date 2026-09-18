@@ -108,12 +108,24 @@ export function AwardsContent({
           <div className={embedded ? 'space-y-6' : 'space-y-6 pt-4'}>
             {tab === 'awarded' && (
               <>
-                {!awards.state && (
+                {!owner && (
+                  <div className="py-8 text-center">
+                    <Gift className="mx-auto mb-3 size-7 text-muted-foreground" />
+                    <p className="text-sm">Recognize a contribution that mattered to you.</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Give someone an award and tell them why their contribution made a difference.
+                    </p>
+                    <Button variant="secondary" size="sm" className="mt-4" onClick={() => requireAuth(() => {})}>
+                      Give awards
+                    </Button>
+                  </div>
+                )}
+                {owner && !awards.state && (
                   <p role="status" className="text-sm text-muted-foreground">
                     {awards.error || 'Loading awarded recognitions…'}
                   </p>
                 )}
-                {awards.state && !awards.state.issued.length && (
+                {owner && awards.state && !awards.state.issued.length && (
                   <p className="py-8 text-center text-sm text-muted-foreground">No recognitions awarded yet.</p>
                 )}
               </>
@@ -128,8 +140,13 @@ export function AwardsContent({
                 <Trophy className="mx-auto mb-3 size-7 text-muted-foreground" />
                 <p className="text-sm">Your story starts with a contribution.</p>
                 <p className="mt-2 text-xs text-muted-foreground">
-                  Earn an activity badge or receive recognition from someone.
+                  Contribute to earn an activity badge or receive recognition from someone.
                 </p>
+                {!currentUser && !showcase && (
+                  <Button variant="secondary" size="sm" className="mt-4" onClick={() => requireAuth(() => {})}>
+                    Earn awards
+                  </Button>
+                )}
               </div>
             )}
             {(['arena', 'user'] as const).map((source) => {
@@ -195,7 +212,7 @@ export function AwardsContent({
               </section>
             )}
           </div>
-          {!showcase && tab !== 'all' && (tab === 'awarded' || (!awards.isOwn && !currentUser)) && (
+          {!showcase && tab !== 'all' && (tab === 'awarded' ? !!currentUser : !awards.isOwn && !currentUser) && (
             <div className="pt-4 text-base leading-6 text-muted-foreground">
               {awards.isOwn ? (
                 <p>
@@ -213,16 +230,16 @@ export function AwardsContent({
                   )}
                 </p>
               ) : (
-                !currentUser && (
+                !currentUser &&
+                owner &&
+                (tab !== 'collection' || visibleAwards.length > 0) && (
                   <Button variant="secondary" size="sm" onClick={() => requireAuth(() => {})}>
-                    Sign in to collect awards
+                    Earn awards
                   </Button>
                 )
               )}
               {!awards.isOwn && tab === 'awarded' && (
-                <p className={!currentUser ? 'mt-2' : undefined}>
-                  You can hand out 3 recognition awards each week.
-                </p>
+                <p className={!currentUser ? 'mt-2' : undefined}>You can hand out 3 recognition awards each week.</p>
               )}
             </div>
           )}

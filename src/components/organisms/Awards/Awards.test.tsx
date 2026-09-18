@@ -297,3 +297,19 @@ it('shows a checkmark indicator for a visible, seen, unworn award', () => {
   render(<AwardsContent open embedded user={mocks.user} />);
   expect(screen.getByLabelText('Visible award')).toBeInTheDocument();
 });
+
+it('shows a signed-out Given empty state instead of loading indefinitely', () => {
+  const user = mocks.user;
+  mocks.user = '';
+  mocks.awards.mockReturnValue({ ...mocks.awards(), state: undefined, isOwn: false });
+  try {
+    render(<AwardsDialog open onOpenChange={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Given (0)' }));
+    expect(screen.getByText('Recognize a contribution that mattered to you.')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Give awards' })).toBeInTheDocument();
+    expect(screen.queryByText('You can hand out 3 recognition awards each week.')).not.toBeInTheDocument();
+  } finally {
+    mocks.user = user;
+  }
+});
