@@ -5,6 +5,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { Badge } from '@/atoms/Badge/Badge';
 import { Button } from '@/atoms/Button/Button';
 import { Card } from '@/atoms/Card/Card';
+import { Image } from '@/atoms/Image/Image';
 import { Skeleton } from '@/atoms/Skeleton/Skeleton';
 import { Typography } from '@/atoms/Typography/Typography';
 import { useBulkUserAvatars } from '@/hooks/useBulkUserAvatars/useBulkUserAvatars';
@@ -31,6 +32,7 @@ import { ARENA_PLACEMENTS } from './Arena.constants';
 import styles from './Arena.module.css';
 import { ArenaPostPreview } from './ArenaPostPreview';
 import { ArenaStat } from './ArenaStats';
+import { useArenaPostImages } from './useArenaPostImages';
 
 const ARENA_GRID_IDEAS = 9;
 
@@ -125,6 +127,7 @@ export function ArenaFloor({
   }, [rotationKey, metric, isList]);
 
   const visible = isList ? ideas.slice(0, ARENA_GRID_IDEAS) : getArenaVisibleIdeas(ideas, selectedId);
+  const postImages = useArenaPostImages(visible);
   const shouldReduceMotion = useReducedMotion();
   const { formatRelativeTime } = useRelativeTime();
   const { usersMap } = useBulkUserAvatars(visible.map((idea) => idea.author));
@@ -145,6 +148,7 @@ export function ArenaFloor({
         const showAllStats = metric !== 'newest';
         const indexedAt = Number.isFinite(idea.indexedAt) ? new Date(idea.indexedAt) : null;
         const placement = ARENA_PLACEMENTS[index] ?? ARENA_PLACEMENTS[0];
+        const image = postImages.get(idea.id);
         const spotlight = (hoveredId ?? focusedId) === idea.id;
         return (
           <motion.li
@@ -275,6 +279,11 @@ export function ArenaFloor({
                 >
                   <ArenaPostPreview text={idea.preview} />
                 </Typography>
+                {image && (
+                  <span className={styles.previewMedia} aria-hidden="true">
+                    <Image src={image.src} alt="" fill className="object-cover object-center" />
+                  </span>
+                )}
                 {leading && lead && (
                   <Typography as="span" overrideDefaults className={styles.leadMargin}>
                     {lead}

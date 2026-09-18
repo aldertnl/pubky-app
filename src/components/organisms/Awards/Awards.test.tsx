@@ -6,6 +6,7 @@ import { type AwardSnapshot } from '@/libs/awards/awards';
 import { AwardGivenDetails } from './AwardGivenDetails';
 import { AwardNotifications } from './AwardNotifications';
 import { AwardsContent, AwardsDialog } from './AwardsDialog';
+import { AwardsEntry } from './AwardsEntry';
 import { AwardTrophy } from './AwardTrophy';
 import { PostAwards } from './PostAwards';
 import { ProfileAwards } from './ProfileAwards';
@@ -19,6 +20,16 @@ vi.mock('@/stores/auth/auth.store', () => ({
 vi.mock('@/hooks/useUserProfile/useUserProfile', () => ({ useUserProfile: () => ({ profile: { name: 'Alex' } }) }));
 vi.mock('@/hooks/useRequireAuth/useRequireAuth', () => ({ useRequireAuth: () => ({ requireAuth: vi.fn() }) }));
 vi.mock('@/providers/ProfileProvider/ProfileProvider', () => ({ useProfileContext: () => ({ pubky: mocks.user }) }));
+vi.mock('@/organisms/DialogNewPost/DialogNewPost', () => ({
+  DialogNewPost: ({ open, onOpenChangeAction }: { open: boolean; onOpenChangeAction: (open: boolean) => void }) =>
+    open ? (
+      <div data-testid="new-post-dialog">
+        <button type="button" onClick={() => onOpenChangeAction(false)}>
+          Close new post
+        </button>
+      </div>
+    ) : null,
+}));
 const state: AwardSnapshot = {
   awards: [
     {
@@ -79,6 +90,29 @@ describe('awards UI', () => {
     expect(screen.queryByText('RECOGNITION')).not.toBeInTheDocument();
   });
 
+  it('opens post creation from the empty My awards state', () => {
+    const onCreatePost = vi.fn();
+    mocks.awards.mockReturnValue({ ...mocks.awards(), state: { ...structuredClone(state), awards: [] } });
+
+    render(<AwardsDialog open onOpenChange={vi.fn()} onCreatePost={onCreatePost} />);
+    fireEvent.click(screen.getByRole('button', { name: 'My awards (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create a post' }));
+
+    expect(onCreatePost).toHaveBeenCalledOnce();
+  });
+
+  it('swaps the awards entry dialog for post creation', () => {
+    mocks.awards.mockReturnValue({ ...mocks.awards(), state: { ...structuredClone(state), awards: [] } });
+
+    render(<AwardsEntry />);
+    fireEvent.click(screen.getByRole('button', { name: 'Awards' }));
+    fireEvent.click(screen.getByRole('button', { name: 'My awards (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Create a post' }));
+
+    expect(screen.getByTestId('new-post-dialog')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'My awards (0)' })).not.toBeInTheDocument();
+  });
+
   it('lists given recognitions and remaining allowance without recipient controls', () => {
     const snapshot = structuredClone(state);
     snapshot.issued = [{ ...snapshot.awards[0], id: 'given', issuer: mocks.user, recipient: 'b'.repeat(52) }];
@@ -106,6 +140,7 @@ describe('awards UI', () => {
 
     expect(screen.getByText('No recognitions awarded yet.')).toBeInTheDocument();
     expect(screen.getByText('No recognitions awarded yet.').parentElement).toHaveTextContent('(3 remaining)');
+    expect(screen.getByRole('link', { name: 'Award posts in feed' })).toHaveAttribute('href', '/home');
   });
 
   it('distinguishes inline loading, failure, and empty awards', () => {

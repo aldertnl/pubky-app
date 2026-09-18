@@ -14,7 +14,9 @@ import { buildCompositeIdFromPubkyUri, parseCompositeId } from '@/models/models.
 /** Read the stream's persisted entities reactively, including optimistic count changes. */
 export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) {
   const { mutedUserIdSet } = useMutedUsers();
-  const cache = useRef(new Map<string, { content: string; blurred: boolean; idea: ArenaIdea }>());
+  const cache = useRef(
+    new Map<string, { content: string; blurred: boolean; attachmentsKey: string; idea: ArenaIdea }>(),
+  );
   const idsKey = JSON.stringify([...new Set(postIds)]);
   const result = useLiveQuery(
     async () => {
@@ -30,10 +32,13 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
           if (!post || !counts || isPostDeleted(post.content) || (!includeMuted && mutedUserIdSet.has(author)))
             return null;
           const previous = cache.current.get(compositeId);
+          const attachments = post.attachments ?? [];
+          const attachmentsKey = attachments.join('|');
           const sameContent =
             previous?.content === post.content &&
             previous.blurred === post.is_blurred &&
-            previous.idea.kind === post.kind;
+            previous.idea.kind === post.kind &&
+            previous.attachmentsKey === attachmentsKey;
           const idea: ArenaIdea = {
             id: compositeId,
             author,
@@ -42,6 +47,7 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
               : post.is_blurred
                 ? 'Content warning'
                 : deriveTextPreview(post) || `${post.kind} post`,
+            attachments,
             kind: post.kind,
             indexedAt: post.indexed_at,
             // Match the native post action bar: one count per distinct label.
@@ -53,9 +59,17 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
               : null,
           };
           const unchanged =
-            sameContent && (Object.keys(idea) as (keyof ArenaIdea)[]).every((key) => previous.idea[key] === idea[key]);
+            sameContent &&
+            (Object.keys(idea) as (keyof ArenaIdea)[]).every((key) =>
+              key === 'attachments' ? previous.attachmentsKey === attachmentsKey : previous.idea[key] === idea[key],
+            );
           const result = unchanged ? previous.idea : idea;
-          nextCache.set(compositeId, { content: post.content, blurred: post.is_blurred, idea: result });
+          nextCache.set(compositeId, {
+            content: post.content,
+            blurred: post.is_blurred,
+            attachmentsKey,
+            idea: result,
+          });
           return result;
         });
         cache.current = nextCache;

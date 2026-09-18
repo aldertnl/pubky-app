@@ -1,5 +1,6 @@
 'use client';
 import { useState } from 'react';
+import Link from 'next/link';
 import { Compass, Gift, Trophy } from 'lucide-react';
 import { Button } from '@/atoms/Button/Button';
 import { Dialog, DialogContent, DialogTitle } from '@/atoms/Dialog/Dialog';
@@ -24,6 +25,7 @@ export function AwardsContent({
   showcase = false,
   postId,
   embedded = false,
+  onCreatePost,
 }: {
   embedded?: boolean;
   open: boolean;
@@ -31,6 +33,7 @@ export function AwardsContent({
   initialAward?: AwardReceipt;
   showcase?: boolean;
   postId?: string;
+  onCreatePost?: () => void;
 }) {
   const currentUser = useAuthStore((state) => state.currentUserPubky);
   const owner = user ?? currentUser ?? undefined;
@@ -137,6 +140,9 @@ export function AwardsContent({
                         <span className="text-foreground">({awards.state.remaining} remaining)</span>.
                       </span>
                     </p>
+                    <Button asChild variant="secondary" size="sm" className="mt-4">
+                      <Link href="/home">Award posts in feed</Link>
+                    </Button>
                   </div>
                 )}
               </>
@@ -153,6 +159,11 @@ export function AwardsContent({
                 <p className="mt-2 text-sm text-muted-foreground">
                   Contribute to earn an activity badge or receive recognition from someone.
                 </p>
+                {!showcase && awards.isOwn && currentUser && onCreatePost && (
+                  <Button variant="secondary" size="sm" className="mt-4" onClick={onCreatePost}>
+                    Create a post
+                  </Button>
+                )}
                 {!currentUser && !showcase && (
                   <Button variant="secondary" size="sm" className="mt-4" onClick={() => requireAuth(() => {})}>
                     Earn awards
@@ -183,7 +194,9 @@ export function AwardsContent({
                   <Label asChild className="mb-3 text-xs font-medium tracking-wide text-muted-foreground uppercase">
                     <p>{source === 'arena' ? 'ACHIEVEMENTS' : 'RECOGNITION'}</p>
                   </Label>
-                  {!items.length && <p className="text-sm text-muted-foreground">No recognition awards yet.</p>}
+                  {!items.length && (
+                    <p className="text-sm text-muted-foreground">You did not receive any recognition awards yet.</p>
+                  )}
                   <div className={`${styles.gallery} ${source === 'user' && tab === 'all' ? styles.galleryUser : ''}`}>
                     {items.map(({ badge, award }) => (
                       <AwardSeen
@@ -266,10 +279,12 @@ export function AwardsContent({
 
 export function AwardsDialog({
   onOpenChange,
+  onCreatePost,
   ...props
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onCreatePost?: () => void;
   user?: string;
   initialAward?: AwardReceipt;
   showcase?: boolean;
@@ -278,7 +293,7 @@ export function AwardsDialog({
   return (
     <Dialog open={props.open} onOpenChange={onOpenChange}>
       <DialogContent className="w-full gap-4 outline-none sm:w-[620px]" aria-describedby={undefined}>
-        <AwardsContent {...props} />
+        <AwardsContent {...props} onCreatePost={onCreatePost} />
       </DialogContent>
     </Dialog>
   );

@@ -607,6 +607,16 @@
   min-height: 0;
   flex-shrink: 0;
 }
+.previewMedia {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 96px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 6px;
+  background: var(--muted);
+}
 .leadMargin {
   flex-shrink: 0;
   color: var(--arena-topic-color, var(--brand));

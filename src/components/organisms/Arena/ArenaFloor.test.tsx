@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { rankArenaIdeas } from '@/libs/arena/arena';
 import styles from './Arena.module.css';
 import { ArenaFloor } from './ArenaFloor';
@@ -17,6 +17,13 @@ vi.mock('@/hooks/useBulkUserAvatars/useBulkUserAvatars', () => ({
     ]),
   }),
 }));
+const arenaImageMocks = vi.hoisted(() => ({ use: vi.fn(() => new Map()) }));
+vi.mock('./useArenaPostImages', () => ({ useArenaPostImages: arenaImageMocks.use }));
+
+beforeEach(() => {
+  arenaImageMocks.use.mockReset();
+  arenaImageMocks.use.mockReturnValue(new Map());
+});
 const ideas = rankArenaIdeas(
   [
     {
@@ -83,6 +90,17 @@ describe('Arena floor', () => {
     expect(screen.getByRole('button', { name: /Rank 2, Mira/ })).not.toHaveTextContent('leading by');
   });
 
+  it('renders an image attachment as a clipped full-width mini preview', () => {
+    arenaImageMocks.use.mockReturnValue(new Map([['a:1', { src: 'https://example.com/image-feed.jpg', alt: 'Poster' }]]));
+    render(<ArenaFloor ideas={ideas} selectedId="a:1" onSelect={vi.fn()} isList={false} metric="tags" />);
+
+    const image = document.querySelector('img[src="https://example.com/image-feed.jpg"]');
+    if (!(image instanceof HTMLImageElement)) throw new Error('Expected the mini post image to render');
+    expect(image).toHaveAttribute('src', 'https://example.com/image-feed.jpg');
+    expect(image).toHaveClass('object-cover', 'object-center');
+    expect(image.parentElement).toHaveClass(styles.previewMedia);
+  });
+
   it('shows ties accurately and hides the margin for a lone post or Most recent', () => {
     const tied = rankArenaIdeas(
       ideas.map((idea) => ({ ...idea, tags: 10 })),
@@ -109,7 +127,7 @@ describe('Arena floor', () => {
         contentLabel="Posts"
       />,
     );
-    expect(screen.getByText('#1 All Posts')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rank 1, Jules/ })).toHaveTextContent('#1 All Posts');
     expect(screen.getByRole('list', { name: 'Idea standings' })).toHaveStyle({ '--arena-topic-color': 'var(--brand)' });
   });
 
@@ -150,7 +168,7 @@ describe('Arena floor', () => {
     expect(screen.getByLabelText('60 tags')).toBeInTheDocument();
     expect(screen.getByLabelText('12 replies')).toBeInTheDocument();
     expect(screen.getByLabelText('7 reposts')).toBeInTheDocument();
-    expect(screen.getByText('#1 Content')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rank 1, Jules/ })).toHaveTextContent('#1 Content');
     rerender(
       <ArenaFloor ideas={rankArenaIdeas(ideas, 'replies')} onSelect={vi.fn()} isList={false} metric="replies" />,
     );
@@ -209,7 +227,7 @@ describe('Arena floor', () => {
       />,
     );
     expect(screen.getByLabelText('7 reposts')).toBeInTheDocument();
-    expect(screen.getByText('#1 Content')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Rank 1, Jules/ })).toHaveTextContent('#1 Content');
     rerender(
       <ArenaFloor
         ideas={rankArenaIdeas(ideas, 'newest')}

@@ -5,11 +5,13 @@ import { Badge } from '@/atoms/Badge/Badge';
 import { Button } from '@/atoms/Button/Button';
 import { useAwards } from '@/hooks/useAwards/useAwards';
 import { isAwardNew } from '@/libs/awards/visibility';
+import { DialogNewPost } from '@/organisms/DialogNewPost/DialogNewPost';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { AwardsDialog } from './AwardsDialog';
 
 export function AwardsEntry() {
   const [open, setOpen] = useState(false);
+  const [newPostOpen, setNewPostOpen] = useState(false);
   const user = useAuthStore((state) => state.currentUserPubky);
   const awards = useAwards(user ?? undefined, true, true);
   const count = awards.state?.awards.filter((award) => isAwardNew(award, awards.state)).length ?? 0;
@@ -28,7 +30,17 @@ export function AwardsEntry() {
           </Badge>
         )}
       </Button>
-      {open && <AwardsDialog open={open} onOpenChange={setOpen} />}
+      {open && (
+        <AwardsDialog
+          open={open}
+          onOpenChange={setOpen}
+          onCreatePost={() => {
+            setOpen(false);
+            setNewPostOpen(true);
+          }}
+        />
+      )}
+      <DialogNewPost open={newPostOpen} onOpenChangeAction={setNewPostOpen} />
     </>
   );
 }

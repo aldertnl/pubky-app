@@ -17,6 +17,7 @@ export interface ArenaIdea {
   id: string;
   author: Pubky;
   preview: string;
+  attachments?: string[];
   kind: string;
   indexedAt: number;
   tags: number;
