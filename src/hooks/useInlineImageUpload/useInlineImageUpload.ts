@@ -8,6 +8,7 @@ import {
   ARTICLE_SUPPORTED_FILE_TYPES,
 } from '@/config/posts';
 import { FileController } from '@/controllers/file/file';
+import { isAppError, requiresLogin } from '@/libs/error/error.utils';
 import { getImageUploadSizeLimitToastMessage } from '@/libs/image/imageUploadSizeLimit';
 import { Logger } from '@/libs/logger/logger';
 import type { Pubky } from '@/models/models.types';
@@ -55,6 +56,7 @@ interface PendingUpload {
  */
 export function useInlineImageUpload({
   enabled,
+  keepSession = false,
   authorPubky,
   getInlineBudget,
 }: UseInlineImageUploadOptions): UseInlineImageUploadReturn {
@@ -114,7 +116,13 @@ export function useInlineImageUpload({
       Logger.error('[useInlineImageUpload] Inline image upload failed', { error });
       toast({
         variant: 'error',
-        description: getImageUploadSizeLimitToastMessage(error) ?? 'Could not upload image. Try again.',
+        // An expired session cannot be retried away: ask for sign-in instead of
+        // showing retry copy (issue #2555). One toast only, and the rejection
+        // below keeps the tag the global handler uses to stay quiet.
+        description:
+          isAppError(error) && requiresLogin(error)
+            ? 'Session expired. Please sign in.'
+            : (getImageUploadSizeLimitToastMessage(error) ?? 'Could not upload image. Try again.'),
       });
       // Rethrow tagged (message preserved) so callers still see the failure
       // but the global handler doesn't re-report what was just toasted
@@ -146,12 +154,12 @@ export function useInlineImageUpload({
     discardedRef.current = false;
 
     if (!ARTICLE_SUPPORTED_ATTACHMENT_MIME_TYPES.includes(file.type)) {
-      return rejectWithToast(`Unsupported file type for ${file.name}. Supported: ${ARTICLE_SUPPORTED_FILE_TYPES}.`);
+      return rejectWithToast(`Unsupported file type. Supported: ${ARTICLE_SUPPORTED_FILE_TYPES}.`);
     }
 
     if (file.size > IMAGE_MAX_RAW_SIZE) {
       const maxSizeLabel = `${Math.round(IMAGE_MAX_RAW_SIZE / (1024 * 1024))}MB`;
-      return rejectWithToast(`${file.name} exceeds the ${maxSizeLabel} limit.`);
+      return rejectWithToast(`Image exceeds the ${maxSizeLabel} limit.`);
     }
 
     // Batch admission: MDXEditor's paste/drop handling calls this once per
@@ -190,6 +198,10 @@ export function useInlineImageUpload({
 
   const getPreviewUrl = (src: string): string | null => {
     return getSession().get(src.trim())?.objectUrl ?? null;
+  };
+
+  const getSessionFile = (uri: string): File | null => {
+    return getSession().get(uri.trim())?.file ?? null;
   };
 
   const registerSessionUpload = (uri: string, file: File) => {
@@ -252,10 +264,11 @@ export function useInlineImageUpload({
     discardRef.current = discardSession;
   });
 
+  const isSessionNeeded = enabled || keepSession;
   useEffect(() => {
-    if (enabled) return;
+    if (isSessionNeeded) return;
     void discardRef.current();
-  }, [enabled]);
+  }, [isSessionNeeded]);
 
   useEffect(() => {
     return () => {
@@ -266,6 +279,7 @@ export function useInlineImageUpload({
   return {
     uploadInlineImage,
     getPreviewUrl,
+    getSessionFile,
     registerSessionUpload,
     uploadingCount,
     finalizeSession,

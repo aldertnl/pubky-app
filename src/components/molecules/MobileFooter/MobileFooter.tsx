@@ -11,7 +11,7 @@ import { Typography } from '@/atoms/Typography/Typography';
 import { FileController } from '@/controllers/file/file';
 import { useAwardNotificationCount } from '@/hooks/useAwards/useAwards';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile/useCurrentUserProfile';
-import { useKeyboardOffset } from '@/hooks/useKeyboardOffset/useKeyboardOffset';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible/useKeyboardVisible';
 import { usePublicRoute } from '@/hooks/usePublicRoute/usePublicRoute';
 import { handleFeedNavClick } from '@/libs/utils/feedScrollTop';
 import { cn } from '@/libs/utils/utils';
@@ -39,7 +39,8 @@ export function MobileFooter({ className }: MobileFooterProps) {
   const awardNotifications = useAwardNotificationCount();
   const unreadNotifications = useNotificationStore((state) => state.selectUnread()) + awardNotifications;
   const localAvatarUrl = useLocalFilesStore((state) => state.profile);
-  const { isKeyboardVisible, keyboardOffset } = useKeyboardOffset();
+  const isKeyboardVisible = useKeyboardVisible();
+
   // Get avatar URL and fallback initial - same logic as desktop header
   const avatarUrl =
     localAvatarUrl ??
@@ -81,7 +82,7 @@ export function MobileFooter({ className }: MobileFooterProps) {
   const protectedNavHrefs = new Set<string>([SETTINGS_ROUTES.ACCOUNT]);
   // Hide footer for guests only on non-explore routes. Core explore and dynamic public
   // routes (/home, /post/..., /profile/...) use the public explore footer.
-  if (!isAuthenticated && !isPublicExploreRoute) {
+  if (isKeyboardVisible || (!isAuthenticated && !isPublicExploreRoute)) {
     return null;
   }
 
@@ -89,16 +90,9 @@ export function MobileFooter({ className }: MobileFooterProps) {
     <Container
       overrideDefaults
       className={cn(
-        'fixed bottom-0 z-40 w-full overflow-x-auto bg-gradient-to-t from-background via-background/95 to-transparent px-3 py-4 transition-transform duration-75 lg:hidden',
+        'fixed bottom-0 z-40 w-full overflow-x-auto bg-gradient-to-t from-background via-background/95 to-transparent px-3 py-4 lg:hidden',
         className,
       )}
-      style={
-        isKeyboardVisible && keyboardOffset > 0
-          ? {
-              transform: `translateY(-${keyboardOffset}px)`,
-            }
-          : undefined
-      }
     >
       <Container
         overrideDefaults

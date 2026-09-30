@@ -1,10 +1,12 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { getUserProfileUrl } from '@/app/routes';
 import { Container } from '@/atoms/Container/Container';
 import { Link } from '@/atoms/Link/Link';
 import { Typography } from '@/atoms/Typography/Typography';
+import { cn } from '@/libs/utils/utils';
 import { AvatarWithFallback } from '@/organisms/AvatarWithFallback/AvatarWithFallback';
 import { useAuthStore } from '@/stores/auth/auth.store';
 
@@ -13,9 +15,18 @@ interface UserInfoPopoverHeaderProps {
   userName: string;
   formattedPublicKey: string;
   avatarUrl?: string;
+  beforePublicKey?: ReactNode;
+  showPublicKey?: boolean;
 }
 
-export function UserInfoPopoverHeader({ userId, userName, formattedPublicKey, avatarUrl }: UserInfoPopoverHeaderProps) {
+export function UserInfoPopoverHeader({
+  userId,
+  userName,
+  formattedPublicKey,
+  avatarUrl,
+  beforePublicKey,
+  showPublicKey = true,
+}: UserInfoPopoverHeaderProps) {
   const router = useRouter();
   const currentUserPubky = useAuthStore((state) => state.currentUserPubky);
   const profileUrl = getUserProfileUrl(userId, currentUserPubky);
@@ -27,6 +38,18 @@ export function UserInfoPopoverHeader({ userId, userName, formattedPublicKey, av
     e.stopPropagation();
     router.push(profileUrl);
   };
+
+  const publicKey = showPublicKey ? (
+    <Typography
+      className={cn(
+        'text-xs leading-4 font-medium tracking-[1.2px] text-muted-foreground uppercase',
+        beforePublicKey && 'min-w-0 truncate',
+      )}
+      overrideDefaults
+    >
+      {formattedPublicKey}
+    </Typography>
+  ) : null;
 
   return (
     <Container className="flex min-w-0 items-center gap-2" overrideDefaults>
@@ -42,12 +65,14 @@ export function UserInfoPopoverHeader({ userId, userName, formattedPublicKey, av
             {userName}
           </Typography>
         </Link>
-        <Typography
-          className="text-xs leading-4 font-medium tracking-[1.2px] text-muted-foreground uppercase"
-          overrideDefaults
-        >
-          {formattedPublicKey}
-        </Typography>
+        {beforePublicKey ? (
+          <Container className="mt-0.5 flex w-full min-w-0 items-center gap-2" overrideDefaults>
+            {beforePublicKey}
+            {publicKey}
+          </Container>
+        ) : (
+          publicKey
+        )}
       </Container>
     </Container>
   );

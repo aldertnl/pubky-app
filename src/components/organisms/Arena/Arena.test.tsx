@@ -21,8 +21,13 @@ const mocks = vi.hoisted(() => ({
   profileStats: vi.fn(),
   stream: vi.fn<() => UseStreamPaginationResult>(),
   avatars: vi.fn<(ids: string[]) => UseBulkUserAvatarsResult>(),
-  ideas: vi.fn<() => { ideas: ArenaIdea[]; error: string | null }>(),
+  ideas: vi.fn<() => { ideas: ArenaIdea[]; error: string | null; loading?: boolean }>(),
   isMuted: vi.fn<(id: string) => boolean>(),
+}));
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+  usePathname: () => '/arena',
+  useSearchParams: () => new URLSearchParams(),
 }));
 vi.mock('@/hooks/useBulkUserAvatars/useBulkUserAvatars', () => ({ useBulkUserAvatars: mocks.avatars }));
 vi.mock('@/hooks/useMutedUsers/useMutedUsers', () => ({ useMutedUsers: () => ({ isMuted: mocks.isMuted }) }));
@@ -34,13 +39,42 @@ vi.mock('@/hooks/useArenaPeople/useArenaPeople', () => ({ useArenaPeople: mocks.
 vi.mock('@/hooks/useArenaRecentPeople/useArenaRecentPeople', () => ({ useArenaRecentPeople: mocks.recentPeople }));
 vi.mock('@/hooks/useArenaIdeas/useArenaIdeas', () => ({ useArenaIdeas: mocks.ideas }));
 vi.mock('@/hooks/useIsMobile/useIsMobile', () => ({ useIsMobile: () => false }));
+vi.mock('./ArenaGraph', () => ({
+  ArenaPostGraph: ({
+    ideas,
+    selectedId,
+    onSelect,
+  }: {
+    ideas: ArenaIdea[];
+    selectedId?: string;
+    onSelect: (id: string) => void;
+  }) => (
+    <div aria-label="Graph projection" data-testid="graph-projection" data-selected={selectedId}>
+      {ideas.map((idea) => (
+        <button key={idea.id} onClick={() => onSelect(idea.id)}>
+          {idea.preview}
+        </button>
+      ))}
+    </div>
+  ),
+  ArenaPeopleGraph: () => <div>People graph</div>,
+  ArenaTagsGraph: ({ topics, onTopic }: { topics: { label: string }[]; onTopic: (label: string) => void }) => (
+    <div data-testid="tags-graph">
+      {topics.map((tag) => (
+        <button key={tag.label} onClick={() => onTopic(tag.label)}>
+          {tag.label}
+        </button>
+      ))}
+    </div>
+  ),
+}));
 vi.mock('@/hooks/useRequireAuth/useRequireAuth', () => ({
   useRequireAuth: () => ({ requireAuth: (onAuthenticated: () => void) => onAuthenticated() }),
 }));
 
 function chooseAll() {
-  fireEvent.click(screen.getByRole('button', { name: 'Choose topic tag' }));
-  fireEvent.click(screen.getByRole('button', { name: 'all' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Choose tag' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Reset tag filter to all' }));
 }
 
 describe('Arena filters and topic standings', () => {
@@ -118,6 +152,156 @@ describe('Arena filters and topic standings', () => {
     });
   }
 
+  it('shows the top ten tags connected to the timeframe without loading posts in Tags mode', async () => {
+    const user = userEvent.setup();
+    mocks.hotTags.mockReturnValue({
+      ...mocks.hotTags(),
+      rawTags: Array.from({ length: 12 }, (_, index) => ({
+        label: `topic${index}`,
+        tagged_count: 30 - index,
+        taggers_count: 0,
+        taggers_id: [],
+      })),
+    });
+    const { container } = render(<Arena />);
+    await user.click(screen.getByRole('button', { name: 'Content: Content' }));
+    mocks.stream.mockClear();
+    await user.click(screen.getByRole('menuitem', { name: 'Tags' }));
+    expect(screen.getByRole('list', { name: 'Tag standings' }).children).toHaveLength(10);
+    expect(screen.getByRole('button', { name: 'Timeframe: This month' })).toBeInTheDocument();
+    expect(screen.getByTestId('arena-tag-connectors')).toBeInTheDocument();
+    expect(container.querySelector('[data-arena-post]')).toBeNull();
+    expect(mocks.stream).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Ranking: Most popular' }));
+    expect(screen.getByRole('menuitem', { name: 'Most popular' })).not.toHaveAttribute('aria-disabled', 'true');
+    for (const label of ['Most active', 'Most replied', 'Most tagged', 'Most posted', 'Most reposted', 'Most recent']) {
+      expect(screen.getByRole('menuitem', { name: label })).toHaveAttribute('aria-disabled', 'true');
+    }
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: 'Timeframe: This month' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Today' }));
+    expect(screen.getByRole('button', { name: 'Timeframe: Today' })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'topic0 tag (30 posts)' }));
+    expect(screen.queryByRole('list', { name: 'Tag standings' })).not.toBeInTheDocument();
+    expect(mocks.stream).toHaveBeenCalled();
+    expect(screen.getByRole('group', { name: 'Selected tag' })).toHaveTextContent('topic0');
+    expect(screen.getByRole('button', { name: 'Content: Content' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Timeframe: Today' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: 'topic0 topic content' })).not.toBeInTheDocument();
+  }, 15_000);
+
+  it('shows the people who used each top tag on posts', async () => {
+    const user = userEvent.setup();
+    mocks.hotTags.mockReturnValue({
+      ...mocks.hotTags(),
+      rawTags: Array.from({ length: 10 }, (_, index) => ({
+        label: `topic${index}`,
+        tagged_count: 30 - index,
+        taggers_count: 3,
+        taggers_id: [`tagger${index}a`, `tagger${index}b`, `tagger${index}c`],
+      })),
+    });
+    render(<Arena />);
+    await user.click(screen.getByRole('button', { name: 'Content: Content' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Tags' }));
+
+    expect(screen.getAllByRole('group', { name: /post taggers$/ })).toHaveLength(10);
+    expect(mocks.avatars).toHaveBeenCalledWith(
+      Array.from({ length: 10 }, (_, index) => [`tagger${index}a`, `tagger${index}b`, `tagger${index}c`]).flat(),
+    );
+  }, 15_000);
+
+  it('shows top tags in grid cards and graph without loading posts', async () => {
+    const user = userEvent.setup();
+    mocks.hotTags.mockReturnValue({
+      ...mocks.hotTags(),
+      rawTags: Array.from({ length: 12 }, (_, index) => ({
+        label: `topic${index}`,
+        tagged_count: 30 - index,
+        taggers_count: 0,
+        taggers_id: [],
+      })),
+    });
+    render(<Arena />);
+    await user.click(screen.getByRole('button', { name: 'Content: Content' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Tags' }));
+    mocks.stream.mockClear();
+
+    await user.click(screen.getByLabelText('Cards'));
+    expect(within(screen.getByRole('list', { name: 'Tag standings' })).getAllByTestId('card')).toHaveLength(10);
+    await user.click(screen.getByLabelText('In graph'));
+    expect(await screen.findByTestId('tags-graph')).toHaveTextContent('topic0');
+    expect(mocks.stream).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'topic0' }));
+    expect(screen.getByRole('group', { name: 'Selected tag' })).toHaveTextContent('topic0');
+    expect(screen.getByLabelText('In arena')).toHaveAttribute('data-state', 'on');
+    expect(mocks.stream).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  }, 15_000);
+
+  it.each(['In arena', 'Cards'])(
+    'keeps %s visible and paused behind the post dialog',
+    async (layout) => {
+      const user = userEvent.setup();
+      setMutedPost({ author: 'first', id: 'first:post', preview: 'First idea' });
+      const { container } = render(<Arena />);
+      await user.click(screen.getByLabelText(layout));
+      const card = screen.getByRole('button', { name: /Rank 1,.*First idea/ });
+      expect(card).toHaveAttribute('aria-haspopup', 'dialog');
+      expect(screen.queryByRole('button', { name: 'Open full post' })).not.toBeInTheDocument();
+      await user.click(card);
+      expect(screen.getByRole('dialog', { name: 'Original Post' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Original Post' })).toBeVisible();
+      expect(container.querySelector('[data-arena-paused][inert]')).not.toBeNull();
+      expect(card).toBeVisible();
+      await user.click(screen.getByRole('button', { name: 'Close' }));
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      expect(container.querySelector('[data-arena-paused][inert]')).toBeNull();
+      expect(card).not.toHaveAttribute('aria-pressed');
+      expect(card).toHaveFocus();
+    },
+    15000,
+  );
+
+  it.each([
+    [null, 'Original Post'],
+    ['ancestor:post', 'Reply'],
+  ])('labels the displayed parent with %s as %s when opening a reply', async (replyTo, title) => {
+    setMutedPost({ author: 'parent', id: 'parent:post', replyTo });
+    const parent = mocks.ideas().ideas[0];
+    mocks.ideas.mockReturnValue({
+      ideas: [parent, { ...parent, author: 'child', id: 'child:post', replyTo: parent.id, tags: 5 }],
+      error: null,
+    });
+    const user = userEvent.setup();
+    render(<Arena />);
+    await user.click(screen.getByRole('button', { name: /Rank 1,/ }));
+    expect(screen.getByRole('dialog', { name: title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: title })).toBeVisible();
+  });
+
+  it('keeps the selected contender and filters when switching between graph and grid', async () => {
+    const user = userEvent.setup();
+    setMutedPost({ author: 'first', id: 'first:post', preview: 'First idea', tags: 5 });
+    const first = mocks.ideas().ideas[0];
+    mocks.ideas.mockReturnValue({
+      ideas: [first, { ...first, author: 'second', id: 'second:post', preview: 'Second idea', tags: 1 }],
+      error: null,
+    });
+    render(<Arena />);
+    await user.click(screen.getByLabelText('In graph'));
+    const graph = await screen.findByTestId('graph-projection');
+    await user.click(within(graph).getByRole('button', { name: 'Second idea' }));
+    expect(graph).toHaveAttribute('data-selected', 'second:post');
+    expect(screen.queryByRole('dialog', { name: 'Original Post' })).not.toBeInTheDocument();
+    await user.click(screen.getByLabelText('Cards'));
+    expect(screen.getByRole('button', { name: /Rank 2,.*Second idea/ })).not.toHaveAttribute('aria-pressed');
+    expect(screen.getByRole('button', { name: 'Ranking: Most popular' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Timeframe: This month' })).toBeInTheDocument();
+    await user.click(screen.getByLabelText('In graph'));
+    expect(await screen.findByTestId('graph-projection')).toHaveAttribute('data-selected', 'second:post');
+  });
+
   it.each(['Most active', 'Most posted'])(
     'automatically switches to people for %s and restores a valid post ranking',
     async (ranking) => {
@@ -136,18 +320,24 @@ describe('Arena filters and topic standings', () => {
     },
   );
 
-  it('places People above the default Content selection and preserves the people followers ranking', async () => {
+  it('puts Tags first, nests smaller content types, and preserves the people followers ranking', async () => {
     const user = userEvent.setup();
     render(<Arena />);
     await user.click(screen.getByRole('button', { name: 'Content: Content' }));
     expect(
       screen
         .getAllByRole('menuitem')
-        .slice(0, 2)
+        .slice(0, 3)
         .map((item) => item.textContent),
-    ).toEqual(['People', 'Content']);
+    ).toEqual(['Tags', 'People', 'Content']);
     expect(screen.getByRole('menuitem', { name: 'Content' })).toHaveAttribute('aria-current', 'true');
-    expect(screen.getByRole('separator')).toBeInTheDocument();
+    expect(screen.queryByRole('separator')).not.toBeInTheDocument();
+    for (const type of ['Posts', 'Articles', 'Collections', 'Images', 'Videos', 'Links', 'Files']) {
+      const item = screen.getByRole('menuitem', { name: type });
+      expect(item).toHaveClass('pl-6', 'text-sm');
+      expect(item.querySelector('svg')).toHaveClass('size-3.5');
+    }
+    expect(screen.getByRole('menuitem', { name: 'Content' }).querySelector('svg')).toHaveClass('size-4');
     await user.click(screen.getByRole('menuitem', { name: 'People' }));
     expect(mocks.people).toHaveBeenLastCalledWith(expect.objectContaining({ metric: 'popular' }));
     await user.click(screen.getByRole('button', { name: 'Ranking: Most popular' }));
@@ -232,15 +422,14 @@ describe('Arena filters and topic standings', () => {
     const floor = screen.getByRole('list', { name: 'People standings' });
     const first = within(floor).getByRole('button', { name: 'Rank 1, Person. Show most popular post' });
     expect(first).toHaveAttribute('aria-pressed', 'true');
-    expect(mocks.personPost).toHaveBeenLastCalledWith(
-      'person',
-      expect.objectContaining({ timeframe: TIMEFRAME.THIS_MONTH }),
-    );
+    expect(mocks.personPost).not.toHaveBeenCalled();
     for (const label of ['4 tags', '12 posts', '23 followers'])
       expect(within(floor).getByLabelText(label)).toBeInTheDocument();
-    expect(screen.getByLabelText('Original post conversation')).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     await user.click(within(floor).getByRole('button', { name: 'Rank 2, Second person. Show most popular post' }));
     expect(first).toHaveAttribute('aria-pressed', 'false');
+    await user.click(screen.getByRole('button', { name: 'Open most popular post' }));
+    expect(screen.getByRole('dialog', { name: 'Popular post by Second person' })).toBeInTheDocument();
     expect(mocks.personPost).toHaveBeenLastCalledWith(
       'second',
       expect.objectContaining({ timeframe: TIMEFRAME.THIS_MONTH }),
@@ -253,14 +442,14 @@ describe('Arena filters and topic standings', () => {
     expect(screen.getByText('Posts are hidden by your mute settings.')).toBeInTheDocument();
     expect(screen.queryByText('No posts found for this tag.')).not.toBeInTheDocument();
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show muted' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Muted' }));
     expect(screen.getByText('A hidden idea')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Hide muted' }));
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
     expect(screen.getByText('Posts are hidden by your mute settings.')).toBeInTheDocument();
   });
 
-  it('ranks visible contenders from first place and restores muted contenders on demand', () => {
+  it('ranks visible contenders from first place when muted posts have higher scores', () => {
     setMutedPost({ tags: 99 });
     const hidden = mocks.ideas().ideas[0];
     mocks.ideas.mockReturnValue({
@@ -270,32 +459,73 @@ describe('Arena filters and topic standings', () => {
     render(<Arena />);
     expect(screen.getByRole('button', { name: /Rank 1,.*Visible idea/ })).toBeInTheDocument();
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show muted' }));
-    expect(screen.getByRole('button', { name: /Rank 1,.*A hidden idea/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Muted' })).not.toBeInTheDocument();
   });
 
   it('does not blame muting when muted posts fall outside the timeframe', () => {
     setMutedPost({ indexedAt: Date.UTC(2000, 0, 1) });
     render(<Arena />);
     expect(screen.getByText('No posts found for this tag.')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Show muted' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Muted' })).not.toBeInTheDocument();
+  });
+
+  it('waits for cached posts instead of flashing an empty state', () => {
+    mocks.ideas.mockReturnValue({ ideas: [], error: null, loading: true });
+    render(<Arena />);
+    expect(screen.getByRole('status', { name: 'Loading Arena' })).toBeInTheDocument();
+    expect(screen.queryByText('No posts found for this tag.')).not.toBeInTheDocument();
+  });
+
+  it('waits for the complete candidate scan before mounting standings', () => {
+    setMutedPost({ author: 'visible', id: 'visible:post', preview: 'Stable contender' });
+    const loadMore = vi.fn();
+    mocks.stream.mockReturnValue({ ...mocks.stream(), postIds: ['visible:post'], hasMore: true, loadMore });
+    const { rerender } = render(<Arena />);
+    expect(loadMore).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status', { name: 'Loading Arena' })).toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Idea standings' })).not.toBeInTheDocument();
+
+    mocks.stream.mockReturnValue({ ...mocks.stream(), loadingMore: true });
+    mocks.ideas.mockReturnValue({ ...mocks.ideas(), loading: true });
+    rerender(<Arena />);
+    expect(screen.getByRole('status', { name: 'Loading Arena' })).toBeInTheDocument();
+    expect(screen.queryByText('Stable contender')).not.toBeInTheDocument();
+
+    mocks.stream.mockReturnValue({ ...mocks.stream(), loadingMore: false, hasMore: false });
+    mocks.ideas.mockReturnValue({ ...mocks.ideas(), loading: false });
+    rerender(<Arena />);
+    const standings = screen.getByRole('list', { name: 'Idea standings' });
+    expect(standings).toHaveTextContent('Stable contender');
+    expect(screen.queryByRole('status', { name: 'Loading Arena' })).not.toBeInTheDocument();
+    rerender(<Arena />);
+    expect(screen.getByRole('list', { name: 'Idea standings' })).toBe(standings);
+  });
+
+  it.each([TIMEFRAME.THIS_MONTH, TIMEFRAME.ALL_TIME])('scans past deleted-only pages in %s', (timeframe) => {
+    useHotStore.setState({ timeframe });
+    const loadMore = vi.fn();
+    mocks.stream.mockReturnValue({ ...mocks.stream(), postIds: ['deleted:post'], hasMore: true, loadMore });
+    mocks.ideas.mockReturnValue({ ideas: [], error: null, loading: false });
+    render(<Arena />);
+    expect(loadMore).toHaveBeenCalledOnce();
+    expect(screen.queryByText('No posts found for this tag.')).not.toBeInTheDocument();
   });
 
   it('resets the temporary reveal after a topic change and when Reset is clicked', () => {
     setMutedPost();
     render(<Arena />);
-    fireEvent.click(screen.getByRole('button', { name: 'Show muted' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Muted' }));
     chooseAll();
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show muted' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Muted' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Show muted' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Muted' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
     expect(screen.queryByText('A hidden idea')).not.toBeInTheDocument();
   });
 
-  it('shows at most three taggers without a counter, fetching only deduplicated visible profiles', () => {
+  it('shows only the selected tag in the Arena and fetches its three visible taggers', () => {
     const rawTags = Array.from({ length: 10 }, (_, index) => ({
       label: `topic${index}`,
       tagged_count: 662,
@@ -313,18 +543,16 @@ describe('Arena filters and topic standings', () => {
     mocks.hotTags.mockReturnValue({ ...mocks.hotTags(), rawTags });
     render(<Arena />);
 
-    for (const tag of rawTags) {
-      const stack = screen.getByTestId(`arena-topic-taggers-${tag.label}`);
-      expect(stack.children).toHaveLength(3);
-      expect(stack).not.toHaveTextContent(/\+/);
-      expect(screen.getByRole('group', { name: `${tag.label} topic taggers` })).toContainElement(stack);
-      const topicButton = screen.getByRole('button', { name: `${tag.label} tag (662 posts)` });
-      expect(topicButton).not.toContainElement(stack);
+    const selectedTag = screen.getByRole('group', { name: 'Selected tag' });
+    const stack = within(selectedTag).getByTestId('arena-topic-taggers-topic0');
+    expect(stack.children).toHaveLength(3);
+    expect(stack).not.toHaveTextContent(/\+/);
+    expect(within(selectedTag).getByRole('button', { name: 'topic0 tag (662 posts)' })).not.toContainElement(stack);
+    for (const tag of rawTags.slice(1)) {
+      expect(screen.queryByTestId(`arena-topic-taggers-${tag.label}`)).not.toBeInTheDocument();
+      expect(within(selectedTag).queryByText(tag.label)).not.toBeInTheDocument();
     }
-    expect(mocks.avatars).toHaveBeenLastCalledWith([
-      'shared',
-      ...rawTags.flatMap((_, index) => [`tagger${index}a`, `tagger${index}b`]),
-    ]);
+    expect(mocks.avatars).toHaveBeenLastCalledWith(['shared', 'tagger0a', 'tagger0b']);
     expect(screen.queryByText('+659')).not.toBeInTheDocument();
   });
 
@@ -401,8 +629,7 @@ describe('Arena filters and topic standings', () => {
     });
     render(<Arena />);
     expect(screen.getByTestId('arena-topic-taggers-pubky')).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'View: In arena' }));
-    await user.click(screen.getByRole('menuitem', { name: 'In grid' }));
+    await user.click(screen.getByLabelText('Cards'));
     expect(screen.queryByTestId('arena-topic-taggers-pubky')).not.toBeInTheDocument();
     expect(mocks.avatars).toHaveBeenLastCalledWith([]);
   });
@@ -416,12 +643,13 @@ describe('Arena filters and topic standings', () => {
     });
     chooseAll();
     expect(mocks.stream).toHaveBeenLastCalledWith({ streamId: 'timeline:all:all', limit: 50, includeMuted: true });
-    expect(screen.getByRole('button', { name: 'Choose topic tag' })).toHaveTextContent('all');
+    expect(screen.getByRole('button', { name: 'Choose tag' })).toHaveTextContent('all');
     expect(screen.getByText('No posts found for these filters.')).toBeInTheDocument();
-    expect(screen.queryByTestId('arena-tag-connectors')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose topic tag' }));
+    expect(screen.getByTestId('arena-tag-connectors')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Most popular content tag' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Choose tag' }));
     fireEvent.click(
-      within(screen.getByRole('group', { name: 'Top tags' })).getByRole('button', { name: 'pubky tag (10 posts)' }),
+      within(screen.getByRole('list', { name: 'Top tags 1' })).getByRole('button', { name: 'pubky tag (10 posts)' }),
     );
     expect(mocks.stream).toHaveBeenLastCalledWith({
       streamId: 'timeline:all:all:pubky',
@@ -452,9 +680,9 @@ describe('Arena filters and topic standings', () => {
     chooseAll();
     await user.click(screen.getByRole('button', { name: 'Content: Content' }));
     await user.click(screen.getByRole('menuitem', { name: 'Posts' }));
-    expect(screen.getByRole('button', { name: 'Choose topic tag' })).toHaveTextContent('all');
-    await user.click(screen.getByRole('button', { name: 'Timeframe: This month’s' }));
-    await user.click(screen.getByRole('menuitem', { name: 'All-time' }));
+    expect(screen.getByRole('button', { name: 'Choose tag' })).toHaveTextContent('all');
+    await user.click(screen.getByRole('button', { name: 'Timeframe: This month' }));
+    await user.click(screen.getByRole('menuitem', { name: 'All time' }));
     expect(mocks.stream).toHaveBeenLastCalledWith({
       streamId: 'total_engagement:all:all',
       limit: 24,
@@ -467,9 +695,9 @@ describe('Arena filters and topic standings', () => {
       limit: 24,
       includeMuted: true,
     });
-    expect(screen.getByRole('button', { name: 'Choose topic tag' })).toHaveTextContent('all');
-    fireEvent.click(screen.getByRole('button', { name: 'Reset' }));
-    expect(screen.getByRole('button', { name: 'Choose topic tag' })).toHaveTextContent('pubky');
+    expect(screen.getByRole('button', { name: 'Choose tag' })).toHaveTextContent('all');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset filters' }));
+    expect(screen.getByRole('button', { name: 'Choose tag' })).toHaveTextContent('pubky');
     expect(mocks.stream).toHaveBeenLastCalledWith({
       streamId: 'timeline:all:all:pubky',
       limit: 50,

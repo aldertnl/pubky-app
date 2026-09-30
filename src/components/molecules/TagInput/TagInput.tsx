@@ -20,6 +20,7 @@ import { TagSuggestionsDropdown } from './TagSuggestionsDropdown/TagSuggestionsD
 export const TagInput = forwardRef<TagInputHandle, TagInputProps>(function TagInput(
   {
     onTagAdd,
+    'aria-label': ariaLabel,
     placeholder,
     existingTags = [],
     viewerTags,
@@ -187,6 +188,7 @@ export const TagInput = forwardRef<TagInputHandle, TagInputProps>(function TagIn
           >
             <Input
               data-cy="add-tag-input"
+              aria-label={ariaLabel}
               ref={inputRef}
               type="text"
               value={inputValue}

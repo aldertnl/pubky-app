@@ -12,6 +12,7 @@ import {
 } from '@/atoms/DropdownMenu/DropdownMenu';
 import { SidebarButton } from '@/atoms/SidebarButton/SidebarButton';
 import { Typography } from '@/atoms/Typography/Typography';
+import { cn } from '@/libs/utils/utils';
 
 interface ArenaFilterMenuProps<T extends string> {
   label: string;
@@ -20,6 +21,8 @@ interface ArenaFilterMenuProps<T extends string> {
     value: T;
     label: string;
     icon: ComponentType<{ className?: string }>;
+    disabled?: boolean;
+    nested?: boolean;
     indicators?: { label: string; icon: ComponentType<{ className?: string }> }[];
   }[];
   onChange: (value: T) => void;
@@ -57,20 +60,24 @@ export function ArenaFilterMenu<T extends string>({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-70" aria-label={label}>
         <Container overrideDefaults className="flex w-full flex-col gap-3">
-          {options.map(({ value: optionValue, label: optionLabel, icon: Icon, indicators }) => (
+          {options.map(({ value: optionValue, label: optionLabel, icon: Icon, indicators, disabled, nested }) => (
             <Fragment key={optionValue}>
               <DropdownMenuItem
+                disabled={disabled}
                 aria-current={optionValue === value ? 'true' : undefined}
                 aria-description={
                   indicators ? `Available for ${indicators.map(({ label }) => label).join(' and ')}` : undefined
                 }
-                className="w-full gap-2 p-0 text-base font-medium text-muted-foreground"
+                className={cn(
+                  'w-full gap-2 p-0 font-medium text-muted-foreground',
+                  nested ? 'pl-6 text-sm' : 'text-base',
+                )}
                 onSelect={() => {
                   setOpen(false);
                   if (optionValue !== value) onChange(optionValue);
                 }}
               >
-                <Icon className="size-4" aria-hidden="true" />
+                <Icon className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true" />
                 <Typography as="span" overrideDefaults className="min-w-0 flex-1 truncate">
                   {optionLabel}
                 </Typography>
@@ -87,8 +94,8 @@ export function ArenaFilterMenu<T extends string>({
                   </span>
                 )}
                 {(indicators || optionValue === value) && (
-                  <span className="size-4 shrink-0" aria-hidden="true">
-                    {optionValue === value && <Check className="size-4 text-brand" />}
+                  <span className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true">
+                    {optionValue === value && <Check className={cn('text-brand', nested ? 'size-3.5' : 'size-4')} />}
                   </span>
                 )}
               </DropdownMenuItem>

@@ -20,7 +20,11 @@ vi.mock('@/hooks/usePostNavigation/usePostNavigation', () => ({
   usePostNavigation: () => ({ getPostHref: (id: string) => `/post/${id}` }),
 }));
 vi.mock('@/organisms/PostMain/PostMain', () => ({
-  PostMain: ({ postId }: { postId: string }) => <article aria-label={postId}>{postId}</article>,
+  PostMain: ({ postId, isReply, isLastReply }: { postId: string; isReply?: boolean; isLastReply?: boolean }) => (
+    <article aria-label={postId} data-reply={isReply || undefined} data-last-reply={isLastReply || undefined}>
+      {postId}
+    </article>
+  ),
 }));
 vi.mock('@/organisms/QuickReply/QuickReply', () => ({
   QuickReply: ({ parentPostId, placeholder }: { parentPostId: string; placeholder?: string }) => (
@@ -116,6 +120,7 @@ describe('Arena leading reply', () => {
     expect(screen.queryByRole('article')).not.toBeInTheDocument();
     rerender(<ArenaConversation {...props} showMuted />);
     expect(screen.getByRole('article', { name: rootId })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     expect(screen.getByRole('article', { name: 'c:popular' })).toBeInTheDocument();
     expect(useStreamPagination).toHaveBeenLastCalledWith(expect.objectContaining({ includeMuted: true }));
     rerender(<ArenaConversation {...props} />);
@@ -129,38 +134,47 @@ describe('Arena leading reply', () => {
     expect(screen.getByRole('status', { name: 'Loading conversation' })).toBeInTheDocument();
     act(() => enterViewport());
     expect(useStreamPagination).toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     expect(screen.getByRole('article', { name: 'c:popular' })).toBeInTheDocument();
   });
   it('shows the most popular direct reply instead of the clicked reply, without a rank number', () => {
     render(<ArenaConversation {...props} />);
     const replies = within(screen.getByRole('region', { name: 'Replies' }));
-    expect(replies.getByRole('article', { name: 'c:popular' })).toBeInTheDocument();
+    expect(replies.queryByRole('article', { name: 'c:popular' })).not.toBeInTheDocument();
+    expect(replies.queryByRole('heading', { name: 'Leading Reply' })).not.toBeInTheDocument();
+    expect(replies.getByRole('button', { name: 'Show leading reply' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
+    expect(replies.getByRole('article', { name: 'c:popular' })).toHaveAttribute('data-reply', 'true');
+    expect(replies.getByRole('article', { name: 'c:popular' })).not.toHaveAttribute('data-last-reply');
     expect(replies.queryByRole('article', { name: selectedId })).not.toBeInTheDocument();
     expect(replies.queryByRole('article', { name: rootId })).not.toBeInTheDocument();
     expect(replies.queryByRole('article', { name: 'd:nested' })).not.toBeInTheDocument();
-    expect(replies.getByRole('heading', { name: /^LEADING REPLY/ })).toBeInTheDocument();
+    expect(replies.getByRole('heading', { name: 'Leading Reply' })).toBeVisible();
     expect(screen.queryByText(/#\d/)).not.toBeInTheDocument();
   });
 
   it('links to all original-post replies before the separate original-post composer', () => {
     render(<ArenaConversation {...props} />);
+    expect(screen.queryByRole('link', { name: 'Show all 27 replies' })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     const reply = screen.getByRole('article', { name: 'c:popular' });
     const link = screen.getByRole('link', { name: 'Show all 27 replies' });
-    const heading = screen.getByRole('heading', { name: 'JOIN THE BATTLE' });
+    expect(screen.getByRole('heading', { name: 'Leading Reply' })).toBeVisible();
     const composer = screen.getByRole('textbox', { name: `Reply to ${rootId}` });
     expect(link).toHaveAttribute('href', `/post/${rootId}`);
-    expect(composer).toHaveAttribute('placeholder', 'Reply to original post');
+    expect(composer).toHaveAttribute('placeholder', 'Join the battle');
     expect(reply.compareDocumentPosition(link) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(link.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(heading.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(link.compareDocumentPosition(composer) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('keeps the shared timeframe and reacts when popularity counts change', () => {
     ideas.push(idea('e:old', { tags: 9999, indexedAt: now - 31 * day }));
     const { rerender } = render(<ArenaConversation {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     expect(screen.getByRole('article', { name: 'c:popular' })).toBeInTheDocument();
     ideas = ideas.map((post) => (post.id === selectedId ? { ...post, reposts: 20 } : post));
     rerender(<ArenaConversation {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     expect(screen.getByRole('article', { name: selectedId })).toBeInTheDocument();
     expect(screen.queryByRole('article', { name: 'e:old' })).not.toBeInTheDocument();
   });
@@ -179,6 +193,7 @@ describe('Arena leading reply', () => {
     ideas.push(idea('f:older-winner', { tags: 50, indexedAt: now - 20 * day }));
     vi.mocked(useStreamPagination).mockReturnValue(stream());
     rerender(<ArenaConversation {...props} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Show leading reply' }));
     expect(screen.getByRole('article', { name: 'f:older-winner' })).toBeInTheDocument();
     expect(screen.queryByRole('status', { name: 'Finding most popular reply' })).not.toBeInTheDocument();
   });
@@ -193,12 +208,31 @@ describe('Arena leading reply', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it('shows cache failures instead of an endless loading state when more replies exist', () => {
+    vi.mocked(useStreamPagination).mockReturnValue(stream({ hasMore: true }));
+    vi.mocked(useArenaIdeas).mockReturnValue({ ideas: [], error: 'Cache unavailable', loading: false });
+    render(<ArenaConversation {...props} />);
+    expect(screen.getByRole('alert')).toHaveTextContent('Could not rank replies.');
+    expect(screen.queryByRole('status', { name: 'Finding most popular reply' })).not.toBeInTheDocument();
+    expect(loadMore).not.toHaveBeenCalled();
+  });
+
+  it('waits for the current reply projection before declaring a winner', () => {
+    vi.mocked(useArenaIdeas).mockReturnValue({ ideas, error: null, loading: true });
+    const { rerender } = render(<ArenaConversation {...props} />);
+    expect(screen.getByRole('status', { name: 'Finding most popular reply' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Show leading reply' })).not.toBeInTheDocument();
+    vi.mocked(useArenaIdeas).mockReturnValue({ ideas, error: null, loading: false });
+    rerender(<ArenaConversation {...props} />);
+    expect(screen.getByRole('button', { name: 'Show leading reply' })).toBeInTheDocument();
+  });
+
   it('does not invent a leading reply when none are in the timeframe', () => {
     ideas = [idea(rootId, { replyTo: null }), idea('b:old', { indexedAt: now - 31 * day })];
     render(<ArenaConversation {...props} />);
     const replies = within(screen.getByRole('region', { name: 'Replies' }));
     expect(replies.queryByRole('article')).not.toBeInTheDocument();
     expect(replies.getByText('No replies in this timeframe.')).toBeInTheDocument();
-    expect(replies.getByRole('heading', { name: 'LEADING REPLY' })).toBeInTheDocument();
+    expect(replies.queryByRole('heading')).not.toBeInTheDocument();
   });
 });

@@ -3,6 +3,7 @@
 import { Fragment } from 'react';
 import { useUserProfile } from '@/hooks/useUserProfile/useUserProfile';
 import { Identity } from '@/libs/identity/identity';
+import { MENTION_IN_TEXT_REGEX } from '@/libs/identity/identity.constants';
 import { formatPublicKey, withPubkyPrefix } from '@/libs/utils/utils';
 
 function PreviewMention({ mention }: { mention: string }) {
@@ -17,10 +18,9 @@ function PreviewMention({ mention }: { mention: string }) {
 
 /** Non-interactive mentions preserve the mini card's select-and-scroll action. */
 export function ArenaPostPreview({ text }: { text: string }) {
-  const pattern = new RegExp(`(^|\\s)(${Identity.PUBKY_IDENTIFIER_WITH_PREFIX_SOURCE})`, 'g');
   const parts = [];
   let cursor = 0;
-  for (const match of text.matchAll(pattern)) {
+  for (const match of text.matchAll(MENTION_IN_TEXT_REGEX)) {
     const start = match.index + match[1].length;
     parts.push(
       <Fragment key={start}>

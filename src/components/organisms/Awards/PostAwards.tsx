@@ -16,8 +16,10 @@ export function PostAwards({
   postId,
   user: profileUser,
   scrollRequest = 0,
+  showHeading = true,
 }: {
   scrollRequest?: number;
+  showHeading?: boolean;
 } & ({ postId: string; user?: string } | { postId?: string; user: string })) {
   const user = profileUser ?? parseCompositeId(postId!).pubky;
   const ref = useRef<HTMLElement>(null);
@@ -45,13 +47,15 @@ export function PostAwards({
       aria-label={profileUser ? 'User awards' : 'Awards for this post'}
       className="mt-6 scroll-mt-[calc(var(--header-height-mobile)+16px)] outline-none lg:scroll-mt-[calc(var(--header-height)+16px)]"
     >
-      <Typography
-        as="h3"
-        overrideDefaults
-        className="mb-3 text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase"
-      >
-        {profileUser ? `${ownerName}’S AWARDS` : 'POST AWARDS'}
-      </Typography>
+      {showHeading && (
+        <Typography
+          as="h3"
+          overrideDefaults
+          className="mb-3 text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase"
+        >
+          {profileUser ? `${ownerName}’S AWARDS` : 'POST AWARDS'}
+        </Typography>
+      )}
       <div className={`${styles.gallery} ${styles.galleryUser}`}>
         {visible.map((award) => (
           <AwardCard

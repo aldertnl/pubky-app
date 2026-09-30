@@ -9,6 +9,7 @@ import { StreamUserController } from '@/controllers/stream/users/users';
 import { UserController } from '@/controllers/user/user';
 import { useMutedUsers } from '@/hooks/useMutedUsers/useMutedUsers';
 import { Logger } from '@/libs/logger/logger';
+import { resolveUserDisplayName } from '@/libs/utils/utils';
 import type { Pubky } from '@/models/models.types';
 import type { UserRelationshipsModelSchema } from '@/models/user/relationships/userRelationships.schema';
 import type { UserListItemData } from '@/organisms/UserListItem/UserListItem.types';
@@ -82,9 +83,13 @@ export function useSearchPeople(tags: string[], { onError }: UseSearchPeopleOpti
   // Bumped on every tags change and on unmount; in-flight fetches compare
   // against it and drop stale results instead of committing them.
   const generationRef = useRef(0);
-  // Keep the latest callback without retriggering the fetch effect.
+  // Keep the latest callback without retriggering the fetch effect. Written
+  // from an effect (not during render) so the React Compiler `refs` rule holds;
+  // readers only run after a commit, so they never observe a stale callback.
   const onErrorRef = useRef(onError);
-  onErrorRef.current = onError;
+  useEffect(() => {
+    onErrorRef.current = onError;
+  }, [onError]);
 
   const { isMuted } = useMutedUsers();
 
@@ -227,8 +232,8 @@ export function useSearchPeople(tags: string[], { onError }: UseSearchPeopleOpti
       const relationship = userRelationshipsMap.get(id);
       return {
         id,
-        name: details.name,
-        avatarUrl: details.image ? FileController.getAvatarUrl(id) : null,
+        name: resolveUserDisplayName(details),
+        avatarUrl: details.image ? FileController.getAvatarUrl(id, details.indexed_at) : null,
         stats: {
           tags: counts?.tagged ?? 0,
           posts: counts?.posts ?? 0,

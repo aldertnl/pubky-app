@@ -6,14 +6,23 @@ exports[`Logo - Snapshots > matches snapshot for Logo with custom className 1`] 
   data-cy="header-logo"
   href="/home"
 >
-  <img
-    alt="Pubky Arena"
-    class="-mt-1 h-[36px] w-[184px]"
-    data-testid="logo-image"
-    height="36"
-    src="/pubky-arena-logo.svg"
-    width="184"
-  />
+  <span
+    class="relative inline-flex shrink-0"
+  >
+    <img
+      alt="Pubky Arena"
+      class="-mt-1 h-[36px] w-[184px]"
+      data-testid="logo-image"
+      height="36"
+      src="/pubky-arena-logo.svg"
+      width="184"
+    />
+    <span
+      class="pointer-events-none absolute top-full right-0 text-[11px] leading-none font-medium text-brand/32"
+    >
+      v0.3
+    </span>
+  </span>
 </a>
 `;
 
@@ -24,14 +33,23 @@ exports[`Logo - Snapshots > matches snapshot for Logo with custom dimensions 1`]
   href="/home"
   style="min-width: 200px; min-height: 80px;"
 >
-  <img
-    alt="Pubky Arena"
-    class="-mt-1"
-    data-testid="logo-image"
-    height="80"
-    src="/pubky-arena-logo.svg"
-    width="200"
-  />
+  <span
+    class="relative inline-flex shrink-0"
+  >
+    <img
+      alt="Pubky Arena"
+      class="-mt-1"
+      data-testid="logo-image"
+      height="80"
+      src="/pubky-arena-logo.svg"
+      width="200"
+    />
+    <span
+      class="pointer-events-none absolute top-full right-0 text-[11px] leading-none font-medium text-brand/32"
+    >
+      v0.3
+    </span>
+  </span>
 </a>
 `;
 
@@ -41,13 +59,22 @@ exports[`Logo - Snapshots > matches snapshot for default Logo 1`] = `
   data-cy="header-logo"
   href="/home"
 >
-  <img
-    alt="Pubky Arena"
-    class="-mt-1 h-[36px] w-[184px]"
-    data-testid="logo-image"
-    height="36"
-    src="/pubky-arena-logo.svg"
-    width="184"
-  />
+  <span
+    class="relative inline-flex shrink-0"
+  >
+    <img
+      alt="Pubky Arena"
+      class="-mt-1 h-[36px] w-[184px]"
+      data-testid="logo-image"
+      height="36"
+      src="/pubky-arena-logo.svg"
+      width="184"
+    />
+    <span
+      class="pointer-events-none absolute top-full right-0 text-[11px] leading-none font-medium text-brand/32"
+    >
+      v0.3
+    </span>
+  </span>
 </a>
 `;

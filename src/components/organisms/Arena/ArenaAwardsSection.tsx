@@ -1,6 +1,6 @@
 'use client';
-import { scrollToArenaTarget } from '@/libs/arena/scrollToArenaTarget';
 import { useEffect, useRef } from 'react';
+import { scrollToArenaTarget } from '@/libs/arena/scrollToArenaTarget';
 import { AwardsContent } from '@/organisms/Awards/AwardsDialog';
 
 export function ArenaAwardsSection({ user, postId, request }: { user: string; postId?: string; request: number }) {

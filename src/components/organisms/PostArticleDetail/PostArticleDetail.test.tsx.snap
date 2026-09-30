@@ -85,7 +85,7 @@ exports[`PostArticleDetail > matches snapshot when blurred 1`] = `
       data-time-placement="bottom-left"
     />
     <div
-      class="mt-3 mb-6"
+      class="mt-3 mb-6 md:flex-col md:items-start md:justify-start"
       data-post-id="user123:post456"
       data-testid="post-inline-tags-actions"
     >
@@ -130,7 +130,7 @@ exports[`PostArticleDetail > matches snapshot with cover image 1`] = `
       data-time-placement="bottom-left"
     />
     <div
-      class="mt-3 mb-6"
+      class="mt-3 mb-6 md:flex-col md:items-start md:justify-start"
       data-post-id="snapshot-user:cover-post"
       data-testid="post-inline-tags-actions"
     >
@@ -145,12 +145,21 @@ exports[`PostArticleDetail > matches snapshot with cover image 1`] = `
         Repost
       </button>
     </div>
-    <img
-      alt="Article cover"
-      class="mb-6 aspect-video w-full rounded-md object-cover object-center"
-      data-testid="cover-image"
-      src="https://example.com/cover.jpg"
-    />
+    <picture>
+      <source
+        media="(min-width: 1024px)"
+      />
+      <img
+        alt="Article cover"
+        class="mb-6 aspect-video w-full rounded-md object-cover object-center"
+        decoding="async"
+        fetchpriority="high"
+        height="600"
+        loading="eager"
+        src="https://example.com/cover.jpg"
+        width="800"
+      />
+    </picture>
     <div
       data-full-article="true"
       data-is-article="true"
@@ -184,7 +193,7 @@ exports[`PostArticleDetail > matches snapshot with default props 1`] = `
       data-time-placement="bottom-left"
     />
     <div
-      class="mt-3 mb-6"
+      class="mt-3 mb-6 md:flex-col md:items-start md:justify-start"
       data-post-id="user123:post456"
       data-testid="post-inline-tags-actions"
     >

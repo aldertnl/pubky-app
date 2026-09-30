@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/atoms/Popover/Popover';
 import { useClosingPresence } from '@/hooks/useClosingPresence/useClosingPresence';
+import { cn } from '@/libs/utils/utils';
 import { UserInfoPopoverContent } from './components/UserInfoPopoverContent/UserInfoPopoverContent';
 import { POPOVER_ALIGN_OFFSET, POPOVER_HOVER_DELAY, POPOVER_SIDE_OFFSET } from './UserInfoPopover.constants';
 
@@ -12,6 +13,8 @@ interface UserInfoPopoverProps {
   avatarUrl?: string;
   formattedPublicKey: string;
   children: React.ReactNode;
+  contentClassName?: string;
+  afterStats?: React.ReactNode;
   /** Enable hover trigger. Defaults to true (hover-to-open). Set false for click-to-open. */
   hover?: boolean;
   /** Vertical offset from trigger element. Defaults to POPOVER_SIDE_OFFSET (1). */
@@ -33,6 +36,8 @@ export function UserInfoPopover({
   avatarUrl,
   formattedPublicKey,
   children,
+  contentClassName,
+  afterStats,
   hover = true,
   sideOffset = POPOVER_SIDE_OFFSET,
   alignOffset = POPOVER_ALIGN_OFFSET,
@@ -59,7 +64,7 @@ export function UserInfoPopover({
         sideOffset={sideOffset}
         align="start"
         alignOffset={alignOffset}
-        className="mx-0 w-(--popover-width)"
+        className={cn('mx-0 w-(--popover-width)', contentClassName)}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onAnimationEnd={onAnimationEnd}
       >
@@ -69,6 +74,7 @@ export function UserInfoPopover({
             userName={userName}
             avatarUrl={avatarUrl}
             formattedPublicKey={formattedPublicKey}
+            afterStats={afterStats}
           />
         ) : null}
       </PopoverContent>

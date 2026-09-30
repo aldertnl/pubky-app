@@ -13,6 +13,13 @@ export type ArenaCandidateSorting = 'timeline' | 'total_engagement';
 /** null selects all topics; strings always refer to literal tag labels. */
 export type ArenaTopicFilter = string | null;
 
+/** Keep controls readable even when the underlying post is several pages long. */
+export function getArenaPreviewLabel(preview: string) {
+  const text = preview.replace(/\s+/g, ' ').trim();
+  const characters = Array.from(text);
+  return characters.length > 160 ? `${characters.slice(0, 160).join('')}…` : text;
+}
+
 export interface ArenaIdea {
   id: string;
   author: Pubky;

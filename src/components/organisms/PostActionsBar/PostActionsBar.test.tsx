@@ -7,6 +7,15 @@ import { PostTagCountProvider } from './PostTagCountContext';
 const mockUsePostCounts = vi.fn();
 const mockUsePostDetails = vi.fn();
 const mockUseBookmark = vi.fn();
+const authState = vi.hoisted(() => ({ currentUserPubky: 'viewer' }));
+
+vi.mock('@/stores/auth/auth.store', () => ({
+  useAuthStore: (selector: (state: { currentUserPubky: string }) => unknown) => selector(authState),
+}));
+
+vi.mock('@/organisms/Awards/RecognizeDialog', () => ({
+  RecognizeDialog: ({ postId }: { postId: string }) => <div data-testid="recognize-dialog" data-post-id={postId} />,
+}));
 
 vi.mock('@/hooks/usePostCounts/usePostCounts', () => ({
   usePostCounts: (postId: string) => mockUsePostCounts(postId),
@@ -122,6 +131,7 @@ vi.mock('@/atoms/Typography/Typography', () => {
 describe('PostActionsBar', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    authState.currentUserPubky = 'viewer';
     // Default mock implementations
     mockUseBookmark.mockReturnValue({
       isBookmarked: false,
@@ -148,6 +158,55 @@ describe('PostActionsBar', () => {
     expect(screen.getByRole('button', { name: 'Tag post (25)' })).toBeInTheDocument();
     rerender(<PostActionsBar postId="post-arena" />);
     expect(screen.getByRole('button', { name: 'Tag post (4)' })).toBeInTheDocument();
+  });
+
+  it('keeps every count and action in the standard row, saving the feed entry', () => {
+    mockUsePostCounts.mockReturnValue({ postCounts: { unique_tags: 0, replies: 8, reposts: 3 }, isLoading: false });
+    const onTagClick = vi.fn();
+    const onReplyClick = vi.fn();
+    const onRepostClick = vi.fn();
+    render(
+      <PostActionsBar
+        postId="author:original"
+        savePostId="viewer:repost"
+        onTagClick={onTagClick}
+        onReplyClick={onReplyClick}
+        onRepostClick={onRepostClick}
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Tag post (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reply to post (8)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Repost (3)' }));
+    expect(onTagClick).toHaveBeenCalledOnce();
+    expect(onReplyClick).toHaveBeenCalledOnce();
+    expect(onRepostClick).toHaveBeenCalledOnce();
+    expect(screen.getByTestId('post-save-picker')).toHaveAttribute('data-post-id', 'viewer:repost');
+    expect(screen.getByRole('button', { name: 'More options' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Recognize contribution' })).toBeInTheDocument();
+    expect(screen.getAllByRole('button')).toHaveLength(6);
+  });
+
+  it('keeps saved membership on the repost while actions address the original', () => {
+    mockUsePostCounts.mockReturnValue({
+      postCounts: { tags: 0, unique_tags: 0, replies: 1, reposts: 1 },
+      isLoading: false,
+    });
+    render(<PostActionsBar postId="author:original" savePostId="me:repost" />);
+    expect(screen.getByTestId('post-save-picker')).toHaveAttribute('data-post-id', 'me:repost');
+    expect(screen.getByTestId('post-menu-actions')).toHaveAttribute('data-post-id', 'author:original');
+    expect(mockUsePostCounts).toHaveBeenCalledWith('author:original');
+  });
+
+  it('recognizes the displayed original and hides recognition on an own post', () => {
+    mockUsePostCounts.mockReturnValue({
+      postCounts: { tags: 0, unique_tags: 0, replies: 1, reposts: 1 },
+      isLoading: false,
+    });
+    const { rerender } = render(<PostActionsBar postId="author:original" savePostId="viewer:repost" />);
+    fireEvent.click(screen.getByRole('button', { name: 'Recognize contribution' }));
+    expect(screen.getByTestId('recognize-dialog')).toHaveAttribute('data-post-id', 'author:original');
+    rerender(<PostActionsBar postId="viewer:original" />);
+    expect(screen.queryByRole('button', { name: 'Recognize contribution' })).not.toBeInTheDocument();
   });
 
   it('shows skeleton loading state while counts are not available', () => {
@@ -248,6 +307,7 @@ describe('PostActionsBar', () => {
 
 describe('PostActionsBar - Snapshots', () => {
   beforeEach(() => {
+    authState.currentUserPubky = 'viewer';
     mockUseBookmark.mockReturnValue({
       isBookmarked: false,
       isLoading: false,

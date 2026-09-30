@@ -87,12 +87,22 @@ describe('useArenaPeople', () => {
   it('inspects later activity pages for count rankings even with ten visible people', async () => {
     stream.users = Array.from({ length: 10 }, (_, i) => person(`user${i}`));
     stream.hasMore = true;
-    const { result, rerender } = renderHook(() => useArenaPeople({ ...defaults, metric: 'popular' }));
+    const { result, rerender } = renderHook(() =>
+      useArenaPeople({ ...defaults, metric: 'popular', reach: REACH.NETWORK }),
+    );
     await waitFor(() => expect(stream.loadMore).toHaveBeenCalled());
     stream = { ...stream, users: [...stream.users, person('later-leader', 200)], hasMore: false };
     rerender();
     expect(result.current.users[0].id).toBe('later-leader');
     expect(result.current.users).toHaveLength(10);
+  });
+  it('stops the ordered most-followed everyone stream once ten visible people are available', () => {
+    stream.users = Array.from({ length: 10 }, (_, i) => person(`user${i}`, 20 - i));
+    stream.hasMore = true;
+    const { result } = renderHook(() => useArenaPeople({ ...defaults, metric: 'popular' }));
+    expect(result.current.users).toHaveLength(10);
+    expect(result.current.loading).toBe(false);
+    expect(stream.loadMore).not.toHaveBeenCalled();
   });
   it('stops fetching after a pagination failure and exposes retry', () => {
     stream = { ...stream, hasMore: true, error: 'Failed to fetch users' };

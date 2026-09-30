@@ -10,7 +10,7 @@ export function Hot() {
       showRightSidebar={false}
       showLeftMobileButton={false}
       showRightMobileButton={false}
-      className="overflow-visible pb-24 lg:pb-12"
+      className="overflow-visible pb-24 has-[[data-arena-graph]]:pb-6 lg:pb-12"
       classNameWrapperContent="gap-0 lg:overflow-visible"
       disableWideShellLayout
     >

@@ -34,6 +34,8 @@ describe('ProfilePageMobileMenu', () => {
 
     // Notifications is ownProfileOnly — must not render
     expect(screen.queryByLabelText('Notifications')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Unlocked')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('Awards')).toBeInTheDocument();
   });
 
   it('renders correct number of menu items', () => {
@@ -62,6 +64,7 @@ describe('ProfilePageMobileMenu', () => {
       'Tagged',
       'Collections',
       'Awards',
+      'Unlocked',
     ]);
   });
 

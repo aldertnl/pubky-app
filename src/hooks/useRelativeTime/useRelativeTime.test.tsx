@@ -49,8 +49,10 @@ describe('useRelativeTime', () => {
     ['23h', 23 * 60 * 60 * 1000, '1d', 24 * 60 * 60 * 1000],
     ['6d', 6 * DAY, '1w', 7 * DAY],
     ['7w', 55 * DAY, '2M', 56 * DAY],
-    ['11M', 364 * DAY, '1Y', 365 * DAY],
+    ['11M', 365 * DAY - 1, '1Y', 365 * DAY],
     ['1Y', (365 + 27) * DAY, '1Y', (365 + 28) * DAY],
+    ['1Y', 730 * DAY - 1, '2Y', 730 * DAY],
+    ['2Y', 1095 * DAY - 1, '3Y', 1095 * DAY],
   ])('does not skip or go backwards across the %s / %s boundary', (belowExpected, belowMs, atExpected, atMs) => {
     const { result } = renderHook(() => useRelativeTime());
 
@@ -79,7 +81,7 @@ describe('useRelativeTime', () => {
 
     function labelSeconds(elapsedMs: number): number {
       const label = formatRelativeTime(new Date(now.getTime() - elapsedMs));
-      // years render as one token, e.g. "2Y"
+      expect(label).toMatch(/^\d+[smhdwMY]$/);
       return label.split(' ').reduce((total, token) => {
         const match = token.match(/^(\d+)([smhdwMY])$/);
         if (!match) throw new Error(`Unexpected label format: "${label}" (token "${token}") at elapsedMs=${elapsedMs}`);

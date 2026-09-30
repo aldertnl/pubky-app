@@ -7,6 +7,7 @@ import remarkGfm from 'remark-gfm';
 import { POST_ROUTES } from '@/app/routes';
 import { Button } from '@/atoms/Button/Button';
 import { Container } from '@/atoms/Container/Container';
+import { remarkDisallowMarkdownLinks, remarkPlaintextTables } from '@/libs/post/markdown';
 import { cn } from '@/libs/utils/utils';
 import { ArticleInlineImage } from '@/molecules/ArticleInlineImage/ArticleInlineImage';
 import { PostMentions } from '@/organisms/PostMentions/PostMentions';
@@ -15,13 +16,11 @@ import { PostHashtags } from '../PostHashtags/PostHashtags';
 import { INLINE_LINK_CLASSNAME, POST_BODY_TYPOGRAPHY_CLASS } from './PostText.constants';
 import { PostTextProps, RemarkAnchorProps, RemarkButtonProps } from './PostText.types';
 import {
-  remarkDisallowMarkdownLinks,
   remarkExtractFirstParagraph,
   remarkHashtags,
   remarkInlineShowMore,
   remarkMentions,
   remarkPlaintextCodeblock,
-  remarkPlaintextTables,
   remarkSoftBreaks,
   remarkStripImages,
   truncatePostPreviewText,
@@ -63,6 +62,7 @@ const articleImageUrlTransform: UrlTransform = (url, key, node) =>
  */
 export const PostText = memo(function PostText({
   content,
+  showFullContent = false,
   isArticle,
   fullArticle,
   articleImages,
@@ -74,7 +74,8 @@ export const PostText = memo(function PostText({
   const onPostPage = pathname.startsWith(POST_ROUTES.POST);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const contentTruncated = !isArticle && !onPostPage && !isExpanded ? truncatePostPreviewText(content) : null;
+  const contentTruncated =
+    !showFullContent && !isArticle && !onPostPage && !isExpanded ? truncatePostPreviewText(content) : null;
   const showMoreButton = Boolean(contentTruncated);
 
   // Inline images render only on surfaces that explicitly pass articleImages
@@ -156,9 +157,7 @@ export const PostText = memo(function PostText({
                     <ArticleInlineImage
                       src={typeof props.src === 'string' ? props.src : undefined}
                       alt={props.alt}
-                      attachments={articleImages.attachments}
-                      authorId={articleImages.authorId}
-                      postId={articleImages.postId}
+                      {...articleImages}
                     />
                   );
                 },

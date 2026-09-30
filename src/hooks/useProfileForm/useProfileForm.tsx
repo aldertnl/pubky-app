@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
 import { ONBOARDING_ROUTES, PROFILE_ROUTES, SETTINGS_ROUTES } from '@/app/routes';
@@ -12,8 +12,9 @@ import { AppError } from '@/libs/error/error';
 import { isAuthError, requiresLogin } from '@/libs/error/error.utils';
 import { getImageUploadSizeLimitToastMessage } from '@/libs/image/imageUploadSizeLimit';
 import { Logger } from '@/libs/logger/logger';
+import { normalizeProfileLinkUrl } from '@/libs/profile/profileLinks';
 import { safeExternalUrlSchema } from '@/libs/utils/safeExternalUrl';
-import { generateRandomUsername } from '@/libs/utils/utils';
+import { generateRandomUsername, isReservedUserName } from '@/libs/utils/utils';
 import { toast } from '@/molecules/Toaster/toast';
 import { UserValidator } from '@/pipes/user/user.validator';
 import type { NexusUserDetails } from '@/services/nexus/nexus.types';
@@ -35,7 +36,10 @@ const nameSchema = z
   .string()
   .trim()
   .min(USER_NAME_MIN_LENGTH, `Name must be at least ${USER_NAME_MIN_LENGTH} characters`)
-  .max(USER_NAME_MAX_LENGTH, `Name must be no more than ${USER_NAME_MAX_LENGTH} characters`);
+  .max(USER_NAME_MAX_LENGTH, `Name must be no more than ${USER_NAME_MAX_LENGTH} characters`)
+  // `[DELETED]` is the label the app shows for a tombstoned user, so a live profile cannot take it.
+  // Mirrors `UserValidator` (the submit gate); both read the rule from `isReservedUserName`.
+  .refine((value) => !isReservedUserName(value), { message: 'This name is reserved' });
 const bioSchema = z
   .string()
   .trim()
@@ -78,6 +82,10 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  // The post-save redirect fetches its route on click (nothing prefetches it), so it runs as a
+  // transition: the submit button keeps its loading state until the next screen renders instead
+  // of dropping it the moment the save completes.
+  const [isNavigating, startNavigation] = useTransition();
   const [isLoading, setIsLoading] = useState(mode === 'edit');
   const [submitText, setSubmitText] = useState<SubmitText>(idleSubmitText);
 
@@ -157,21 +165,27 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
     }
   }, []);
 
-  const validateLinkUrl = useCallback((value: string, index: number) => {
-    if (value.trim().length === 0) {
-      setLinkUrlErrors((prev) => ({ ...prev, [index]: null }));
-    } else {
-      const res = safeExternalUrlSchema.safeParse(value);
-      setLinkUrlErrors((prev) => ({
-        ...prev,
-        [index]: res.success ? null : (res.error.issues[0]?.message ?? 'Invalid URL'),
-      }));
-    }
-  }, []);
+  const validateLinkUrl = useCallback(
+    (value: string, index: number) => {
+      if (value.trim().length === 0) {
+        setLinkUrlErrors((prev) => ({ ...prev, [index]: null }));
+      } else {
+        // Validate what we would store: a bare X handle is rewritten to its profile URL first.
+        const res = safeExternalUrlSchema.safeParse(normalizeProfileLinkUrl(links[index]?.label ?? '', value));
+        setLinkUrlErrors((prev) => ({
+          ...prev,
+          [index]: res.success ? null : (res.error.issues[0]?.message ?? 'Invalid URL'),
+        }));
+      }
+    },
+    [links],
+  );
 
   const validateUser = useCallback(() => {
     const avatarToValidate = mode === 'edit' && !avatarChanged ? null : avatarFile;
-    const { data, error } = UserValidator.check(name, bio, links, avatarToValidate);
+    // Validate and save the normalized links, so accepting a bare X handle is one behaviour.
+    const normalizedLinks = links.map((link) => ({ ...link, url: normalizeProfileLinkUrl(link.label, link.url) }));
+    const { data, error } = UserValidator.check(name, bio, normalizedLinks, avatarToValidate);
 
     if (error.length > 0) {
       for (const issue of error) {
@@ -354,7 +368,9 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
         }
         await AuthController.bootstrapWithDelay();
         setShowWelcomeDialog?.(true);
-        router.push(ONBOARDING_ROUTES.TAGS);
+        startNavigation(() => {
+          router.push(ONBOARDING_ROUTES.TAGS);
+        });
       } else {
         await ProfileController.commitUpdate({
           name: user.name,
@@ -377,7 +393,9 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
         toast({
           title: 'Profile updated',
         });
-        router.push(editRedirectTo ?? PROFILE_ROUTES.PROFILE);
+        startNavigation(() => {
+          router.push(editRedirectTo ?? PROFILE_ROUTES.PROFILE);
+        });
       }
     } catch (error) {
       const sizeLimitMessage = getImageUploadSizeLimitToastMessage(error);
@@ -455,7 +473,8 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
     !!bioError ||
     Object.values(linkUrlErrors).some((m) => !!m) ||
     !!avatarError ||
-    isSaving;
+    isSaving ||
+    isNavigating;
 
   return {
     state: {
@@ -464,7 +483,7 @@ export function useProfileForm(props: UseProfileFormProps): UseProfileFormReturn
       links,
       avatarFile,
       avatarPreview,
-      isSaving,
+      isSaving: isSaving || isNavigating,
       isLoading,
       submitText,
     },

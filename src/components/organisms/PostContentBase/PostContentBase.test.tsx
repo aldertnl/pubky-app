@@ -95,7 +95,9 @@ vi.mock('@/organisms/Collections/CollectionCard/CollectionCard', () => ({
 }));
 
 vi.mock('../PostAttachments/PostAttachments', () => ({
-  PostAttachments: vi.fn(() => <div data-testid="post-attachments" />),
+  PostAttachments: vi.fn(({ children }: { children?: React.ReactNode }) => (
+    <div data-testid="post-attachments">{children}</div>
+  )),
 }));
 
 vi.mock('../PostContentBlurred/PostContentBlurred', () => ({
@@ -145,10 +147,27 @@ describe('PostContentBase', () => {
     mockUseLocalFilesStore.mockReturnValue(undefined);
   });
 
+  it('passes the Cards presentation to an article', () => {
+    mockUsePostDetails.mockReturnValue({
+      postDetails: createMockPostDetails({
+        kind: 'long',
+        content: JSON.stringify({ title: 'Cards article', body: 'Article body' }),
+      }),
+      isLoading: false,
+    });
+    render(<PostContentBase postId="post-123" mediaVariant="cards" />);
+    expect(vi.mocked(PostArticle)).toHaveBeenCalledWith(expect.objectContaining({ presentation: 'cards' }), undefined);
+  });
+
   it('renders content when postDetails are available', () => {
     render(<PostContentBase postId="post-123" />);
 
     expect(screen.getByTestId('container')).toBeInTheDocument();
+  });
+
+  it.each(['default', 'cards'] as const)('preserves explicitly expanded text in %s', (mediaVariant) => {
+    render(<PostContentBase postId="post-123" showFullContent mediaVariant={mediaVariant} />);
+    expect(mockPostText).toHaveBeenCalledWith(expect.objectContaining({ showFullContent: true }), undefined);
   });
 
   it('calls PostAttachments with attachments from postDetails', () => {
@@ -219,13 +238,13 @@ describe('PostContentBase', () => {
     );
   });
 
-  it('renders PostContentBlurred when is_blurred is true', () => {
+  it.each(['default', 'cards'] as const)('keeps moderated content hidden in %s', (mediaVariant) => {
     mockUsePostDetails.mockReturnValue({
       postDetails: createMockPostDetails({ content: 'Test content', is_blurred: true }),
       isLoading: false,
     });
 
-    render(<PostContentBase postId="post-123" className="custom-class" />);
+    render(<PostContentBase postId="post-123" className="custom-class" mediaVariant={mediaVariant} />);
 
     expect(screen.getByTestId('post-content-blurred')).toBeInTheDocument();
     expect(mockPostContentBlurred).toHaveBeenCalledWith({ postId: 'post-123', className: 'custom-class' }, undefined);
@@ -324,7 +343,7 @@ describe('PostContentBase', () => {
     expect(screen.queryByTestId('post-article')).not.toBeInTheDocument();
     expect(screen.getByTestId('container')).toBeInTheDocument();
     expect(mockPostText).toHaveBeenCalledWith(
-      { content: 'raw long content that is not an article envelope', className: undefined },
+      { content: 'raw long content that is not an article envelope', className: undefined, showFullContent: false },
       undefined,
     );
   });

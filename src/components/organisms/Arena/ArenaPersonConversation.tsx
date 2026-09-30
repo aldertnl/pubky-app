@@ -1,6 +1,5 @@
 'use client';
 
-import { PostAwards } from '@/organisms/Awards/PostAwards';
 import { Button } from '@/atoms/Button/Button';
 import { Skeleton } from '@/atoms/Skeleton/Skeleton';
 import { useArenaPersonPost } from '@/hooks/useArenaPersonPost/useArenaPersonPost';
@@ -13,10 +12,8 @@ export function ArenaPersonConversation({
   author,
   authorName,
   postWindow,
-  awardsScrollRequest,
   eager,
 }: {
-  awardsScrollRequest?: number;
   eager?: boolean;
   author: string;
   authorName?: string;
@@ -47,15 +44,12 @@ export function ArenaPersonConversation({
               : 'This person has no posts in this timeframe.'}
           </div>
         )}
-        <PostAwards user={author} scrollRequest={awardsScrollRequest} />
       </>
     );
   return (
     <ArenaConversation
       key={post.id}
-      awardsUser={author}
-      awardsScrollRequest={awardsScrollRequest}
-      eager={eager || !!awardsScrollRequest}
+      eager={eager}
       rootId={post.id}
       selectedId={post.id}
       postWindow={postWindow}

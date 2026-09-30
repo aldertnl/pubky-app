@@ -4,15 +4,18 @@ import { type CSSProperties } from 'react';
 import { StickyNote } from 'lucide-react';
 import { motion, useReducedMotion } from 'motion/react';
 import { Button } from '@/atoms/Button/Button';
+import { Card } from '@/atoms/Card/Card';
 import { Skeleton } from '@/atoms/Skeleton/Skeleton';
 import type { UserStreamUser } from '@/hooks/useUserStream/useUserStream.types';
 import { ARENA_PEOPLE_LIMIT, type ArenaPeopleMetric } from '@/libs/arena/people';
+import { arenaPeopleStats } from '@/libs/arena/stats';
 import { cn, formatPublicKey } from '@/libs/utils/utils';
 import { AvatarWithFallback } from '@/organisms/AvatarWithFallback/AvatarWithFallback';
 import { AwardTrophy } from '@/organisms/Awards/AwardTrophy';
 import { ARENA_PLACEMENTS } from './Arena.constants';
 import styles from './Arena.module.css';
-import { ArenaStat } from './ArenaStats';
+import { ArenaStandings } from './ArenaStandings';
+import { ArenaRank, ArenaStat } from './ArenaStats';
 
 export function ArenaPeopleFloor({
   users,
@@ -22,22 +25,23 @@ export function ArenaPeopleFloor({
   selectedId,
   onSelect,
   onExpand,
-  onAwards,
 }: {
   users: UserStreamUser[];
   isList: boolean;
   metric: ArenaPeopleMetric;
   loading?: boolean;
   selectedId?: string;
-  onAwards?: (user: string, postId?: string) => void;
   onSelect: (id: string) => void;
   onExpand: () => void;
 }) {
   const reduceMotion = useReducedMotion();
   const visible = loading ? Array.from<undefined>({ length: ARENA_PEOPLE_LIMIT }) : users;
+  const PersonContainer = isList ? Card : 'div';
   return (
-    <ol
-      className={cn(styles.floor, styles.peopleFloor, isList && styles.list)}
+    <ArenaStandings
+      isList={isList}
+      itemIds={visible.map((user, index) => user?.id ?? `person-skeleton-${index}`)}
+      className={styles.peopleFloor}
       aria-label={
         loading ? (metric === 'newest' ? 'Loading recent people' : 'Loading active people') : 'People standings'
       }
@@ -63,7 +67,13 @@ export function ArenaPeopleFloor({
             initial={reduceMotion ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            <div className={styles.personNode}>
+            <PersonContainer
+              className={cn(
+                styles.personNode,
+                isList && styles.personCard,
+                isList && 'min-w-0 gap-0 rounded-md py-0 shadow-2xl shadow-black/60',
+              )}
+            >
               {user ? (
                 <>
                   <Button
@@ -83,31 +93,24 @@ export function ArenaPeopleFloor({
                         size="xl"
                         className={styles.personAvatar}
                       />
-                      <span className={styles.personRank}>#{index + 1}</span>
                     </span>
                     <span className={styles.personName}>{name}</span>
                     <span className={styles.personStats}>
-                      <ArenaStat kind="tags" count={user.counts?.tags} active={metric === 'tags'} />
-                      <ArenaStat kind="posts" count={user.counts?.posts} active={metric === 'posts'} />
-                      {metric === 'replies' && <ArenaStat kind="replies" count={user.counts?.replies} active />}
-                      {metric !== 'replies' && (
-                        <ArenaStat kind="followers" count={user.counts?.followers} active={metric === 'popular'} />
-                      )}
+                      <ArenaRank rank={index + 1} />
+                      {arenaPeopleStats(user.counts, metric).map((stat) => (
+                        <ArenaStat key={stat.kind} {...stat} />
+                      ))}
                     </span>
                   </Button>
                   {user.id === selectedId && (
-                    <AwardTrophy
-                      onActivate={onAwards ? () => onAwards(user.id) : undefined}
-                      user={user.id}
-                      className={cn(styles.awardIcon, styles.personAwardsButton)}
-                    />
+                    <AwardTrophy user={user.id} className={cn(styles.awardIcon, styles.personAwardsButton)} />
                   )}
                   {user.id === selectedId && (
                     <Button
                       overrideDefaults
                       type="button"
                       className={cn(styles.awardIcon, styles.personPost)}
-                      aria-label="Scroll to most popular post"
+                      aria-label="Open most popular post"
                       title="See most popular post"
                       onClick={onExpand}
                     >
@@ -122,10 +125,10 @@ export function ArenaPeopleFloor({
                   <Skeleton className="h-3 w-28" />
                 </div>
               )}
-            </div>
+            </PersonContainer>
           </motion.li>
         );
       })}
-    </ol>
+    </ArenaStandings>
   );
 }

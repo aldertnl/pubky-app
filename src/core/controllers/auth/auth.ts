@@ -3,7 +3,6 @@ import type { TKeypairParams } from '@/application/auth/auth.types';
 import { BootstrapApplication, type BootstrapProgressCallback } from '@/application/bootstrap/bootstrap';
 import { SettingsApplication } from '@/application/settings/settings';
 import { postStreamQueue } from '@/application/stream/posts/muting/post-stream-queue';
-import { TagApplication } from '@/application/tag/tag';
 import { UserApplication } from '@/application/user/user';
 import { getModerationId } from '@/config/moderation';
 import type {
@@ -11,10 +10,12 @@ import type {
   TLoginWithMnemonicParams,
   TSignUpParams,
 } from '@/controllers/auth/auth.types';
+import { LocksController } from '@/controllers/locks/locks';
+import { captureViewerSession } from '@/controllers/tag/tag-cache.utils';
 import { NotificationCoordinator } from '@/coordinators/notifications/notifications';
 import { StreamCoordinator } from '@/coordinators/streams/stream';
-import { TtlCoordinator } from '@/coordinators/ttl/ttl';
 import { clearDatabase } from '@/database/franky/franky.helpers';
+import { createCanceledError } from '@/libs/error/auth-flow-canceled';
 import { ErrorService } from '@/libs/error/error.types';
 import { isAppError, isWrongEnvironmentHomeserverError, toAppError } from '@/libs/error/error.utils';
 import { Identity } from '@/libs/identity/identity';
@@ -26,7 +27,11 @@ import type { Pubky } from '@/models/models.types';
 import { NotificationNormalizer } from '@/pipes/notification/notification.normalizer';
 import { PubkySpecsSingleton } from '@/pipes/pipes.builder';
 import { SettingsNormalizer } from '@/pipes/settings/settings.normalizer';
-import type { TGenerateAuthUrlResult, THomeserverSessionResult } from '@/services/homeserver/homeserver.types';
+import type {
+  TGenerateAuthUrlResult,
+  TGeneratePassportAuthUrlParams,
+  THomeserverSessionResult,
+} from '@/services/homeserver/homeserver.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { useHomeStore } from '@/stores/home/home.store';
 import { useHotStore } from '@/stores/hot/hot.store';
@@ -39,6 +44,13 @@ import { useSettingsStore } from '@/stores/settings/settings.store';
 import type { SettingsState } from '@/stores/settings/settings.types';
 import { useSignInStore } from '@/stores/signIn/signIn.store';
 
+/**
+ * How long logout waits for the homeserver to end the session. The SDK's `session.signout()`
+ * accepts no timeout or AbortSignal, so a homeserver that connects but never replies would
+ * otherwise hold logout open for the OS-level TCP timeout. Local cleanup runs either way.
+ */
+const LOGOUT_TIMEOUT_MS = 5_000;
+
 export class AuthController {
   private constructor() {} // Prevent instantiation
 
@@ -49,6 +61,11 @@ export class AuthController {
     const cancel = this.activeAuthFlow?.cancel;
     this.activeAuthFlow = null;
     cancel?.();
+  }
+
+  /** True while `token` identifies the flow that currently owns auth-flow state. */
+  private static ownsAuthFlow(token: symbol): boolean {
+    return this.activeAuthFlow?.token === token;
   }
 
   /** Cancel detached moderation-follow work before account-local state changes ownership. */
@@ -104,27 +121,70 @@ export class AuthController {
   static async restorePersistedSession(): Promise<boolean> {
     this.cancelModerationFollow();
     const authStore = useAuthStore.getState();
+    let isCurrent = captureViewerSession();
     try {
       const result = await AuthApplication.restorePersistedSession({ authStore });
+      if (!isCurrent() || useAuthStore.getState().isLoggingOut) return false;
+
       if (!result) {
         await this.cleanupLocalState();
         return false;
       }
       const { session } = result;
-      const initialState = {
-        session,
-        currentUserPubky: Identity.z32FromSession({ session }),
-        hasProfile: authStore.hasProfile,
-      };
-      authStore.init(initialState);
+      const currentUserPubky = Identity.z32FromSession({ session });
+      // A session restored from a persisted export can carry an undetermined profile: reloading
+      // mid sign-in persists `hasProfile: null` before the profile check completes. Leaving it
+      // unknown read as unauthenticated, which rendered the landing page behind the signed-in
+      // header (issue #2070).
+      const hasProfile = authStore.hasProfile;
+      authStore.init({ session, currentUserPubky, hasProfile });
+      isCurrent = captureViewerSession();
+
+      if (hasProfile === null && !(await this.resolveRestoredProfileState({ pubky: currentUserPubky }))) {
+        if (isCurrent() && !useAuthStore.getState().isLoggingOut) await this.cleanupLocalState();
+        return false;
+      }
+
       return true;
     } catch (error) {
+      if (!isCurrent() || useAuthStore.getState().isLoggingOut) return false;
       const appError = toAppError(error, ErrorService.Local, 'restorePersistedSession');
       await this.cleanupLocalState();
       if (isWrongEnvironmentHomeserverError(appError)) {
         throw appError;
       }
       return false;
+    }
+  }
+
+  /**
+   * Resolves the profile state of a session restored from a persisted export, keeping
+   * `hasProfile` unknown until the homeserver answers and sign-in initialization completes.
+   *
+   * While this runs, useAuthStatus keeps the app loading, so no route decides on an
+   * undetermined profile. A state that stays undetermined after the retries signs the session
+   * out instead of letting the app treat the restored account as signed out (issue #2070).
+   *
+   * @param params - Parameters containing the restored session's public key
+   * @param params.pubky - The restored session's public key identifier
+   * @returns true when the store now holds a definite profile state
+   */
+  private static async resolveRestoredProfileState({ pubky }: { pubky: Pubky }): Promise<boolean> {
+    const isCurrent = captureViewerSession();
+    useAuthStore.getState().setIsResolvingProfile(true);
+    try {
+      const hasProfile = await AuthApplication.resolveUserIsSignedUp({ pubky });
+      if (!isCurrent() || useAuthStore.getState().isLoggingOut || hasProfile === null) return false;
+
+      // Reloading during sign-in can interrupt settings sync and bootstrap after the session
+      // export was saved. Resume that work before authenticated routes become accessible.
+      if (hasProfile) await this.hydrateMeImAlive({ pubky });
+      if (!isCurrent() || useAuthStore.getState().isLoggingOut) return false;
+
+      useAuthStore.getState().setHasProfile(hasProfile);
+      return true;
+    } finally {
+      if (isCurrent()) useAuthStore.getState().setIsResolvingProfile(false);
     }
   }
 
@@ -142,6 +202,8 @@ export class AuthController {
     await clearDatabase();
     // Skip post-migration resync — bootstrap runs if user has profile, otherwise no data to resync
     useMigrationStore.getState().reset();
+    // Settings are account-local: start from defaults so a previous account's document is never pushed to this one
+    useSettingsStore.getState().reset();
     const session = await AuthApplication.signIn({ keypair });
     if (!session) {
       Logger.error('Failed to sign in. Please try again.', { keypair });
@@ -160,6 +222,7 @@ export class AuthController {
    * @param params.pubky - The user's public key identifier
    */
   private static async hydrateMeImAlive({ pubky }: { pubky: Pubky }) {
+    const isCurrent = captureViewerSession();
     const signInStore = useSignInStore.getState();
     const {
       meta: { url },
@@ -167,6 +230,7 @@ export class AuthController {
 
     // Progress callback to update signInStore from Controller layer (respecting architecture rules)
     const onProgress: BootstrapProgressCallback = (step) => {
+      if (!isCurrent()) return;
       switch (step) {
         case 'bootstrapFetched':
           signInStore.setBootstrapFetched(true); // Step 3 complete (60%)
@@ -189,7 +253,12 @@ export class AuthController {
     const preferences = (remoteSettings ?? localSettings).notifications;
     const allowedTypes = NotificationNormalizer.toEnabledTypes(preferences);
 
-    const notification = await BootstrapApplication.initialize({ pubky, lastReadUrl: url, allowedTypes }, onProgress);
+    if (!isCurrent()) return;
+    const notification = await BootstrapApplication.initialize(
+      { pubky, lastReadUrl: url, allowedTypes, isCurrent },
+      onProgress,
+    );
+    if (!isCurrent()) return;
     useNotificationStore.getState().setState(notification);
 
     // Apply remote settings to store (store mutation stays in Controller layer)
@@ -227,6 +296,51 @@ export class AuthController {
       throw error;
     }
     await this.completeAuthenticatedSession({ session });
+  }
+
+  /**
+   * Swaps the stored session for one the user just approved with today's capability list (#2373).
+   * Not a sign-in: no profile check, bootstrap or sign-in progress, so the route guard sees no change
+   * and the user keeps their place. The old session is never signed out — the homeserver keys its
+   * cookie by pubky, so that would drop the new session as well. Guards that compare the session
+   * object (`captureViewerSession`, the TTL coordinator) see one change: reads in flight are dropped
+   * once and TTL restarts, both of which the next interaction recovers from.
+   *
+   * @returns false when the approval came from another key — a user picking the wrong identity in
+   * Pubky Ring, which the caller reports as a toast. Not an `Err.*`: it is an expected choice, and
+   * an AppError would file it in Sentry as a fault.
+   */
+  static async upgradeSession({ session }: THomeserverSessionResult): Promise<boolean> {
+    // No `cancelActiveAuthFlow` here: the flow that produced this approval already cancelled itself
+    // on settle, so the only flow left to cancel would be a newer one the user just started — whose
+    // QR would then stop polling and never register their next approval.
+    const authStore = useAuthStore.getState();
+    const pubky = Identity.z32FromSession({ session });
+
+    if (pubky !== authStore.currentUserPubky) {
+      // That session is real on its own homeserver, so end it instead of leaving it dangling.
+      // Best-effort, and silent: a failure here is already an `AppError` that logged itself.
+      await AuthApplication.logout({ session }).catch(() => undefined);
+      Logger.warn('Session upgrade approved with a different key');
+      return false;
+    }
+
+    // The same boundary sign-in and restore apply: the key may have republished to a homeserver this
+    // deployment refuses since the session was minted. Not signed out on failure — the cookie is
+    // keyed by pubky, so signing this one out would leave the user with none.
+    await AuthApplication.assertUserHomeserverAllowed({ publicKey: session.info.publicKey });
+
+    // That check is a network round trip, so the account can change while it runs. Re-read the store
+    // instead of using the snapshot above: storing now would resurrect a session after a sign-out, or
+    // pair the new account with the previous one's session.
+    const current = useAuthStore.getState();
+    if (current.currentUserPubky !== pubky) {
+      Logger.warn('Discarded an upgraded session: the account changed while it was being checked');
+      return false;
+    }
+
+    current.setSession(session);
+    return true;
   }
 
   /**
@@ -277,6 +391,8 @@ export class AuthController {
     await clearDatabase();
     // Skip post-migration resync — new user has no homeserver data to resync
     useMigrationStore.getState().reset();
+    // Settings are account-local: start from defaults so a previous account's document is never pushed to this one
+    useSettingsStore.getState().reset();
     const keypair = Identity.keypairFromSecretKey(secretKey);
     const { session } = await AuthApplication.signUp({ keypair, signupToken });
     const authStore = useAuthStore.getState();
@@ -308,29 +424,58 @@ export class AuthController {
   }
 
   /**
-   * Wraps auth URL generation with flow tracking so useAuthUrl can cancel on unmount
-   * and we detect stale requests (e.g. React StrictMode double-mount).
+   * Wraps sign-in URL generation: clears the previous account's local state, then tracks the flow.
+   *
+   * Ownership is taken synchronously, before the first `await`: a start that is superseded while
+   * its database cleanup or URL generation is still in flight never becomes the active flow, never
+   * cancels the newer flow, and rejects with the canceled error instead of returning a dead URL.
    * @param generateFn - Async function that returns the auth URL result
    * @returns Promise resolving to the generated authentication URL with wrapped approval
    */
   private static async wrapAuthFlow(
     generateFn: () => Promise<TGenerateAuthUrlResult>,
   ): Promise<TGenerateAuthUrlResult> {
+    const token = this.claimAuthFlow();
     this.cancelModerationFollow();
+
     await clearDatabase();
+    if (!this.ownsAuthFlow(token)) throw createCanceledError();
+
     // Skip post-migration resync — full bootstrap below covers all data
     useMigrationStore.getState().reset();
+    // Settings are account-local: start from defaults so a previous account's document is never pushed to this one
+    useSettingsStore.getState().reset();
+    return this.trackAuthFlow(token, generateFn);
+  }
+
+  /** Synchronous on purpose: callers claim the flow before their first `await`. */
+  private static claimAuthFlow(): symbol {
     const token = Symbol('auth-flow');
     this.cancelActiveAuthFlow();
     this.activeAuthFlow = { token, cancel: null };
+    return token;
+  }
+
+  /**
+   * Flow tracking only, so useAuthUrl can cancel on unmount and stale requests are detected
+   * (e.g. React StrictMode double-mount, or a Pubky Ring request started right before a Passport
+   * request). No local state is touched: the session upgrade runs this for a user who stays signed in.
+   */
+  private static async trackAuthFlow(
+    token: symbol,
+    generateFn: () => Promise<TGenerateAuthUrlResult>,
+  ): Promise<TGenerateAuthUrlResult> {
     const { authorizationUrl, awaitApproval, cancelAuthFlow } = await generateFn();
 
-    if (!this.activeAuthFlow || this.activeAuthFlow.token !== token) {
+    const activeAuthFlow = this.activeAuthFlow;
+    if (!activeAuthFlow || activeAuthFlow.token !== token) {
       cancelAuthFlow();
-      return { authorizationUrl, awaitApproval, cancelAuthFlow };
+      // Swallow the rejection of the now-orphaned approval so it never surfaces as unhandled.
+      awaitApproval.catch(() => undefined);
+      throw createCanceledError();
     }
 
-    this.activeAuthFlow.cancel = cancelAuthFlow;
+    activeAuthFlow.cancel = cancelAuthFlow;
 
     const wrappedAwaitApproval = awaitApproval.finally(() => {
       if (this.activeAuthFlow?.token === token) {
@@ -350,18 +495,12 @@ export class AuthController {
    */
   private static async cleanupLocalState() {
     this.cancelModerationFollow();
-    // Capture pubky before resetting auth store; used to scope marker cleanup.
-    const pubky = useAuthStore.getState().currentUserPubky;
-    if (pubky) {
-      TagApplication.clearViewerMarkers(pubky);
-    }
-
     // Mute-list SSE cursors live in sessionStorage; clear before the next account might reuse the same tab.
     clearMuteSyncCursorSessionStorage();
 
     // Reset singletons
     PubkySpecsSingleton.reset();
-    TtlCoordinator.resetInstance();
+    // CoordinatorManager owns TTL lifetime; its auth listener clears session work.
     StreamCoordinator.resetInstance();
     NotificationCoordinator.resetInstance();
 
@@ -384,6 +523,10 @@ export class AuthController {
     useSearchStore.getState().reset();
     useNotificationStore.getState().reset();
     useSettingsStore.getState().reset();
+
+    // Unified logout: tear down the Locks session (Lock Server signout + local store) alongside the
+    // homeserver session, so the user can never stay logged into Locks after leaving pubky.app.
+    await LocksController.logout();
 
     // Clear cookies (also drops any stale `locale` cookie from the removed language selection)
     clearCookies();
@@ -412,11 +555,30 @@ export class AuthController {
   }
 
   /**
+   * Generates the sign-in authentication URL handed to Pubky Passport ("Continue with Google").
+   * Shares the single-active-flow tracking with the Pubky Ring flows, so starting Passport cancels
+   * a pending Ring request and vice versa.
+   * @param params - x-callback-url metadata (source label and same-origin callbacks)
+   * @returns Promise resolving to the generated authentication URL with wrapped approval
+   */
+  static async getPassportAuthUrl(params: TGeneratePassportAuthUrlParams): Promise<TGenerateAuthUrlResult> {
+    return this.wrapAuthFlow(() => AuthApplication.generatePassportAuthUrl(params));
+  }
+
+  /**
+   * Same Ring flow as sign-in (the requested list is already the current one), but for a signed-in
+   * user (#2373): the local database and settings stay as they are. Approval goes to `upgradeSession`.
+   */
+  static async getUpgradeAuthUrl(): Promise<TGenerateAuthUrlResult> {
+    return this.trackAuthFlow(this.claimAuthFlow(), () => AuthApplication.generateAuthUrl());
+  }
+
+  /**
    * Logs out the current user from both the homeserver and local application state.
    */
   static async logout() {
     this.cancelModerationFollow();
-    let authStore = useAuthStore.getState();
+    const authStore = useAuthStore.getState();
 
     // Set logging out flag immediately to prevent flash of weird states in UI
     authStore.setIsLoggingOut(true);
@@ -424,28 +586,47 @@ export class AuthController {
     let session = authStore.session;
 
     // Fresh loads can still have a persisted session export before the live session is restored.
-    // Reuse the restore flow so /logout performs a real homeserver sign-out before local cleanup.
+    // Restore credentials directly: revocation must not depend on profile or bootstrap reads.
     if (!session && authStore.sessionExport) {
       try {
-        const didRestoreSession = await this.restorePersistedSession();
-        if (!didRestoreSession) {
-          return;
-        }
+        session = (await AuthApplication.restorePersistedSession({ authStore }))?.session ?? null;
       } catch (error) {
-        // restorePersistedSession already cleaned up local state; a wrong-environment
-        // rejection needs no toast here — the user asked to log out anyway.
-        Logger.warn('Persisted session restore during logout failed; local state already cleaned up', { error });
-        return;
+        // A wrong-environment rejection needs no toast here — the user asked to log out anyway.
+        Logger.warn('Persisted session restore during logout failed; clearing local state', { error });
       }
-      authStore = useAuthStore.getState();
-      session = authStore.session;
     }
 
     if (session) {
+      // Bound the sign-out. The SDK's session.signout() takes no timeout or AbortSignal, so a
+      // homeserver that accepts the connection and then never replies would hold logout open
+      // until the OS-level TCP timeout, leaving cookies and the local database in place.
+      // Local cleanup must always run; ending the server session is best-effort.
+      let timeoutId: ReturnType<typeof setTimeout> | undefined;
       try {
-        await AuthApplication.logout({ session });
-      } catch (error) {
-        Logger.warn('Homeserver logout failed, clearing local state anyway', { error });
+        const timeoutPromise = new Promise<boolean>((resolve) => {
+          timeoutId = setTimeout(() => resolve(true), LOGOUT_TIMEOUT_MS);
+        });
+
+        const timedOut = await Promise.race([
+          AuthApplication.logout({ session }).then(
+            () => false,
+            (error) => {
+              Logger.warn('Homeserver logout failed, clearing local state anyway', { error });
+              return false;
+            },
+          ),
+          timeoutPromise,
+        ]);
+
+        if (timedOut) {
+          Logger.warn('Homeserver sign-out did not answer in time, clearing local state anyway', {
+            timeoutMs: LOGOUT_TIMEOUT_MS,
+          });
+        }
+      } finally {
+        if (timeoutId !== undefined) {
+          clearTimeout(timeoutId);
+        }
       }
     }
 

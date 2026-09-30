@@ -2,7 +2,7 @@
 const DAYS_PER_WEEK = 7;
 const WEEKS_PER_MONTH = 4;
 const DAYS_PER_YEAR = 365;
-const MAX_REMAINDER_MONTHS = 11;
+const MAX_MONTHS = 11;
 
 /**
  * Hook to format relative time.
@@ -31,9 +31,9 @@ export function useRelativeTime() {
     if (diffHours < 24) return `${diffHours}h`;
     if (diffDays < 7) return `${diffDays}d`;
     if (diffWeeks < 8) return `${diffWeeks}w`;
-    // Keep years at 365 days and floor older timestamps to whole years.
+    // Keep years at 365 days and cap the four-week month approximation below a year.
     if (diffDays < DAYS_PER_YEAR) {
-      return `${Math.min(diffMonths, MAX_REMAINDER_MONTHS)}M`;
+      return `${Math.min(diffMonths, MAX_MONTHS)}M`;
     }
 
     const diffYears = Math.floor(diffDays / DAYS_PER_YEAR);

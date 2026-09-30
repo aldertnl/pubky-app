@@ -31,8 +31,9 @@ export function ArenaTagConnectors({ stageRef, topic }: { stageRef: RefObject<HT
     let tag: HTMLElement | null = null;
     let floor: HTMLElement | null = null;
     let cards: HTMLElement[] = [];
-    const cardSelector = '[data-arena-post], [data-arena-person]';
-    const cardId = (card: HTMLElement) => card.dataset.arenaPost ?? card.dataset.arenaPerson!;
+    const cardSelector = '[data-arena-post], [data-arena-person], [data-arena-tag-node]';
+    const cardId = (card: HTMLElement) =>
+      card.dataset.arenaPost ?? card.dataset.arenaPerson ?? card.dataset.arenaTagNode!;
     const geometryStyle = ({ style }: HTMLElement) =>
       [
         style.transform,
@@ -100,12 +101,9 @@ export function ArenaTagConnectors({ stageRef, topic }: { stageRef: RefObject<HT
         if (source.width && source.height && floorBox.width) {
           const x = source.left + source.width / 2;
           const y = source.top + source.height / 2;
-          const dx = floorBox.left + floorBox.width / 2 - x;
-          const dy = floorBox.top + floorBox.height / 2 - y;
-          // All lines share the edge of the tag that faces into the Arena.
-          const distance = Math.max(Math.abs(dx) / (source.width / 2), Math.abs(dy) / (source.height / 2), 1);
-          const startX = x + dx / distance - origin.left;
-          const startY = y + dy / distance - origin.top;
+          // The selected tag sits at the center of the Arena; connections radiate outward.
+          const startX = x - origin.left;
+          const startY = y - origin.top;
           if (!initialPulseIds && cards.length) {
             initialPulseIds = new Set(cards.map(cardId));
           }

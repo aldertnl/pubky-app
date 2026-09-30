@@ -1,13 +1,14 @@
 import * as Sentry from '@sentry/nextjs';
-import { INLINE_IMAGE_UPLOAD_REJECTION_NAME } from '@/hooks/useInlineImageUpload/useInlineImageUpload.types';
 import { Env } from '@/libs/env/env';
 import { AppError } from '@/libs/error/error';
+import { OBSERVABILITY_IGNORE_ERRORS } from '@/libs/observability/sentry.constants';
 import {
   sanitizeForSentry,
   scrubSensitiveData,
   scrubSpanJson,
   scrubTransactionEvent,
   shouldDropAppErrorFromSentry,
+  shouldDropCapturedExceptionFromSentry,
 } from '@/libs/observability/sentry.utils';
 import {
   getSentryDsn,
@@ -98,24 +99,22 @@ export function getSentryInitBase(): Sentry.NodeOptions & Sentry.BrowserOptions 
     debug: false,
     sendDefaultPii: false,
     tracesSampleRate: getSentryTracesSampleRate(),
-    ignoreErrors: [
-      'ResizeObserver loop limit exceeded',
-      'ResizeObserver loop completed with undelivered notifications',
-      'Failed to fetch',
-      /Loading chunk \d+ failed/,
-      'AbortError',
-      'Non-Error promise rejection captured',
-      // Expected article inline-image upload rejections: surfaced to the user
-      // via toast at the source, but MDXEditor's internal batch handling
-      // rethrows them into a promise nobody owns, so Sentry's globalHandlers
-      // would report them as unhandled. Genuine upload failures are already
-      // captured with full context through the Err.* factory pipeline.
-      INLINE_IMAGE_UPLOAD_REJECTION_NAME,
-    ],
-    beforeSend: scrubSensitiveData,
+    // Spread, not passed through: the SDK option is a mutable array, and neither sink may mutate the shared list.
+    ignoreErrors: [...OBSERVABILITY_IGNORE_ERRORS],
+    beforeSend: filterAndScrubErrorEvent,
     beforeSendTransaction: scrubTransactionEvent,
     beforeSendSpan: scrubSpanJson,
   };
+}
+
+/**
+ * `beforeSend` for error events. The SDK's own capture paths (`globalHandlers` for unhandled
+ * rejections, `app/error.tsx`, `captureException` calls) bypass `captureAppError`, so the drop
+ * rules and the once-per-chain guard are enforced here as well before PII scrubbing.
+ */
+function filterAndScrubErrorEvent(event: Sentry.ErrorEvent, hint: Sentry.EventHint): Sentry.ErrorEvent | null {
+  if (shouldDropCapturedExceptionFromSentry(hint.originalException)) return null;
+  return scrubSensitiveData(event);
 }
 
 /**

@@ -6,10 +6,11 @@ import {
   CircleUserRound,
   HeartHandshake,
   Library,
-  Trophy,
+  LockOpen,
   MessageCircle,
   StickyNote,
   Tag,
+  Trophy,
   UsersRound,
 } from 'lucide-react';
 import { PROFILE_PAGE_TYPES, type ProfilePageType } from '@/app/profile/types';
@@ -73,6 +74,12 @@ export const PROFILE_MENU_ITEMS: ProfileMenuItem[] = [
     pageType: PROFILE_PAGE_TYPES.COLLECTIONS,
   },
   { icon: Trophy, label: 'Awards', pageType: PROFILE_PAGE_TYPES.AWARDS },
+  {
+    icon: LockOpen,
+    label: 'Unlocked',
+    pageType: PROFILE_PAGE_TYPES.UNLOCKED,
+    ownProfileOnly: true, // The content lives in the reader's own /priv
+  },
 ];
 export interface ProfilePageMobileMenuProps {
   activePage: ProfilePageType;

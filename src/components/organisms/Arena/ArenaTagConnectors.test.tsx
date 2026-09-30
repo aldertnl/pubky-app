@@ -102,7 +102,9 @@ describe('Arena connector scheduling', () => {
     expect(mask).toHaveAttribute('height', '80');
     expect(mask).toHaveAttribute('rx', '40');
     expect(mask).toHaveAttribute('transform', 'matrix(1 0 0 1 200 200)');
-    expect(container.querySelector('[data-arena-connection="person"] path')?.getAttribute('d')).toMatch(/L 200 200$/);
+    expect(container.querySelector('[data-arena-connection="person"] path')?.getAttribute('d')).toBe(
+      'M 50 16 L 200 200',
+    );
   });
 
   it('does no layout reads for opacity, highlight, decoration or its own SVG updates', async () => {

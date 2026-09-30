@@ -13,7 +13,13 @@ import type { PostContentOrganismProps } from './PostContent.types';
  * - **Repost without content (plain repost)**: PostContentBase returns null + PostPreviewCard
  * - **Collection original**: PostPreviewCard renders embed `CollectionCard` (no post shell)
  */
-export function PostContent({ postId, className, textClassName, mediaVariant = 'default' }: PostContentOrganismProps) {
+export function PostContent({
+  postId,
+  showFullContent = false,
+  className,
+  textClassName,
+  mediaVariant = 'default',
+}: PostContentOrganismProps) {
   // Get repost information
   const { isRepost, originalPostId } = useRepostInfo(postId);
 
@@ -24,6 +30,7 @@ export function PostContent({ postId, className, textClassName, mediaVariant = '
     <>
       {/* Always render PostContentBase - it's a structural wrapper for content elements */}
       <PostContentBase
+        showFullContent={showFullContent}
         postId={postId}
         className={className}
         textClassName={textClassName}

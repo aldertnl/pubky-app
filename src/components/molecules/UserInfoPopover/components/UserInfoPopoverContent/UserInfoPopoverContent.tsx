@@ -1,6 +1,7 @@
 'use client';
 
 import { Pencil } from 'lucide-react';
+import type { ReactNode } from 'react';
 import { Button } from '@/atoms/Button/Button';
 import { Container } from '@/atoms/Container/Container';
 import { Typography } from '@/atoms/Typography/Typography';
@@ -20,6 +21,7 @@ interface UserInfoPopoverContentProps {
   userName: string;
   avatarUrl?: string;
   formattedPublicKey: string;
+  afterStats?: ReactNode;
 }
 function transformConnectionsToAvatarItems(connections: UserConnectionData[], limit: number): AvatarGroupItem[] {
   return connections.slice(0, limit).map((connection) => ({
@@ -36,6 +38,7 @@ export function UserInfoPopoverContent({
   userName,
   avatarUrl,
   formattedPublicKey,
+  afterStats,
 }: UserInfoPopoverContentProps) {
   const {
     isCurrentUser,
@@ -57,7 +60,6 @@ export function UserInfoPopoverContent({
     onFollowClick,
   } = useUserInfoPopoverActions({
     userId,
-    userName,
     isCurrentUser,
     isFollowing,
     isFollowingStatusLoading,
@@ -89,6 +91,7 @@ export function UserInfoPopoverContent({
         followingAvatars={followingAvatars}
         maxAvatars={MAX_AVATARS}
       />
+      {afterStats}
       {isCurrentUser ? (
         <Button variant="secondary" size="sm" onClick={onEditClick} aria-label={'Edit profile'}>
           <Pencil className="size-4" />

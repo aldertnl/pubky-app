@@ -714,6 +714,21 @@ describe('createPostStreamParams', () => {
         expect(result.params.skip).toBe(10); // NOT decremented
         expect(result.params.start).toBeUndefined();
       });
+
+      it('should carry the author scope through extraParams (profile "Filter posts")', () => {
+        const authorPubky = 'profile-author-pubky' as Pubky;
+        const result = createPostStreamParams({
+          streamId: buildContentSearchStreamId('bitcoin wallet', 'all', authorPubky),
+          streamTail: 10,
+          streamHead: 0,
+          limit: 2,
+          viewerId: mockViewerId,
+        });
+
+        expect(result.invokeEndpoint).toBe(StreamSource.CONTENT_SEARCH);
+        expect(result.extraParams).toEqual({ q: 'bitcoin wallet', author_id: authorPubky });
+        expect(result.params).toEqual({ limit: 2, skip: 10 });
+      });
     });
   });
 
@@ -1171,6 +1186,14 @@ describe('breakDownStreamId', () => {
       expect(result.kind).toBeUndefined();
       expect(result.searchQuery).toBeUndefined();
     });
+
+    it('should surface the author scope for author-scoped ids (profile "Filter posts")', () => {
+      const authorPubky = 'profile-author-pubky' as Pubky;
+      const result = breakDownStreamId(buildContentSearchStreamId('bitcoin wallet', 'all', authorPubky));
+      expect(result.invokeEndpoint).toBe(StreamSource.CONTENT_SEARCH);
+      expect(result.searchQuery).toBe('bitcoin wallet');
+      expect(result.authorId).toBe(authorPubky);
+    });
   });
 });
 
@@ -1314,6 +1337,32 @@ describe('NexusPostStreamService', () => {
 
       const calledArgs = queryNexusSpy.mock.calls[0][0] as { url: string };
       expect(calledArgs.url).not.toContain('kind=');
+    });
+
+    it('forwards the author scope into the by_content URL (profile "Filter posts")', async () => {
+      const queryNexusSpy = mockQueryNexus.mockResolvedValue([]);
+
+      await NexusPostStreamService.fetch({
+        params: { skip: 0, limit: 2 },
+        invokeEndpoint: StreamSource.CONTENT_SEARCH,
+        extraParams: { q: 'bitcoin wallet', author_id: mockAuthorId },
+      });
+
+      const calledArgs = queryNexusSpy.mock.calls[0][0] as { url: string };
+      expect(calledArgs.url).toContain(`author=${mockAuthorId}`);
+    });
+
+    it('omits author from the URL for the global (unscoped) search', async () => {
+      const queryNexusSpy = mockQueryNexus.mockResolvedValue([]);
+
+      await NexusPostStreamService.fetch({
+        params: { skip: 0, limit: 2 },
+        invokeEndpoint: StreamSource.CONTENT_SEARCH,
+        extraParams: { q: 'bitcoin wallet' },
+      });
+
+      const calledArgs = queryNexusSpy.mock.calls[0][0] as { url: string };
+      expect(calledArgs.url).not.toContain('author=');
     });
   });
 
@@ -1460,6 +1509,33 @@ describe('NexusPostStreamService', () => {
         body: JSON.stringify({ post_ids: mockPostIds, include_attachment_metadata: true }),
       });
       expect(result).toEqual(mockPosts);
+    });
+
+    it.each([undefined, false, true])('canonicalizes the body and forwards force=%s separately', async (force) => {
+      // Arrange
+      const queryNexusSpy = mockQueryNexus.mockResolvedValue([]);
+      const postIds = ['author2:post3', 'author1:post2', 'author1:post1'];
+
+      // Act
+      await NexusPostStreamService.fetchByIds({
+        post_ids: postIds,
+        viewer_id: mockViewerId,
+        include_attachment_metadata: false,
+        force,
+      });
+
+      // Assert
+      expect(queryNexusSpy).toHaveBeenCalledWith({
+        url: expect.stringContaining('/stream/posts/by_ids'),
+        method: 'POST',
+        body: JSON.stringify({
+          post_ids: ['author1:post1', 'author1:post2', 'author2:post3'],
+          include_attachment_metadata: false,
+          viewer_id: mockViewerId,
+        }),
+        force,
+      });
+      expect(postIds).toEqual(['author2:post3', 'author1:post2', 'author1:post1']);
     });
 
     it('should return empty array when fetching empty post IDs', async () => {

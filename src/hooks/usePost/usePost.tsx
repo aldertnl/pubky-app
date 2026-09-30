@@ -7,6 +7,7 @@ import { PostController } from '@/controllers/post/post';
 import type { TEditPostAttachments } from '@/controllers/post/post.types';
 import { useInlineImageUpload } from '@/hooks/useInlineImageUpload/useInlineImageUpload';
 import type { InlineImageLocalEntry } from '@/hooks/useInlineImageUpload/useInlineImageUpload.types';
+import { isAppError, requiresLogin } from '@/libs/error/error.utils';
 import { getImageUploadSizeLimitToastMessage } from '@/libs/image/imageUploadSizeLimit';
 import { Logger } from '@/libs/logger/logger';
 import {
@@ -14,13 +15,17 @@ import {
   serializeArticleBody,
   type SerializeArticleBodyError,
 } from '@/libs/post/articleInlineImages';
+import { buildLockTeaserContent } from '@/libs/post/lockTeaser';
+import { getStorageQuotaToastMessage } from '@/libs/storage/storageQuota';
 import { toast } from '@/molecules/Toaster/toast';
 import { FileVariant } from '@/services/nexus/file/file.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { useLocalFilesStore } from '@/stores/localFiles/localFiles.store';
 import type {
   ExistingAttachment,
+  SerializedArticle,
   UsePostEditOptions,
+  UsePostOptions,
   UsePostPostOptions,
   UsePostReplyOptions,
   UsePostRepostOptions,
@@ -74,13 +79,26 @@ function fileToLocalAttachment(file: File): InlineImageLocalEntry {
  * const handleSubmit = edit({ editPostId: 'post-123', onSuccess: () => {} });
  * ```
  */
-export function usePost(): UsePostReturn {
+/**
+ * Copy for a write the homeserver rejected as unauthenticated (`UNAUTHORIZED` or
+ * `SESSION_EXPIRED`): retrying cannot help until the session is re-established, so
+ * the user is asked to sign in instead of retrying a write that keeps failing
+ * (issue #2555). Mirrors the profile form's copy.
+ */
+const showSessionExpiredToast = () =>
+  toast({
+    variant: 'error',
+    description: 'Session expired. Please sign in.',
+  });
+
+export function usePost({ keepInlineImages = false }: UsePostOptions = {}): UsePostReturn {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [attachments, setAttachments] = useState<File[]>([]);
   const [existingAttachments, setExistingAttachments] = useState<ExistingAttachment[]>([]);
   const [isArticle, setIsArticle] = useState(false);
   const [articleTitle, setArticleTitle] = useState('');
+  const [lockTitle, setLockTitle] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   // selectCurrentUserPubky() throws an error when user is not authenticated;
   // access currentUserPubky directly to get null instead (post actions return early if null)
@@ -94,6 +112,7 @@ export function usePost(): UsePostReturn {
   // remains the authoritative cap enforcement.
   const inlineImageSession = useInlineImageUpload({
     enabled: isArticle,
+    keepSession: keepInlineImages,
     authorPubky: currentUserId,
     getInlineBudget: () =>
       ARTICLE_ATTACHMENT_MAX_FILES -
@@ -102,14 +121,44 @@ export function usePost(): UsePostReturn {
   });
 
   /**
+   * Maps a failed commit to its toast. A full homeserver storage quota warns and says why, since
+   * retrying cannot help; the image size limit keeps its specific message; anything else falls back
+   * to the generic retry copy (issue #1776).
+   */
+  const showCommitErrorToast = (error: unknown, fallbackDescription: string) => {
+    const storageQuotaMessage = getStorageQuotaToastMessage(error);
+    if (storageQuotaMessage) {
+      toast({ variant: 'warning', description: storageQuotaMessage });
+      return;
+    }
+
+    // A write the homeserver rejected as unauthenticated cannot succeed by retrying:
+    // the session has to be re-established first, so point at sign-in instead of
+    // asking for a retry that keeps failing (issue #2555). Nothing here signs the
+    // user out or retries the write; the caller's draft is left untouched.
+    if (isAppError(error) && requiresLogin(error)) {
+      showSessionExpiredToast();
+      return;
+    }
+
+    toast({
+      variant: 'error',
+      description: getImageUploadSizeLimitToastMessage(error) ?? fallbackDescription,
+    });
+  };
+
+  /**
    * Serializes an article body for publishing: rewrites author-owned inline
    * file URIs to `attachment:{n}` slots. Returns null (after toasting) when
    * the body contains destinations that block publishing.
    */
-  const serializeArticleForPublish = (coverPresent: boolean): { body: string; inlineUris: string[] } | null => {
+  const serializeArticleForPublish = (
+    coverPresent: boolean,
+    body = content.trim(),
+  ): { body: string; inlineUris: string[] } | null => {
     if (!currentUserId) return null;
     const serialized = serializeArticleBody({
-      body: content.trim(),
+      body,
       coverPresent,
       authorPubky: currentUserId,
       maxInlineImages: ARTICLE_ATTACHMENT_MAX_FILES - (coverPresent ? 1 : 0),
@@ -143,6 +192,16 @@ export function usePost(): UsePostReturn {
     return true;
   };
 
+  const serializeArticleForLock = (body: string): SerializedArticle | null => {
+    const serialized = serializeArticleForPublish(attachments.length > 0, body.trim());
+    if (!serialized || rejectForeignInlineUris(serialized.inlineUris)) return null;
+
+    const inlineFiles = serialized.inlineUris.map((uri) => inlineImageSession.getSessionFile(uri));
+    // A skipped file would shift every slot after it onto the wrong image.
+    if (!inlineFiles.every((file) => file !== null)) return null;
+    return { body: serialized.body, inlineFiles };
+  };
+
   /**
    * Seeds the local files store with `[cover?, ...inline]` entries so the
    * creating session renders instantly (the CDN may not have generated
@@ -171,13 +230,18 @@ export function usePost(): UsePostReturn {
         if (sessionEntry) return sessionEntry;
         const fileMetadata = metadataByUri.get(uri);
         if (!fileMetadata) return null;
+        const isImage = fileMetadata.content_type.startsWith('image');
         return {
           type: fileMetadata.content_type,
           name: fileMetadata.name,
           urls: {
             main: FileController.getFileUrl({ fileId: fileMetadata.id, variant: FileVariant.MAIN }),
-            feed: fileMetadata.content_type.startsWith('image')
+            feed: isImage
               ? FileController.getFileUrl({ fileId: fileMetadata.id, variant: FileVariant.FEED })
+              : undefined,
+            // A kept cover renders from here, so the desktop hero needs its derived variant too.
+            large: isImage
+              ? FileController.getFileUrl({ fileId: fileMetadata.id, variant: FileVariant.LARGE })
               : undefined,
           },
         };
@@ -217,10 +281,7 @@ export function usePost(): UsePostReturn {
       onSuccess?.(createdPostId);
     } catch (err) {
       Logger.error('[usePost] Failed to submit reply:', err);
-      toast({
-        variant: 'error',
-        description: getImageUploadSizeLimitToastMessage(err) ?? 'Could not post reply. Try again.',
-      });
+      showCommitErrorToast(err, 'Could not post reply. Try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -281,23 +342,14 @@ export function usePost(): UsePostReturn {
       onSuccess?.(createdPostId);
     } catch (err) {
       Logger.error('[usePost] Failed to create post:', err);
-      toast({
-        variant: 'error',
-        description: getImageUploadSizeLimitToastMessage(err) ?? 'Could not create post. Try again.',
-      });
+      showCommitErrorToast(err, 'Could not create post. Try again.');
     } finally {
       inlineImageSession.setCommitting(false);
       setIsSubmitting(false);
     }
   };
 
-  const repost = async ({
-    originalPostId,
-    originalAuthorName,
-    successToastTitle,
-    onSuccess,
-    onUndo,
-  }: UsePostRepostOptions) => {
+  const repost = async ({ originalPostId, successToastTitle, onSuccess, onUndo }: UsePostRepostOptions) => {
     if (!originalPostId || !currentUserId) return;
 
     setIsSubmitting(true);
@@ -315,17 +367,14 @@ export function usePost(): UsePostReturn {
       setAttachments([]);
 
       toast({
-        title: successToastTitle ?? (originalAuthorName ? `Reposted ${originalAuthorName}'s post` : 'Reposted'),
+        title: successToastTitle ?? 'Reposted',
         action: { label: 'Undo', altText: 'Undo', onClick: () => onUndo(createdPostId) },
       });
 
       onSuccess?.(createdPostId);
     } catch (err) {
       Logger.error('[usePost] Failed to repost:', err);
-      toast({
-        variant: 'error',
-        description: getImageUploadSizeLimitToastMessage(err) ?? 'Could not repost. Try again.',
-      });
+      showCommitErrorToast(err, 'Could not repost. Try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -333,6 +382,7 @@ export function usePost(): UsePostReturn {
 
   const edit = async ({
     editPostId,
+    isLockAnnouncement,
     originalAttachmentUris,
     preservedAttachmentUris,
     onSuccess,
@@ -432,7 +482,9 @@ export function usePost(): UsePostReturn {
         const keptUris = existingAttachments.map((attachment) => attachment.uri);
         const originalUris = originalAttachmentUris ?? keptUris;
         const attachmentsChanged = attachments.length > 0 || keptUris.length !== originalUris.length;
-        editContentPayload = content.trim();
+        editContentPayload = isLockAnnouncement
+          ? buildLockTeaserContent({ lock_title: lockTitle, teaser_description: content })
+          : content.trim();
         editAttachments = attachmentsChanged
           ? { original: originalUris, kept: keptUris, added: attachments }
           : undefined;
@@ -454,12 +506,21 @@ export function usePost(): UsePostReturn {
       setExistingAttachments([]);
       setIsArticle(false);
       setArticleTitle('');
+      setLockTitle('');
       toast({
         title: 'Post updated',
       });
       onSuccess?.(editPostId);
     } catch (err) {
       Logger.error('[usePost] Failed to edit post:', err);
+
+      // Same session-expiry handling as `showCommitErrorToast`: an unauthenticated
+      // edit cannot succeed by retrying (issue #2555).
+      if (isAppError(err) && requiresLogin(err)) {
+        showSessionExpiredToast();
+        return;
+      }
+
       toast({
         variant: 'error',
         description: getImageUploadSizeLimitToastMessage(err) ?? 'Could not update post. Try again.',
@@ -500,6 +561,8 @@ export function usePost(): UsePostReturn {
     setIsArticle,
     articleTitle,
     setArticleTitle,
+    lockTitle,
+    setLockTitle,
     reply,
     post,
     repost,
@@ -510,5 +573,6 @@ export function usePost(): UsePostReturn {
       getPreviewUrl: inlineImageSession.getPreviewUrl,
     },
     uploadingCount: inlineImageSession.uploadingCount,
+    serializeArticleForLock,
   };
 }

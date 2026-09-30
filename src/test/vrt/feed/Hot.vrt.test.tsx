@@ -2,6 +2,7 @@
 // Vitest `__vi_import_N__` aliases; reordering causes a TDZ crash in
 // @vitest/browser. Do not let `eslint --fix` reorder these imports.
 /* eslint-disable simple-import-sort/imports */
+import type { UseEntityTaggersResult } from '@/hooks/useEntityTaggers/useEntityTaggers';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { matchVrtFrameScreenshot, renderForVRT } from '@/test-utils/vrt';
 import { formatStableRelative } from '@/test-utils/vrt.clock';
@@ -161,8 +162,8 @@ vi.mock('@/stores/localFiles/localFiles.store', () => ({
   }),
 }));
 
-vi.mock('@/hooks/useKeyboardOffset/useKeyboardOffset', () => ({
-  useKeyboardOffset: () => ({ isKeyboardVisible: false, keyboardOffset: 0 }),
+vi.mock('@/hooks/useKeyboardVisible/useKeyboardVisible', () => ({
+  useKeyboardVisible: () => false,
 }));
 
 vi.mock('@/hooks/usePublicRoute/usePublicRoute', () => ({
@@ -353,7 +354,10 @@ vi.mock('@/hooks/useTtlSubscription/useTtlSubscription', () => {
 
 vi.mock('@/hooks/usePostHeaderVisibility/usePostHeaderVisibility', async () => {
   const f = await fixtures;
-  const cache = new Map<string, { showRepostHeader: boolean; shouldShowPostHeader: boolean }>();
+  const cache = new Map<
+    string,
+    { showRepostHeader: boolean; shouldShowPostHeader: boolean; originalPostId: string | null }
+  >();
   return {
     usePostHeaderVisibility: (compositeId: string) => {
       const cached = cache.get(compositeId);
@@ -361,6 +365,7 @@ vi.mock('@/hooks/usePostHeaderVisibility/usePostHeaderVisibility', async () => {
       const result = {
         showRepostHeader: !!f.postsByCompositeId.get(compositeId)?.relationships.reposted,
         shouldShowPostHeader: true,
+        originalPostId: null,
       };
       cache.set(compositeId, result);
       return result;
@@ -394,13 +399,14 @@ vi.mock('@/hooks/useEntityTags/useEntityTags', async () => {
   };
 });
 
-vi.mock('@/hooks/usePostTaggers/usePostTaggers', () => {
-  const result = {
-    taggersByLabel: new Map<string, string[]>(),
-    taggerStates: new Map<string, { isLoading: boolean; error: string | null }>(),
-    fetchAllTaggers: async () => {},
+vi.mock('@/hooks/useEntityTaggers/useEntityTaggers', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/hooks/useEntityTaggers/useEntityTaggers')>();
+  const result: UseEntityTaggersResult = {
+    taggerStates: new Map(),
+    loadTaggers: async () => {},
+    loadMoreTaggers: async () => {},
   };
-  return { usePostTaggers: () => result };
+  return { ...actual, useEntityTaggers: () => result };
 });
 
 vi.mock('@/hooks/useThreadReplies/useThreadReplies', () => {

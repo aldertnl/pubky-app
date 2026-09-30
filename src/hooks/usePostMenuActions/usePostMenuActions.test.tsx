@@ -17,6 +17,7 @@ const {
   mockUseMuteUser,
   mockUseMutedUsers,
   mockUseCopyToClipboard,
+  mockUseShareUrl,
 } = vi.hoisted(() => ({
   mockIsAppError: vi.fn(),
   mockParseCompositeId: vi.fn(),
@@ -28,6 +29,7 @@ const {
   mockUseMuteUser: vi.fn(),
   mockUseMutedUsers: vi.fn(),
   mockUseCopyToClipboard: vi.fn(),
+  mockUseShareUrl: vi.fn(),
 }));
 
 // Mock dependencies
@@ -66,6 +68,10 @@ vi.mock('@/hooks/useMutedUsers/useMutedUsers', () => ({
 
 vi.mock('@/hooks/useCopyToClipboard/useCopyToClipboard', () => ({
   useCopyToClipboard: mockUseCopyToClipboard,
+}));
+
+vi.mock('@/hooks/useShareUrl/useShareUrl', () => ({
+  useShareUrl: mockUseShareUrl,
 }));
 
 // Mock Molecules
@@ -114,6 +120,7 @@ describe('usePostMenuActions', () => {
     isMuteUserLoading: vi.fn().mockReturnValue(false),
     isMuted: vi.fn().mockReturnValue(false),
     copyToClipboard: vi.fn().mockResolvedValue(true),
+    shareUrl: vi.fn().mockResolvedValue(true),
   };
 
   beforeEach(() => {
@@ -167,6 +174,9 @@ describe('usePostMenuActions', () => {
     mockUseCopyToClipboard.mockReturnValue({
       copyToClipboard: defaultMocks.copyToClipboard,
     });
+    mockUseShareUrl.mockReturnValue({
+      shareUrl: defaultMocks.shareUrl,
+    });
   });
 
   describe('Menu items for other user posts', () => {
@@ -211,7 +221,7 @@ describe('usePostMenuActions', () => {
       expect(followItem?.disabled).toBe(true);
     });
 
-    it('calls toggleFollow with full author name on follow action click', async () => {
+    it('calls toggleFollow with the author id on follow action click', async () => {
       const { result } = renderHook(() =>
         usePostMenuActions(mockPostId, { onReportClick: vi.fn(), onEditClick: vi.fn(), onDeleteClick: vi.fn() }),
       );
@@ -223,10 +233,10 @@ describe('usePostMenuActions', () => {
         await followItem?.onClick();
       });
 
-      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockAuthorId, false, 'Test Author');
+      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockAuthorId, false);
     });
 
-    it('calls toggleFollow with full author name on unfollow action click', async () => {
+    it('calls toggleFollow with the author id on unfollow action click', async () => {
       mockUseIsFollowing.mockReturnValue({
         isFollowing: true,
         isLoading: false,
@@ -243,7 +253,7 @@ describe('usePostMenuActions', () => {
         await followItem?.onClick();
       });
 
-      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockAuthorId, true, 'Test Author');
+      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockAuthorId, true);
     });
 
     it('does not throw when the follow fails (useFollowUser handles feedback)', async () => {
@@ -301,7 +311,7 @@ describe('usePostMenuActions', () => {
 
       expect(defaultMocks.toggleMute).toHaveBeenCalledWith(mockAuthorId, false);
       expect(vi.mocked(toast)).toHaveBeenCalledWith({
-        title: 'Test Author muted',
+        title: 'User muted',
       });
     });
 
@@ -485,7 +495,7 @@ describe('usePostMenuActions', () => {
       expect(copyLinkItem?.label).toBe('Copy link to post');
     });
 
-    it('calls copyToClipboard with post URL on copy link click', async () => {
+    it('hands the post URL to shareUrl on copy link click', async () => {
       const { result } = renderHook(() =>
         usePostMenuActions(mockPostId, { onReportClick: vi.fn(), onEditClick: vi.fn(), onDeleteClick: vi.fn() }),
       );
@@ -496,7 +506,7 @@ describe('usePostMenuActions', () => {
         await copyLinkItem?.onClick();
       });
 
-      expect(defaultMocks.copyToClipboard).toHaveBeenCalledWith('https://example.com/post/author123/post456');
+      expect(defaultMocks.shareUrl).toHaveBeenCalledWith('https://example.com/post/author123/post456');
     });
 
     it('includes copy text action for short posts', () => {

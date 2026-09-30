@@ -156,8 +156,8 @@ vi.mock('@/stores/settings/settings.store', async () => {
   };
 });
 
-vi.mock('@/hooks/useKeyboardOffset/useKeyboardOffset', () => ({
-  useKeyboardOffset: () => ({ isKeyboardVisible: false, keyboardOffset: 0 }),
+vi.mock('@/hooks/useKeyboardVisible/useKeyboardVisible', () => ({
+  useKeyboardVisible: () => false,
 }));
 
 vi.mock('@/hooks/usePublicRoute/usePublicRoute', () => ({
@@ -217,13 +217,6 @@ vi.mock('@/hooks/useSearchAutocomplete/useSearchAutocomplete', () => {
   const result = { tags: [], users: [], isLoading: false, error: null };
   return { useSearchAutocomplete: () => result };
 });
-
-vi.mock('@/hooks/useCollectionsNavDiscovery/useCollectionsNavDiscovery', () => ({
-  useCollectionsNavDiscovery: () => ({
-    showCollectionsNew: false,
-    markCollectionsNavSeen: () => {},
-  }),
-}));
 
 vi.mock('@/hooks/useSignOut/useSignOut', () => ({
   useSignOut: () => ({ handleSignOut: async () => {}, isLoading: false }),

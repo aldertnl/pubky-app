@@ -1,5 +1,19 @@
 import type { Dispatch, SetStateAction } from 'react';
 
+export interface UsePostOptions {
+  /** A captured lock draft needs the article's uploaded images after the composer was emptied. */
+  keepInlineImages?: boolean;
+}
+
+/**
+ * An article body in published form: `body` references its images by `attachment:{n}` slot and
+ * `inlineFiles` holds them in slot order, after the cover.
+ */
+export type SerializedArticle = {
+  body: string;
+  inlineFiles: File[];
+};
+
 export interface UsePostReplyOptions {
   postId: string;
   onSuccess?: (createdPostId: string) => void;
@@ -11,12 +25,10 @@ export interface UsePostPostOptions {
 
 export interface UsePostRepostOptions {
   originalPostId: string;
-  /** Original post author's name for the toast message */
-  originalAuthorName?: string;
   /**
    * Overrides the success toast title (e.g. "Share Collection" reuses the
-   * repost flow but reads as a collection action). Falls back to the standard
-   * "Reposted {author}'s post" copy when omitted.
+   * repost flow but reads as a collection action). Falls back to 'Reposted'
+   * when omitted.
    */
   successToastTitle?: string;
   onSuccess?: (createdPostId: string) => void;
@@ -26,6 +38,8 @@ export interface UsePostRepostOptions {
 
 export interface UsePostEditOptions {
   editPostId: string;
+  /** Keeps an existing lock announcement in teaser-envelope mode. */
+  isLockAnnouncement?: boolean;
   /**
    * The attachment URIs the edit composer was seeded from (the snapshot taken
    * when the dialog opened — NOT the live post row, which can change underneath
@@ -56,7 +70,7 @@ export type ExistingAttachment = {
   type: string;
   name: string;
   /** Resolved render URLs (local blob or CDN); `null` while metadata is loading. */
-  urls: { main: string; feed?: string } | null;
+  urls: { main: string; feed?: string; large?: string } | null;
   /**
    * Set when metadata resolution (local + Nexus backfill) has terminally failed.
    * Distinguishes "still loading" (skeleton) from "unknowable" (generic file
@@ -78,6 +92,8 @@ export interface UsePostReturn {
   setIsArticle: Dispatch<SetStateAction<boolean>>;
   articleTitle: string;
   setArticleTitle: Dispatch<SetStateAction<string>>;
+  lockTitle: string;
+  setLockTitle: Dispatch<SetStateAction<string>>;
   reply: (options: UsePostReplyOptions) => Promise<void>;
   post: (options: UsePostPostOptions) => Promise<void>;
   repost: (options: UsePostRepostOptions) => Promise<void>;
@@ -90,4 +106,6 @@ export interface UsePostReturn {
   };
   /** Inline image uploads currently in flight; publishing is blocked while > 0. */
   uploadingCount: number;
+  /** Null, after a toast, when a normal publish would refuse the body too. */
+  serializeArticleForLock: (body: string) => SerializedArticle | null;
 }

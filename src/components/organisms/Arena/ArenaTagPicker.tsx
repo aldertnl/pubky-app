@@ -1,36 +1,35 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { ChevronDown, Tag as TagIcon } from 'lucide-react';
-import { useForm } from 'react-hook-form';
+import { ChevronDown, RotateCcw, Tag as TagIcon } from 'lucide-react';
 import { Button } from '@/atoms/Button/Button';
-import { Label } from '@/atoms/Label/Label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/atoms/Popover/Popover';
 import { Tag } from '@/atoms/Tag/Tag';
 import { Typography } from '@/atoms/Typography/Typography';
 import { ARENA_TOPIC_LIMIT } from '@/libs/arena/arena';
-import { generateRandomColor, hexToRgba } from '@/libs/utils/utils';
-import { ControlledInputField } from '@/molecules/ControlledInputField/ControlledInputField';
-import { PostTag } from '@/molecules/PostTag/PostTag';
-import { type ArenaTagForm, type ArenaTagPickerProps, arenaTagSchema } from './ArenaTagPicker.types';
+import { TagInput } from '@/molecules/TagInput/TagInput';
+import type { TagInputHandle } from '@/molecules/TagInput/TagInput.types';
+import { ArenaRankedTag } from './ArenaRankedTag';
+import type { ArenaTagPickerProps } from './ArenaTagPicker.types';
+
+const TOPIC_COLUMN_SIZE = Math.ceil(ARENA_TOPIC_LIMIT / 2);
 
 export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: ArenaTagPickerProps) {
   const isAll = topic === null;
   const hasSelection = isAll || !!topic;
   const [open, setOpen] = useState(false);
-  const formRef = useRef<HTMLFormElement>(null);
-  const form = useForm<ArenaTagForm>({ resolver: zodResolver(arenaTagSchema), defaultValues: { tag: '' } });
+  const inputRef = useRef<TagInputHandle>(null);
+  const topTopics = topics.slice(0, ARENA_TOPIC_LIMIT);
+  const topicColumns = [topTopics.slice(0, TOPIC_COLUMN_SIZE), topTopics.slice(TOPIC_COLUMN_SIZE)];
+
+  function selectTag(tag: Parameters<ArenaTagPickerProps['onTopic']>[0]) {
+    onTopic(tag);
+    setOpen(false);
+  }
 
   return (
     <span data-arena-tag-picker className="relative inline-flex align-middle">
-      <Popover
-        open={open}
-        onOpenChange={(next) => {
-          if (next) form.reset({ tag: '' });
-          setOpen(next);
-        }}
-      >
+      <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             overrideDefaults={hasSelection}
@@ -41,7 +40,7 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
                 ? 'relative h-8 rounded-md focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none'
                 : 'text-xs'
             }
-            aria-label="Choose topic tag"
+            aria-label="Choose tag"
           >
             {isAll ? (
               <Tag name="all" className="pr-9" style={{ backgroundColor: '#000', border: '1px solid var(--border)' }} />
@@ -62,82 +61,67 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
         <PopoverContent
           align="start"
           sideOffset={4}
-          className="mx-0 w-70 max-w-[calc(100vw-2rem)] bg-background shadow-xl"
-          aria-label="Choose topic tag"
+          className="mx-0 max-h-[calc(100vh-2rem)] w-fit max-w-[calc(100vw-2rem)] overflow-y-auto bg-background shadow-xl"
+          aria-label="Choose tag"
           onOpenAutoFocus={(event) => {
             event.preventDefault();
-            formRef.current?.querySelector('input')?.focus();
+            inputRef.current?.focus();
           }}
         >
-          <div className="mb-3 space-y-3">
-            <Typography
-              as="h3"
-              overrideDefaults
-              className="text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase"
-            >
-              SELECT ALL TOPICS
-            </Typography>
-            <Button
-              type="button"
-              variant="dark-outline"
-              size="sm"
-              className="rounded-md border-border bg-black text-sm font-bold"
-              aria-pressed={isAll}
-              onClick={() => {
-                onTopic(null);
-                setOpen(false);
-              }}
-            >
-              all
-            </Button>
-          </div>
-          <div className="mb-3 space-y-3">
-            <Typography
-              as="h3"
-              overrideDefaults
-              className="text-xs leading-4 font-medium tracking-[0.075rem] text-muted-foreground uppercase"
-            >
-              TOP #{ARENA_TOPIC_LIMIT} TOPICS {timeframeLabel}
-            </Typography>
-            <div className="flex flex-wrap gap-2" role="group" aria-label="Top tags">
-              {topics.slice(0, ARENA_TOPIC_LIMIT).map((tag) => (
-                <PostTag
-                  key={tag.label}
-                  label={tag.label}
-                  count={tag.tagged_count}
-                  maxLabelLength={14}
-                  selectedStyle={{
-                    borderColor: generateRandomColor(tag.label),
-                    boxShadow: `inset 0 0 8px 0 ${generateRandomColor(tag.label)}, 0 0 32px 8px ${hexToRgba(generateRandomColor(tag.label), 0.32)}`,
-                  }}
-                  selected={tag.label === topic}
-                  onClick={() => {
-                    onTopic(tag.label);
-                    setOpen(false);
-                  }}
-                />
+          <div className="mb-3 space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <Typography as="h3" overrideDefaults className="text-base leading-6 font-medium text-muted-foreground">
+                Top #{ARENA_TOPIC_LIMIT} tags {timeframeLabel.toLowerCase()}
+              </Typography>
+            </div>
+            <div className="grid w-fit max-w-full grid-cols-[max-content_max-content] gap-x-4 gap-y-6">
+              {topicColumns.map((column, columnIndex) => (
+                <ol
+                  key={columnIndex}
+                  start={columnIndex * TOPIC_COLUMN_SIZE + 1}
+                  className="m-0 list-none space-y-2 p-0"
+                  aria-label={`Top tags ${columnIndex + 1}`}
+                >
+                  {column.map((tag, rowIndex) => {
+                    const index = columnIndex * TOPIC_COLUMN_SIZE + rowIndex;
+                    const rank = index + 1;
+                    const selected = tag.label === topic;
+                    return (
+                      <li key={tag.label} className="list-none" aria-label={`Rank ${rank}: ${tag.label}`}>
+                        <ArenaRankedTag
+                          label={tag.label}
+                          count={tag.tagged_count}
+                          rank={rank}
+                          selected={selected}
+                          onClick={() => selectTag(tag.label)}
+                        />
+                      </li>
+                    );
+                  })}
+                </ol>
               ))}
+              {/* Exclude the input's intrinsic width so the tags size this column. */}
+              <div className="min-w-0 [contain:inline-size]">
+                <TagInput
+                  ref={inputRef}
+                  aria-label="Tag"
+                  onTagAdd={(tag) => selectTag(tag.trim().toLowerCase())}
+                  placeholder="enter tag"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                className="shrink-0 gap-2 self-center justify-self-end"
+                aria-label="Reset tag filter to all"
+                onClick={() => selectTag(null)}
+              >
+                <RotateCcw className="size-4" aria-hidden="true" />
+                Reset to &apos;all&apos;
+              </Button>
             </div>
           </div>
-          <form
-            ref={formRef}
-            className="flex flex-col gap-3"
-            onSubmit={form.handleSubmit(({ tag }) => {
-              onTopic(tag);
-              setOpen(false);
-            })}
-          >
-            <Label htmlFor="tag" className="sr-only">
-              Topic tag
-            </Label>
-            <ControlledInputField
-              control={form.control}
-              name="tag"
-              placeholder="enter topic"
-              variant="default"
-              size="md"
-            />
-          </form>
         </PopoverContent>
       </Popover>
     </span>

@@ -4,12 +4,14 @@ import { describe, expect, it, vi } from 'vitest';
 import { FORCE_FEED_SCROLL_TOP_KEY } from '@/config/feed';
 import { FileController } from '@/controllers/file/file';
 import { useCurrentUserProfile } from '@/hooks/useCurrentUserProfile/useCurrentUserProfile';
-import { useKeyboardOffset } from '@/hooks/useKeyboardOffset/useKeyboardOffset';
+import { useKeyboardVisible } from '@/hooks/useKeyboardVisible/useKeyboardVisible';
 import { MobileFooter } from './MobileFooter';
 
 const collectionsDiscoveryMock = vi.hoisted(() => ({
   setShowSignInDialog: vi.fn(),
 }));
+const awardNotificationMock = vi.hoisted(() => ({ count: vi.fn(() => 0) }));
+vi.mock('@/hooks/useAwards/useAwards', () => ({ useAwardNotificationCount: awardNotificationMock.count }));
 
 let mockCurrentUserPubky: string | null = 'pk:test-user-pubky';
 let mockIsPublicRoute = false;
@@ -105,9 +107,10 @@ vi.mock('@/hooks/usePublicRoute/usePublicRoute', () => ({
   })),
 }));
 
-vi.mock('@/hooks/useKeyboardOffset/useKeyboardOffset', () => ({
-  useKeyboardOffset: vi.fn(() => ({ isKeyboardVisible: false, keyboardOffset: 0 })),
+vi.mock('@/hooks/useKeyboardVisible/useKeyboardVisible', () => ({
+  useKeyboardVisible: vi.fn(() => false),
 }));
+
 // Track notification store mock for per-test overrides
 const mockSelectUnread = vi.fn(() => 0);
 vi.mock('@/controllers/file/file', () => ({
@@ -140,6 +143,7 @@ describe('MobileFooter', () => {
     vi.clearAllMocks();
     vi.mocked(usePathname).mockReturnValue('/home');
     mockSelectUnread.mockReturnValue(0);
+    awardNotificationMock.count.mockReturnValue(0);
     mockCurrentUserPubky = 'pk:test-user-pubky';
     mockIsPublicRoute = false;
     mockIsCoreExploreRoute = false;
@@ -148,8 +152,8 @@ describe('MobileFooter', () => {
       value: createSessionStorageMock(),
     });
 
-    // Reset keyboard offset mock
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: false, keyboardOffset: 0 });
+    // Reset keyboard visibility mock
+    vi.mocked(useKeyboardVisible).mockReturnValue(false);
   });
 
   it('renders with default props', () => {
@@ -298,13 +302,22 @@ describe('MobileFooter', () => {
     expect(collectionsLink).not.toHaveClass('border');
   });
 
-  it('does not show a Collections NEW treatment for guests', () => {
+  it('renders the Collections nav item without a NEW treatment', () => {
+    render(<MobileFooter />);
+
+    const collectionsLink = document.querySelector('.lucide-library')?.closest('a');
+    expect(collectionsLink).toBeTruthy();
+    expect(collectionsLink).not.toHaveClass('border-brand');
+    expect(screen.getByRole('link', { name: 'Collections' })).toBeInTheDocument();
+    expect(screen.queryByText('New')).not.toBeInTheDocument();
+  });
+
+  it('keeps Collections reachable for guests on public explore routes', () => {
     mockCurrentUserPubky = null;
     mockIsCoreExploreRoute = true;
 
     render(<MobileFooter />);
 
-    expect(screen.queryByText('New')).not.toBeInTheDocument();
     const collectionsLink = document.querySelector('.lucide-library')?.closest('a');
     expect(collectionsLink).toBeTruthy();
     expect(collectionsLink).toHaveAttribute('href', '/collections');
@@ -337,8 +350,9 @@ describe('MobileFooter', () => {
     expect(profileLink).not.toHaveClass('ring-2', 'ring-primary');
   });
 
-  it('displays notification counter badge when unread notifications > 0', () => {
-    mockSelectUnread.mockReturnValue(5);
+  it('includes new recognition in the unread notification counter badge', () => {
+    mockSelectUnread.mockReturnValue(3);
+    awardNotificationMock.count.mockReturnValue(2);
     render(<MobileFooter />);
 
     const badge = screen.getByTestId('mobile-notification-counter');
@@ -401,38 +415,17 @@ describe('MobileFooter', () => {
     expect(setItemSpy).toHaveBeenCalledWith(FORCE_FEED_SCROLL_TOP_KEY, '1');
   });
 
-  it('applies transform when keyboard is visible', async () => {
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: true, keyboardOffset: 300 });
+  it('hides navigation while the keyboard is open and restores it when dismissed', () => {
+    const { rerender } = render(<MobileFooter />);
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
 
-    const { container } = render(<MobileFooter />);
-    const footerContainer = container.querySelector('.fixed');
-
-    expect(footerContainer).toBeInTheDocument();
-    expect(footerContainer?.getAttribute('style')).toContain('translateY(-300px)');
-  });
-
-  it('does not apply transform when keyboard is not visible', async () => {
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: false, keyboardOffset: 0 });
-
-    const { container } = render(<MobileFooter />);
-    const footerContainer = container.querySelector('.fixed');
-
-    expect(footerContainer).toBeInTheDocument();
-    expect(footerContainer?.getAttribute('style')).toBeFalsy();
-  });
-
-  it('always applies transition classes for smooth keyboard animation', async () => {
-    // transition-transform and duration-75 are always present regardless of keyboard state
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: false, keyboardOffset: 0 });
-    const { container, rerender } = render(<MobileFooter />);
-    let footerContainer = container.querySelector('.fixed');
-    expect(footerContainer).toHaveClass('transition-transform', 'duration-75');
-
-    // Still present when keyboard is visible
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: true, keyboardOffset: 300 });
+    vi.mocked(useKeyboardVisible).mockReturnValue(true);
     rerender(<MobileFooter />);
-    footerContainer = container.querySelector('.fixed');
-    expect(footerContainer).toHaveClass('transition-transform', 'duration-75');
+    expect(screen.queryByRole('link', { name: 'Home' })).not.toBeInTheDocument();
+
+    vi.mocked(useKeyboardVisible).mockReturnValue(false);
+    rerender(<MobileFooter />);
+    expect(screen.getByRole('link', { name: 'Home' })).toBeInTheDocument();
   });
 
   it('renders public explore navigation with gated account actions when unauthenticated on a core explore route', () => {
@@ -482,10 +475,11 @@ describe('MobileFooter - Snapshots', () => {
     vi.clearAllMocks();
     vi.mocked(usePathname).mockReturnValue('/home');
     mockSelectUnread.mockReturnValue(0);
+    awardNotificationMock.count.mockReturnValue(0);
     mockCurrentUserPubky = 'pk:test-user-pubky';
     mockIsPublicRoute = false;
     mockIsCoreExploreRoute = false;
-    vi.mocked(useKeyboardOffset).mockReturnValue({ isKeyboardVisible: false, keyboardOffset: 0 });
+    vi.mocked(useKeyboardVisible).mockReturnValue(false);
   });
 
   it('matches snapshot with default props', () => {

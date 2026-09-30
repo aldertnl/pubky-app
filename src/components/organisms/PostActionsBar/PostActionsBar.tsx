@@ -43,6 +43,7 @@ const postActionsCountVariants = cva(POST_ACTION_COUNT_TYPOGRAPHY_CLASS, {
 });
 export function PostActionsBar({
   postId,
+  savePostId = postId,
   onTagClick,
   onReplyClick,
   onRepostClick,
@@ -122,7 +123,7 @@ export function PostActionsBar({
           </Button>
         ),
       )}
-      {!isCollection && <PostSavePicker postId={postId} buttonClassName={buttonClassName} />}
+      {!isCollection && <PostSavePicker postId={savePostId} buttonClassName={buttonClassName} />}
       {!isOwnPost && (
         <Button
           {...commonButtonProps}

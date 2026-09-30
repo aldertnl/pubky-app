@@ -1,6 +1,9 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FileController } from '@/controllers/file/file';
+import { AuthErrorCode } from '@/libs/error/error.codes';
+import { Err } from '@/libs/error/error.factories';
+import { ErrorService } from '@/libs/error/error.types';
 import type { Pubky } from '@/models/models.types';
 import { toast } from '@/molecules/Toaster/toast';
 import { useInlineImageUpload } from './useInlineImageUpload';
@@ -191,6 +194,27 @@ describe('useInlineImageUpload', () => {
       expect(result.current.getPreviewUrl(fileUri('a'))).toBeNull();
     });
 
+    it('toasts sign-in once and keeps the tagged rejection when the upload is UNAUTHORIZED (#2555)', async () => {
+      vi.mocked(FileController.commitCreate).mockRejectedValue(
+        Err.auth(AuthErrorCode.UNAUTHORIZED, 'Unauthorized', {
+          service: ErrorService.Homeserver,
+          operation: 'commitCreate',
+        }),
+      );
+      const { result } = setup();
+
+      await expect(result.current.uploadInlineImage(imageFile())).rejects.toMatchObject({
+        name: INLINE_IMAGE_UPLOAD_REJECTION_NAME,
+      });
+
+      expect(vi.mocked(toast)).toHaveBeenCalledTimes(1);
+      expect(vi.mocked(toast)).toHaveBeenCalledWith(
+        expect.objectContaining({ variant: 'error', description: 'Session expired. Please sign in.' }),
+      );
+      expect(result.current.uploadingCount).toBe(0);
+      expect(result.current.getPreviewUrl(fileUri('a'))).toBeNull();
+    });
+
     it('tracks uploadingCount while uploads are in flight', async () => {
       let resolveUpload!: (uri: string) => void;
       vi.mocked(FileController.commitCreate).mockImplementation(
@@ -362,6 +386,55 @@ describe('useInlineImageUpload', () => {
       });
     });
 
+    it('keeps the uploads when article mode is disabled while a lock draft holds the session', async () => {
+      const { result, rerender } = setup();
+      await uploadTwo(result);
+
+      await act(async () => {
+        rerender({ enabled: false, keepSession: true, authorPubky: PUBKY, getInlineBudget: () => 9 });
+      });
+
+      expect(FileController.commitDelete).not.toHaveBeenCalled();
+      expect(result.current.getSessionFile(fileUri('a'))).toBeInstanceOf(File);
+    });
+
+    it('discards the session once the lock draft lets go of it outside article mode', async () => {
+      const { result, rerender } = setup();
+      await uploadTwo(result);
+      rerender({ enabled: false, keepSession: true, authorPubky: PUBKY, getInlineBudget: () => 9 });
+
+      rerender({ enabled: false, keepSession: false, authorPubky: PUBKY, getInlineBudget: () => 9 });
+
+      await waitFor(() => {
+        expect(FileController.commitDelete).toHaveBeenCalledWith({ fileUris: [fileUri('a'), fileUri('b')] });
+      });
+    });
+
+    it('keeps the uploads when the lock draft goes back into the article composer', async () => {
+      const { result, rerender } = setup();
+      await uploadTwo(result);
+      rerender({ enabled: false, keepSession: true, authorPubky: PUBKY, getInlineBudget: () => 9 });
+
+      await act(async () => {
+        rerender({ enabled: true, keepSession: false, authorPubky: PUBKY, getInlineBudget: () => 9 });
+      });
+
+      expect(FileController.commitDelete).not.toHaveBeenCalled();
+      expect(result.current.getPreviewUrl(fileUri('a'))).toMatch(/^blob:mock-/);
+    });
+
+    it('still discards on unmount while a lock draft holds the session', async () => {
+      const { result, rerender, unmount } = setup();
+      await uploadTwo(result);
+      rerender({ enabled: false, keepSession: true, authorPubky: PUBKY, getInlineBudget: () => 9 });
+
+      unmount();
+
+      await waitFor(() => {
+        expect(FileController.commitDelete).toHaveBeenCalledWith({ fileUris: [fileUri('a'), fileUri('b')] });
+      });
+    });
+
     it('unmount after finalize is a no-op', async () => {
       const { result, unmount } = setup();
       await uploadTwo(result);
@@ -372,6 +445,21 @@ describe('useInlineImageUpload', () => {
       unmount();
 
       expect(FileController.commitDelete).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getSessionFile', () => {
+    it('returns the file as it was picked, and null for a URI from outside the session', async () => {
+      vi.mocked(FileController.commitCreate).mockResolvedValue(fileUri('a'));
+      const { result } = setup();
+      const picked = imageFile('a.png', 'image/png');
+
+      await act(async () => {
+        await result.current.uploadInlineImage(picked);
+      });
+
+      expect(result.current.getSessionFile(fileUri('a'))).toBe(picked);
+      expect(result.current.getSessionFile(fileUri('other'))).toBeNull();
     });
   });
 

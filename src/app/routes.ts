@@ -5,11 +5,14 @@ export const ROOT_ROUTES = '/';
 export enum ONBOARDING_ROUTES {
   BACKUP = '/onboarding/backup',
   INSTALL = '/onboarding/install',
+  /** Step 1 when Pubky Passport is available: "Manage your own keys" vs "Continue with Google". */
+  JOIN = '/onboarding/join',
   PROFILE = '/onboarding/profile',
   PUBKY = '/onboarding/pubky',
   SCAN = '/onboarding/scan',
   HUMAN = '/onboarding/human',
   TAGS = '/onboarding/tags',
+  FOLLOW = '/onboarding/follow',
 }
 
 export enum AUTH_ROUTES {
@@ -58,6 +61,7 @@ export enum PROFILE_ROUTES {
   PROFILE_PAGE = '/profile/profile',
   COLLECTIONS = '/profile/collections',
   AWARDS = '/profile/awards',
+  UNLOCKED = '/profile/unlocked',
 }
 
 export enum SETTINGS_ROUTES {
@@ -105,6 +109,7 @@ export const PUBLIC_ROUTES: string[] = [
 export const ALLOWED_ROUTES = [
   ONBOARDING_ROUTES.PROFILE,
   ONBOARDING_ROUTES.TAGS,
+  ONBOARDING_ROUTES.FOLLOW,
   APP_ROUTES.HOME,
   APP_ROUTES.FEED,
   APP_ROUTES.SEARCH,
@@ -128,6 +133,7 @@ export const UNAUTHENTICATED_ROUTES = {
     ONBOARDING_ROUTES.PUBKY,
     ONBOARDING_ROUTES.BACKUP,
     ONBOARDING_ROUTES.HUMAN,
+    ONBOARDING_ROUTES.JOIN,
     ...EXPLORE_ROUTES,
     AUTH_ROUTES.LOGOUT,
     COPYRIGHT_ROUTES.COPYRIGHT,
@@ -223,6 +229,12 @@ export function matchPostRoute(pathname: string): { userId: string; postId: stri
 /** `/post/[userId]/[postId]` — browsable without auth; uses explore header chrome for guests. */
 export function isPostRoute(pathname: string): boolean {
   return matchPostRoute(pathname) !== null;
+}
+
+/** `/feed/[id]` exactly — excludes the missing base route and deeper descendants. */
+export function isCustomFeedRoute(pathname: string): boolean {
+  const segments = pathname.split('/').filter(Boolean);
+  return segments[0] === 'feed' && segments.length === 2;
 }
 
 export function isCoreExploreRoute(pathname: string): boolean {

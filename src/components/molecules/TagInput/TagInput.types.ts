@@ -7,6 +7,8 @@ export interface TagInputHandle {
 type TagInputContainerVariant = 'dashed' | 'plain';
 
 export interface TagInputProps {
+  /** Accessible name when the input has no visible label. */
+  'aria-label'?: string;
   /** Callback when a tag is added. Can return a Promise for async handling. */
   onTagAdd: (tag: string) => void | Promise<unknown>;
   /** Placeholder text for the input */

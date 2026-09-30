@@ -15,7 +15,7 @@ import { buildCompositeIdFromPubkyUri, parseCompositeId } from '@/models/models.
 export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) {
   const { mutedUserIdSet } = useMutedUsers();
   const cache = useRef(
-    new Map<string, { content: string; blurred: boolean; attachmentsKey: string; idea: ArenaIdea }>(),
+    new Map<string, { content: string; lock: string | null; blurred: boolean; attachmentsKey: string; idea: ArenaIdea }>(),
   );
   const idsKey = JSON.stringify([...new Set(postIds)]);
   const result = useLiveQuery(
@@ -34,8 +34,10 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
           const previous = cache.current.get(compositeId);
           const attachments = post.attachments ?? [];
           const attachmentsKey = attachments.join('|');
+          const lock = post.lock ?? null;
           const sameContent =
             previous?.content === post.content &&
+            previous.lock === lock &&
             previous.blurred === post.is_blurred &&
             previous.idea.kind === post.kind &&
             previous.attachmentsKey === attachmentsKey;
@@ -46,7 +48,7 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
               ? previous.idea.preview
               : post.is_blurred
                 ? 'Content warning'
-                : deriveTextPreview(post) || `${post.kind} post`,
+                : deriveTextPreview({ content: post.content, kind: post.kind, lock }) || `${post.kind} post`,
             attachments,
             kind: post.kind,
             indexedAt: post.indexed_at,
@@ -66,6 +68,7 @@ export function useArenaIdeas(postIds: string[], { includeMuted = false } = {}) 
           const result = unchanged ? previous.idea : idea;
           nextCache.set(compositeId, {
             content: post.content,
+            lock,
             blurred: post.is_blurred,
             attachmentsKey,
             idea: result,

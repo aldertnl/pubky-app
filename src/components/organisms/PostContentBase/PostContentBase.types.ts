@@ -1,6 +1,7 @@
 export interface PostContentBaseProps {
+  showFullContent?: boolean;
   postId: string;
   className?: string;
   textClassName?: string;
-  mediaVariant?: 'default' | 'list';
+  mediaVariant?: 'default' | 'list' | 'cards';
 }

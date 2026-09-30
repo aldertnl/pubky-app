@@ -15,6 +15,7 @@ const {
   mockUseMuteUser,
   mockUseMutedUsers,
   mockUseCopyToClipboard,
+  mockUseShareUrl,
 } = vi.hoisted(() => ({
   mockIsAppError: vi.fn(),
   mockUseTranslations: vi.fn(),
@@ -24,6 +25,7 @@ const {
   mockUseMuteUser: vi.fn(),
   mockUseMutedUsers: vi.fn(),
   mockUseCopyToClipboard: vi.fn(),
+  mockUseShareUrl: vi.fn(),
 }));
 
 // Mock Hooks
@@ -49,6 +51,10 @@ vi.mock('@/hooks/useMutedUsers/useMutedUsers', () => ({
 
 vi.mock('@/hooks/useCopyToClipboard/useCopyToClipboard', () => ({
   useCopyToClipboard: mockUseCopyToClipboard,
+}));
+
+vi.mock('@/hooks/useShareUrl/useShareUrl', () => ({
+  useShareUrl: mockUseShareUrl,
 }));
 
 // Mock Molecules
@@ -84,6 +90,7 @@ describe('useProfileMenuActions', () => {
     isMuteUserLoading: vi.fn().mockReturnValue(false),
     isMuted: vi.fn().mockReturnValue(false),
     copyToClipboard: vi.fn().mockResolvedValue(true),
+    shareUrl: vi.fn().mockResolvedValue(true),
   };
 
   beforeEach(() => {
@@ -160,6 +167,9 @@ describe('useProfileMenuActions', () => {
     mockUseCopyToClipboard.mockReturnValue({
       copyToClipboard: defaultMocks.copyToClipboard,
     });
+    mockUseShareUrl.mockReturnValue({
+      shareUrl: defaultMocks.shareUrl,
+    });
   });
 
   describe('Follow action', () => {
@@ -198,7 +208,7 @@ describe('useProfileMenuActions', () => {
       expect(followItem?.disabled).toBe(true);
     });
 
-    it('calls toggleFollow with full profile name on follow action click', async () => {
+    it('calls toggleFollow with the user id on follow action click', async () => {
       const { result } = renderHook(() => useProfileMenuActions(mockUserId));
 
       const followItem = result.current.menuItems.find((item) => item.id === PROFILE_MENU_ACTION_IDS.FOLLOW);
@@ -208,10 +218,10 @@ describe('useProfileMenuActions', () => {
         await followItem?.onClick();
       });
 
-      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockUserId, false, 'Test User');
+      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockUserId, false);
     });
 
-    it('calls toggleFollow with full profile name on unfollow action click', async () => {
+    it('calls toggleFollow with the user id on unfollow action click', async () => {
       mockUseIsFollowing.mockReturnValue({
         isFollowing: true,
         isLoading: false,
@@ -226,7 +236,7 @@ describe('useProfileMenuActions', () => {
         await followItem?.onClick();
       });
 
-      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockUserId, true, 'Test User');
+      expect(defaultMocks.toggleFollow).toHaveBeenCalledWith(mockUserId, true);
     });
 
     it('does not throw when the follow fails (useFollowUser handles feedback)', async () => {
@@ -292,7 +302,7 @@ describe('useProfileMenuActions', () => {
 
       expect(defaultMocks.toggleMute).toHaveBeenCalledWith(mockUserId, false);
       expect(vi.mocked(toast)).toHaveBeenCalledWith({
-        title: 'Test User muted',
+        title: 'User muted',
       });
     });
 
@@ -309,7 +319,7 @@ describe('useProfileMenuActions', () => {
 
       expect(defaultMocks.toggleMute).toHaveBeenCalledWith(mockUserId, true);
       expect(vi.mocked(toast)).toHaveBeenCalledWith({
-        title: 'Test User unmuted',
+        title: 'User unmuted',
       });
     });
 
@@ -364,7 +374,7 @@ describe('useProfileMenuActions', () => {
       expect(copyLinkItem?.label).toBe('Copy profile link');
     });
 
-    it('calls copyToClipboard with profile URL on copy link click', async () => {
+    it('hands the profile URL to shareUrl on copy link click', async () => {
       const { result } = renderHook(() => useProfileMenuActions(mockUserId));
 
       const copyLinkItem = result.current.menuItems.find((item) => item.id === PROFILE_MENU_ACTION_IDS.COPY_LINK);
@@ -373,13 +383,11 @@ describe('useProfileMenuActions', () => {
         await copyLinkItem?.onClick();
       });
 
-      expect(defaultMocks.copyToClipboard).toHaveBeenCalledWith(`https://example.com/profile/${mockUserId}`);
+      expect(defaultMocks.shareUrl).toHaveBeenCalledWith(`https://example.com/profile/${mockUserId}`);
     });
 
-    it('shows error toast when copy pubky fails', async () => {
-      const error = new Error('Copy failed');
-      vi.mocked(isAppError).mockReturnValue(false);
-      defaultMocks.copyToClipboard.mockRejectedValue(error);
+    it('stays silent when copying the pubky fails (useCopyToClipboard owns the feedback)', async () => {
+      defaultMocks.copyToClipboard.mockResolvedValue(false);
 
       const { result } = renderHook(() => useProfileMenuActions(mockUserId));
 
@@ -389,18 +397,12 @@ describe('useProfileMenuActions', () => {
         await copyPubkyItem?.onClick();
       });
 
-      await waitFor(() => {
-        expect(vi.mocked(toast)).toHaveBeenCalledWith({
-          variant: 'error',
-          description: 'Could not copy to clipboard',
-        });
-      });
+      expect(defaultMocks.copyToClipboard).toHaveBeenCalledWith(`pubky${mockUserId}`);
+      expect(vi.mocked(toast)).not.toHaveBeenCalled();
     });
 
-    it('shows error toast when copy link fails', async () => {
-      const error = new Error('Copy failed');
-      vi.mocked(isAppError).mockReturnValue(false);
-      defaultMocks.copyToClipboard.mockRejectedValue(error);
+    it('stays silent when the share sheet is dismissed (useShareUrl owns the feedback)', async () => {
+      defaultMocks.shareUrl.mockResolvedValue(false);
 
       const { result } = renderHook(() => useProfileMenuActions(mockUserId));
 
@@ -410,12 +412,8 @@ describe('useProfileMenuActions', () => {
         await copyLinkItem?.onClick();
       });
 
-      await waitFor(() => {
-        expect(vi.mocked(toast)).toHaveBeenCalledWith({
-          variant: 'error',
-          description: 'Could not copy to clipboard',
-        });
-      });
+      expect(defaultMocks.shareUrl).toHaveBeenCalledWith(`https://example.com/profile/${mockUserId}`);
+      expect(vi.mocked(toast)).not.toHaveBeenCalled();
     });
   });
 

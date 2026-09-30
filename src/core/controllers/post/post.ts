@@ -4,13 +4,13 @@ import type { EnrichedPostDetails } from '@/application/moderation/moderation.ty
 import { PostApplication } from '@/application/post/post';
 import type { TGetDetailsByIdsParams, TGetOrFetchPostParams, TPostSnapshot } from '@/application/post/post.types';
 import { TagKind, type TCreateTagInput } from '@/application/tag/tag.types';
+import { POST_MAX_TAGS } from '@/config/posts';
 import type {
   TCreateCollectionParams,
   TCreatePostParams,
   TDeletePostParams,
   TEditCollectionParams,
   TEditPostParams,
-  TFetchMorePostTagsParams,
   TFetchPostTaggersParams,
   TFileAttachmentsParams,
   TNormalizeTagsParams,
@@ -18,23 +18,26 @@ import type {
   TUpdateCollectionItemParams,
 } from '@/controllers/post/post.types';
 import type { TTagEventParams } from '@/controllers/tag/tag.types';
+import { captureViewerSession } from '@/controllers/tag/tag-cache.utils';
 import { ClientErrorCode, ValidationErrorCode } from '@/libs/error/error.codes';
 import { Err } from '@/libs/error/error.factories';
 import { ErrorService } from '@/libs/error/error.types';
-import { toAppError } from '@/libs/error/error.utils';
+import { isAppError, requiresLogin, toAppError } from '@/libs/error/error.utils';
 import { isHomeserverFileUri } from '@/libs/file/homeserverFileUri';
 import { Logger } from '@/libs/logger/logger';
+import { parseArticleContent } from '@/libs/post/articleContent';
 import { isAuthorFileUri } from '@/libs/post/articleInlineImages';
+import { extractHashtagLabelsFromMarkdown, mergeTagLabels } from '@/libs/post/hashtags';
 import { isPostDeleted } from '@/libs/utils/utils';
 import { buildCompositeId, parseCompositeId } from '@/models/models.utils';
 import type { CollectionPost, TAuthoredCollectionsParams } from '@/models/post/collection/collectionPost.types';
 import type { PostCountsModelSchema } from '@/models/post/counts/postCounts.schema';
 import type { PostDetailsModelSchema } from '@/models/post/details/postDetails.schema';
 import type { PostRelationshipsModelSchema } from '@/models/post/relationships/postRelationships.schema';
-import type { TagCollectionModelSchema } from '@/models/shared/tag/tag.schema';
 import type { TFileAttachmentResult } from '@/pipes/file/file.types';
 import { CollectionPostContent } from '@/pipes/post/post.collection';
 import {
+  inferAnnouncementKind,
   inferPostKindForCreate,
   inferPostKindForEdit,
   resolveTagTargetCompositeIdForPostCreate,
@@ -42,7 +45,7 @@ import {
 import { PostNormalizer } from '@/pipes/post/post.normalizer';
 import { PostValidators } from '@/pipes/post/post.validators';
 import { TagNormalizer } from '@/pipes/tag/tag.normalizer';
-import type { NexusTag, NexusTaggers } from '@/services/nexus/nexus.types';
+import type { NexusTaggers } from '@/services/nexus/nexus.types';
 import type { TCompositeId } from '@/services/nexus/post/post.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 
@@ -87,16 +90,6 @@ export class PostController {
   }
 
   /**
-   * Read post tags for a specific post from local database
-   * @param params - Parameters object
-   * @param params.compositeId - Composite post ID in format "authorId:postId"
-   * @returns Post tags
-   */
-  static async getTags({ compositeId }: TCompositeId): Promise<TagCollectionModelSchema<string>[]> {
-    return await PostApplication.getTags({ compositeId });
-  }
-
-  /**
    * Read post relationships for a specific post
    * @param params - Parameters object
    * @param params.compositeId - Composite post ID in format "authorId:postId"
@@ -121,11 +114,11 @@ export class PostController {
    * Persists details, counts, relationships, tags, and author.
    * @param params - Parameters object
    * @param params.compositeId - Composite post ID in format "authorId:postId"
-   * @param params.viewerId - Optional viewer ID for relationship data
+   * @param params.viewerId - Viewer ID for relationship data; defaults to the signed-in user
    * @returns Post details or null if not found
    */
   static async getOrFetch(params: TGetOrFetchPostParams): Promise<PostDetailsModelSchema | null> {
-    return await PostApplication.getOrFetch(params);
+    return await PostApplication.getOrFetch({ ...this.withViewer(params), isCurrent: captureViewerSession() });
   }
 
   /**
@@ -133,11 +126,19 @@ export class PostController {
    * Use instead of `getOrFetch` when the caller already knows the post is not cached.
    * @param params - Parameters object
    * @param params.compositeId - Composite post ID in format "authorId:postId"
-   * @param params.viewerId - Optional viewer ID for relationship data
+   * @param params.viewerId - Viewer ID for relationship data; defaults to the signed-in user
    * @returns Post details or null if not found
    */
   static async fetch(params: TGetOrFetchPostParams): Promise<PostDetailsModelSchema | null> {
-    return await PostApplication.fetch(params);
+    return await PostApplication.fetch({ ...this.withViewer(params), isCurrent: captureViewerSession() });
+  }
+
+  /**
+   * Fills in the signed-in viewer when the caller did not supply one, so the post author and
+   * post relationships are persisted relative to the current user (#1803).
+   */
+  private static withViewer(params: TGetOrFetchPostParams): TGetOrFetchPostParams {
+    return { ...params, viewerId: params.viewerId ?? useAuthStore.getState().currentUserPubky };
   }
 
   static async getAuthoredCollections(params: TAuthoredCollectionsParams): Promise<CollectionPost[] | null> {
@@ -145,19 +146,7 @@ export class PostController {
   }
 
   static async fetchAuthoredCollections(params: TAuthoredCollectionsParams): Promise<CollectionPost[] | null> {
-    return await PostApplication.fetchAuthoredCollections(params);
-  }
-
-  /**
-   * Fetch more post tags from Nexus with pagination
-   * @param params - Parameters object
-   * @param params.compositeId - Composite post ID in format "authorId:postId"
-   * @param params.skip - Number of tags to skip
-   * @param params.limit - Maximum number of tags to return
-   * @returns Array of tags from Nexus
-   */
-  static async fetchTags({ compositeId, skip, limit, viewerId }: TFetchMorePostTagsParams): Promise<NexusTag[]> {
-    return await PostApplication.fetchTags({ compositeId, skip, limit, viewerId });
+    return await PostApplication.fetchAuthoredCollections({ ...params, isCurrent: captureViewerSession() });
   }
 
   /**
@@ -190,7 +179,9 @@ export class PostController {
     attachmentUris,
     parentPostId,
     originalPostId,
+    lock,
   }: TCreatePostParams): Promise<string> {
+    const isCurrent = captureViewerSession();
     let parentUri: string | undefined = undefined;
     let repostedUri: string | undefined = undefined;
     let tagList: TCreateTagInput[] = [];
@@ -218,7 +209,11 @@ export class PostController {
       );
     }
 
-    const postKind = inferPostKindForCreate({ content, attachments, isArticle });
+    // A `lock` marks this post as the public announcement of locked content, which may never be a
+    // `long` or `collection` post — the locked content behind it still may.
+    const postKind = lock
+      ? inferAnnouncementKind({ content, attachments, isArticle })
+      : inferPostKindForCreate({ content, attachments, isArticle });
 
     // TODO: In the future, we could decouple that action and do it asyncronously in the moment that we add a file to the post
     const fileAttachments = attachments ? await this.normalizeFileAttachments({ attachments, pubky: authorId }) : [];
@@ -230,6 +225,7 @@ export class PostController {
         parentUri,
         embed: repostedUri,
         attachments: fileAttachments,
+        lock,
         attachmentUris,
       },
       authorId,
@@ -237,7 +233,15 @@ export class PostController {
 
     const { id: postId } = meta;
 
-    if (tags) {
+    // Hashtags in the content become tags of the created post (#1882). Articles store
+    // their title (plain text, never rendered as a hashtag) and body (markdown) as JSON.
+    const hashtagLabels = extractHashtagLabelsFromMarkdown(
+      isArticle ? (parseArticleContent(content)?.body ?? '') : content,
+      isArticle,
+    );
+    const tagLabels = mergeTagLabels(tags ?? [], hashtagLabels, POST_MAX_TAGS);
+
+    if (tagLabels.length > 0) {
       const tagTargetCompositeId = resolveTagTargetCompositeIdForPostCreate({
         authorId,
         newPostId: postId,
@@ -245,7 +249,7 @@ export class PostController {
         content,
         attachments,
       });
-      const tagsMetadata = tags.map((tag) => {
+      const tagsMetadata = tagLabels.map((tag) => {
         return {
           taggerId: authorId,
           taggedId: tagTargetCompositeId,
@@ -264,6 +268,7 @@ export class PostController {
       postUrl: meta.url,
       fileAttachments,
       tags: tagList,
+      isCurrent,
     });
 
     return compositePostId;
@@ -287,6 +292,11 @@ export class PostController {
         await FileApplication.commitCreate({ fileAttachments: [fileAttachment] });
         coverImageUrl = fileAttachment.fileResult.meta.url;
       } catch (error) {
+        // Keep an expired-session failure classified instead of wrapping it as
+        // validation, so the caller can ask for a sign-in rather than reporting a
+        // retryable cover-upload failure (issue #2555).
+        if (isAppError(error) && requiresLogin(error)) throw error;
+
         throw Err.validation(ValidationErrorCode.INVALID_INPUT, 'Failed to upload collection cover image', {
           service: ErrorService.Local,
           operation: 'commitCreateCollection',
@@ -391,6 +401,10 @@ export class PostController {
         coverImageUrl = fileAttachment.fileResult.meta.url;
         uploadedCoverUri = coverImageUrl;
       } catch (error) {
+        // Same as `commitCreateCollection`: an expired session keeps its auth
+        // classification so the caller can prompt for sign-in (issue #2555).
+        if (isAppError(error) && requiresLogin(error)) throw error;
+
         throw Err.validation(ValidationErrorCode.INVALID_INPUT, 'Failed to upload collection cover image', {
           service: ErrorService.Local,
           operation: 'commitEditCollection',

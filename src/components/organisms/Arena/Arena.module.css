@@ -35,6 +35,9 @@
   vertical-align: middle;
   white-space: nowrap;
 }
+.filterClause[hidden] {
+  display: none;
+}
 .filterClause > a {
   display: inline-flex;
 }
@@ -47,16 +50,15 @@
 }
 .stage {
   position: relative;
-  padding-top: calc(71px + var(--arena-stage-gap));
-  min-height: calc(650px + var(--arena-stage-gap));
+  padding-block: 48px;
   animation: arena-appear 280ms var(--arena-ease) both;
 }
 .bowl {
   position: absolute;
   left: 0;
-  top: calc(10px + var(--arena-stage-gap));
+  top: 0;
   width: 100%;
-  height: 630px;
+  height: 100%;
   pointer-events: none;
   color: var(--arena-topic-color, var(--brand));
   animation: arena-appear 600ms ease-out both;
@@ -199,7 +201,8 @@
 }
 .topics {
   position: absolute;
-  inset: var(--arena-stage-gap) 0 0;
+  inset: 0;
+  z-index: 10;
   pointer-events: none;
 }
 .tagConnectors {
@@ -223,6 +226,8 @@
 }
 .topic {
   position: absolute;
+  left: 50%;
+  top: 50%;
   transform: translate(-50%, -50%);
   pointer-events: auto;
   width: max-content;
@@ -235,6 +240,7 @@
   gap: 6px;
   zoom: var(--arena-tag-scale, 1);
   rotate: var(--arena-tag-rotation, 0deg);
+  opacity: var(--arena-tag-opacity, 1);
   transition:
     rotate 240ms var(--arena-ease),
     scale 180ms var(--arena-ease),
@@ -336,84 +342,65 @@
 .topicTag[data-state='on'] > span:last-child {
   border: 0;
 }
-.topic:nth-child(1) {
-  left: 50%;
-  top: 25px;
-}
-.topic:nth-child(2) {
-  left: 77%;
-  top: 82px;
-}
-.topic:nth-child(3) {
-  left: auto;
-  right: 0;
-  transform: translateY(-50%);
-  top: 232px;
-}
-.topic:nth-child(4) {
-  left: auto;
-  right: 0;
-  transform: translateY(-50%);
-  top: 418px;
-}
-.topic:nth-child(5) {
-  left: 77%;
-  top: 568px;
-}
-.topic:nth-child(6) {
-  left: 50%;
-  top: 625px;
-}
-.topic:nth-child(7) {
-  left: 23%;
-  top: 568px;
-}
-.topic:nth-child(8) {
-  left: 0;
-  transform: translateY(-50%);
-  top: 418px;
-}
-.topic:nth-child(9) {
-  left: 0;
-  transform: translateY(-50%);
-  top: 232px;
-}
-.topic:nth-child(10) {
-  left: 23%;
-  top: 82px;
-}
 .floor {
   position: relative;
   isolation: isolate;
-  margin: 24px auto 0;
+  margin: 0 auto;
   padding: 0;
   list-style: none;
-  width: 76%;
-  height: 460px;
+  width: 100%;
+  height: clamp(520px, 44vw, 680px);
 }
 .arenaLoading {
   min-height: 460px;
+}
+.orbitTag {
+  position: absolute;
+  translate: -50% -50%;
+  width: max-content;
+}
+.tagsFloor.list .gridTagCard {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  translate: none;
+}
+.gridTagCardInner {
+  display: flex;
+  min-height: 152px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  box-shadow: 0 16px 32px rgb(0 0 0 / 40%);
+}
+.tagsFloor.list .topicTaggers {
+  top: calc(100% + 12px);
+  right: 0;
+}
+@media (max-width: 900px) {
+  .floor.tagsFloor:not(.list) {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 36px;
+    padding: 24px 16px;
+  }
+  .orbitTag {
+    position: static;
+    translate: none;
+  }
+  .tagsFloor:not(.list) .topicControl {
+    zoom: 1;
+  }
 }
 .initialArenaLoading {
   padding-top: calc(48px + var(--arena-stage-gap));
 }
 .skeletonCard {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  min-height: 144px;
-  padding: var(--arena-post-padding);
+  cursor: default;
 }
 .skeletonFloor .ideaCard {
   pointer-events: none;
-}
-.skeletonFloor .contender:first-child .rank {
-  left: var(--arena-post-padding);
-  right: auto;
-}
-.skeletonRank {
-  display: block;
 }
 .contender {
   min-width: 0;
@@ -423,7 +410,7 @@
 }
 .floor:not(.list) .contender {
   position: absolute;
-  width: 30.5%;
+  width: 25%;
   translate: -50% -50%;
   pointer-events: none;
 }
@@ -438,8 +425,10 @@
   --arena-selection-glow: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 32%, transparent);
   --arena-selection-inset: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 32%, transparent);
   --arena-post-padding: 16px;
+  --arena-expand-size: 32px;
+  --arena-expand-gap: 12px;
   position: relative;
-  height: 100%;
+  height: auto;
   outline: 1px solid transparent;
   box-shadow: var(--arena-card-shadow);
   transition:
@@ -457,23 +446,41 @@
   flex-direction: column;
   gap: 12px;
   width: 100%;
-  height: 100%;
+  height: auto;
   padding: var(--arena-post-padding);
   text-align: left;
   border-radius: inherit;
   cursor: pointer;
   outline: none;
 }
-.leader .idea {
-  padding-top: calc(var(--arena-post-padding) + 8px);
+.ideaCard:has(> .postAward) .idea {
+  padding-bottom: calc(var(--arena-post-padding) + var(--arena-expand-size) + var(--arena-expand-gap));
 }
-.expandPost {
-  position: absolute;
-  right: var(--arena-post-padding);
-  top: -16px;
-  width: 32px;
-  height: 32px;
-  box-shadow: none;
+.ideaCard:has(> .postAward) .idea:has(.leadMargin) {
+  padding-bottom: var(--arena-post-padding);
+}
+.ideaCard:has(> .postAward) .leadMargin {
+  min-height: var(--arena-expand-size);
+  align-items: flex-end;
+  padding-right: calc(var(--arena-expand-size) + var(--arena-expand-gap));
+}
+.fullscreenLayer[data-state='open'] {
+  animation: arena-fullscreen-open 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes arena-fullscreen-open {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fullscreenLayer[data-state='open'] {
+    animation: none;
+  }
 }
 .conversationTarget {
   margin-top: 32px;
@@ -482,11 +489,16 @@
   outline: none;
 }
 @media (hover: hover) and (pointer: fine) {
-  .ideaCard:hover {
-    outline-color: var(--border);
-  }
   .topicControl:hover {
     scale: 1.1;
+  }
+  .ideaCard:hover {
+    background-color: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 16%, var(--background));
+    outline-color: var(--arena-selection-border);
+    box-shadow:
+      inset 0 0 8px 0 var(--arena-selection-inset),
+      var(--arena-card-shadow),
+      0 0 32px 8px var(--arena-selection-glow);
   }
 }
 .ideaCard:active,
@@ -497,8 +509,7 @@
   outline: none;
   box-shadow: inset 0 0 0 1px var(--ring);
 }
-.selected,
-.ideaCard.selected:hover {
+.ideaCard:has(> .idea:focus-visible) {
   background-color: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 16%, var(--background));
   outline-color: var(--arena-selection-border);
   box-shadow:
@@ -508,12 +519,6 @@
 }
 .contender[data-arena-spotlight] .ideaCard {
   scale: 1.1;
-  outline-color: var(--arena-topic-color);
-}
-.contender[data-arena-spotlight] .ideaCard:not(.selected) {
-  box-shadow:
-    var(--arena-card-shadow),
-    0 0 18px 2px color-mix(in srgb, var(--arena-topic-color) 16%, transparent);
 }
 .arrivalGlow,
 .leaderPulse {
@@ -539,7 +544,7 @@
 }
 .ideaHeader {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   width: 100%;
   min-width: 0;
 }
@@ -552,54 +557,39 @@
 }
 .postAward {
   position: absolute;
-  top: -16px;
+  bottom: var(--arena-post-padding);
   right: var(--arena-post-padding);
+  z-index: 10;
   flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  rotate: 8deg;
+  width: var(--arena-expand-size);
+  height: var(--arena-expand-size);
+  cursor: pointer;
 }
-.ideaCard:has(.expandPost) .postAward {
-  right: calc(var(--arena-post-padding) + 40px);
-}
-.rankPill {
-  gap: 4px;
-  background: var(--card);
-  border-color: color-mix(in srgb, var(--muted-foreground) 40%, transparent);
-  color: var(--muted-foreground);
-  font-size: 11px;
-  line-height: 16px;
-  letter-spacing: 0.075rem;
-  padding: 2px 6px;
-  font-variant-numeric: tabular-nums;
-  transition:
-    color 200ms ease,
-    border-color 200ms ease;
-}
-.leadingRank,
-.selected .rankPill,
-.contender[data-arena-spotlight] .rankPill {
-  border-color: var(--arena-topic-color, var(--brand));
-  background: var(--background);
-  box-shadow: inset 0 0 8px 0 color-mix(in srgb, var(--arena-topic-color, var(--brand)) 32%, transparent);
+.rankStat {
+  flex-shrink: 0;
   color: var(--arena-topic-color, var(--brand));
 }
-.ideaCard .leadingRank,
-.postAward,
-.expandPost {
+.postAward {
   background: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 10%, var(--background));
 }
-.expandPost:hover {
-  color: #fff;
-  border-color: #fff;
-  background: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 16%, var(--background));
+.graphHover :where(button, a[href]):not(:disabled):not([aria-disabled='true']) {
+  transition:
+    scale 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 180ms ease,
+    color 180ms ease;
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .graphHover
+    :where(button, a[href]):not(.idea):not(:disabled):not([aria-disabled='true']):not([data-arena-no-grow]):hover {
+    scale: 1.04;
+  }
 }
 .preview {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: 2.5rem;
+  min-height: 0;
   font-size: 14px;
   line-height: 20px;
 }
@@ -618,6 +608,11 @@
   background: var(--muted);
 }
 .leadMargin {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: 8px;
+  margin-top: auto;
   flex-shrink: 0;
   color: var(--arena-topic-color, var(--brand));
   font-size: 11px;
@@ -633,6 +628,70 @@
   flex-wrap: wrap;
   margin-top: 2px;
 }
+/* Match Graph Explorer's HTML panels floating over the canvas. */
+.graphSurface {
+  --arena-graph-spacing: 12px;
+  border: 1px solid var(--secondary);
+  border-radius: 8px;
+  background: rgb(0 0 0 / 30%);
+  box-shadow: 0 12px 24px rgb(0 0 0 / 40%);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+}
+.graphCard {
+  padding: var(--arena-graph-spacing);
+}
+.graphProfileCard > div {
+  gap: var(--arena-graph-spacing);
+}
+.graphStandings {
+  max-height: min(
+    var(--arena-stack-height, var(--radix-popover-content-available-height)),
+    calc(var(--radix-popover-content-available-height) - 2 * var(--arena-graph-spacing) - 2px)
+  );
+  overscroll-behavior: contain;
+}
+.graphTagStack {
+  max-height: min(var(--arena-stack-height, 100%), calc(100% - 16px));
+  overscroll-behavior: contain;
+}
+/* Keep the shared mini card readable inside graph popups at every viewport. */
+.graphPopup .popupPost {
+  --arena-post-padding: var(--arena-graph-spacing);
+}
+.graphPopup .popupPost .idea {
+  gap: var(--arena-graph-spacing);
+  padding-top: var(--arena-post-padding);
+}
+.graphPopup [data-testid='avatar-fallback-initial'] {
+  font-size: max(12px, 26cqw) !important;
+  font-weight: 500;
+}
+.ideaCard.popupPost {
+  --arena-card-shadow: none;
+}
+.popupPost .ideaHeader {
+  display: flex;
+  align-items: flex-start;
+}
+.popupPost .ideaAuthor {
+  display: block;
+}
+.popupPost .ideaAuthor > :first-child {
+  display: block;
+}
+.popupPost .postAvatar {
+  position: relative;
+}
+.popupPost .stats {
+  flex-wrap: wrap;
+}
+.popupPost .stats span,
+.popupPost .recentTimestamp div,
+.popupPost .recentTimestamp span,
+.popupPost .leadMargin {
+  font-size: 12px;
+}
 .statValue {
   display: inline-block;
   animation: arena-appear 180ms ease-out both;
@@ -644,7 +703,7 @@
 .recentTimestamp div,
 .recentTimestamp span {
   gap: 2px;
-  color: var(--arena-topic-color, var(--brand));
+  color: var(--muted-foreground);
   font-size: 0.625rem;
   line-height: 0.875rem;
   font-weight: 700;
@@ -654,7 +713,7 @@
 .recentTimestamp svg {
   width: 0.75rem;
   height: 0.75rem;
-  color: var(--arena-topic-color, var(--brand));
+  color: var(--muted-foreground);
 }
 .readerContent {
   animation: arena-change 240ms var(--arena-ease) both;
@@ -673,22 +732,35 @@
 .reader > section {
   min-width: 0;
 }
-.readerConnectors {
-  position: absolute;
-  inset: 0;
-  z-index: -10;
-  width: 100%;
-  height: 100%;
-  overflow: visible;
-  pointer-events: none;
-  color: var(--border);
+.reader.conversationReader {
+  grid-template-columns: minmax(0, 1fr);
 }
-.readerHeading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 12px;
+.readerReplies {
+  margin-left: 12px;
+}
+.readerReplyBranch {
+  position: relative;
+  padding-bottom: 24px;
+}
+.readerReplyBranch::before {
+  content: '';
+  position: absolute;
+  top: -24px;
+  bottom: 0;
+  left: 0;
+  border-left: 1px solid var(--border);
+  pointer-events: none;
+}
+.readerReplyContent {
+  position: relative;
+}
+.readerReplyContent::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  height: 24px;
+  border-left: 1px solid var(--border);
 }
 .status {
   padding: 80px 24px;
@@ -699,84 +771,19 @@
   padding-top: calc(80px + var(--arena-stage-gap));
 }
 .list {
+  margin-top: 20px;
   height: auto;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: 24px;
+  align-items: start;
   width: 100%;
-  padding-top: 20px;
-}
-.list .idea {
-  height: 100%;
+  padding: 0;
 }
 .listStage {
   min-height: auto;
-  padding-top: var(--arena-stage-gap);
+  padding: 0;
 }
 .listStage .bowl {
   display: none;
-}
-.listStage .topics {
-  position: static;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.listStage .topic:nth-child(n) {
-  position: static;
-  max-width: none;
-  transform: none;
-}
-.listStage .topic > button {
-  rotate: none;
-}
-@media (max-width: 1100px) {
-  .stage {
-    min-height: auto;
-    padding-top: var(--arena-stage-gap);
-  }
-  .bowl {
-    top: calc(190px + var(--arena-stage-gap));
-    height: calc(100% - 190px - var(--arena-stage-gap));
-  }
-  .orbitField {
-    inset: 0;
-    overflow-clip-margin: 0;
-  }
-  .topics {
-    position: static;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-  .topic:nth-child(n) {
-    position: static;
-    max-width: none;
-    transform: none;
-    flex-direction: row;
-    justify-content: flex-start;
-  }
-  .topicWithTaggers {
-    margin-bottom: 24px;
-  }
-  .floor {
-    margin-top: 0;
-    width: 90%;
-    height: 470px;
-    padding-top: 24px;
-  }
-  .floor:not(.list) .contender {
-    width: 32%;
-  }
-  .list {
-    height: auto;
-    width: 100%;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .listStage {
-    min-height: auto;
-  }
 }
 @media (max-width: 1023px) {
   .reader {
@@ -785,12 +792,25 @@
   }
 }
 @media (max-width: 900px) {
+  .stage:not(.listStage) {
+    padding-block: 24px;
+  }
+  .topics {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    padding-block: 16px 40px;
+  }
+  .topic {
+    position: static;
+    transform: none;
+  }
   .tagConnectors {
     display: none;
   }
   .bowl {
-    top: calc(190px + var(--arena-stage-gap));
-    height: 540px;
+    top: 0;
+    height: 100%;
   }
   .floor:not(.list) {
     display: grid;
@@ -842,10 +862,6 @@
     flex-wrap: wrap;
     row-gap: 12px;
   }
-  .topics,
-  .listStage .topics {
-    gap: 6px;
-  }
   .topic {
     font-size: 12px;
     padding: 0;
@@ -854,8 +870,8 @@
     min-height: auto;
   }
   .bowl {
-    top: calc(268px + var(--arena-stage-gap));
-    height: 540px;
+    top: 0;
+    height: 100%;
   }
   .floor:not(.list) {
     grid-template-columns: minmax(0, 1fr);
@@ -863,21 +879,22 @@
   }
   .ideaCard {
     --arena-post-padding: 12px;
+    --arena-expand-size: 24px;
+    --arena-expand-gap: 8px;
   }
   .ideaHeader {
     gap: 8px;
   }
   .list {
     height: auto;
-    grid-template-columns: minmax(0, 1fr);
     /* Leave 32px above the post controls, which sit 16px above the card. */
-    padding-top: 48px;
+    margin-top: 48px;
   }
-  .floor:not(.peopleFloor) {
+  .floor:not(.peopleFloor):not(.list) {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     column-gap: 12px;
   }
-  .floor:not(.peopleFloor) > .contender:nth-child(n + 7) {
+  .floor:not(.peopleFloor):not(.list) > .contender:nth-child(n + 7) {
     display: none;
   }
   .ideaHeader {
@@ -898,24 +915,15 @@
   .postAvatar {
     position: absolute;
     top: -12px;
-    left: calc(var(--arena-post-padding) + 36px);
+    left: var(--arena-post-padding);
   }
   .floor:not(.list) .contender[data-position] .ideaCard:not(.leader) .rank {
     right: auto;
     left: var(--arena-post-padding);
   }
-  .postAward,
-  .expandPost {
-    top: -12px;
-    width: 24px;
-    height: 24px;
-  }
-  .ideaCard:has(.expandPost) .postAward {
-    right: calc(var(--arena-post-padding) + 28px);
-  }
   .preview {
     -webkit-line-clamp: 2;
-    min-height: 40px;
+    min-height: 0;
   }
 }
 
@@ -1054,7 +1062,6 @@
   .ideaCard:active,
   .contender[data-arena-spotlight] .ideaCard,
   .connectionLine,
-  .rankPill,
   .topicControl,
   .topicControl:hover,
   .topicControl:active {
@@ -1128,19 +1135,6 @@
   outline: none;
   border-color: white;
 }
-.personRank {
-  position: absolute;
-  right: -4px;
-  bottom: -2px;
-  padding: 2px 6px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: var(--background);
-  color: var(--muted-foreground);
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 16px;
-}
 .peopleFloor .contender:first-child .personNode {
   --arena-person-size: 104px;
 }
@@ -1148,11 +1142,6 @@
   outline: 2px solid var(--arena-topic-color);
   outline-offset: 3px;
   box-shadow: 0 0 32px color-mix(in srgb, var(--arena-topic-color) 30%, transparent);
-}
-.peopleFloor .contender:first-child .personRank,
-.person[aria-pressed='true'] .personRank {
-  border-color: var(--arena-topic-color, var(--brand));
-  color: var(--arena-topic-color, var(--brand));
 }
 .personName {
   max-width: 100%;
@@ -1172,7 +1161,6 @@
   gap: 8px;
   padding: 3px 6px;
   border-radius: 999px;
-  background: color-mix(in srgb, var(--background) 88%, transparent);
   white-space: nowrap;
 }
 .peopleFloor .person:focus-visible {
@@ -1193,6 +1181,36 @@
 .peopleFloor.list .personNode {
   transform: none;
 }
+.peopleFloor.list .personCard {
+  display: flex;
+  align-items: stretch;
+  min-height: 0;
+  height: auto;
+  padding: 20px 12px;
+  background: var(--card);
+  outline: 1px solid transparent;
+}
+.peopleFloor.list .personCard:has(.person[aria-pressed='true']) {
+  outline-color: var(--arena-topic-color, var(--brand));
+  box-shadow: 0 0 24px color-mix(in srgb, var(--arena-topic-color, var(--brand)) 24%, transparent);
+}
+.peopleFloor.list .personCard .person {
+  height: auto;
+  justify-content: center;
+  gap: 10px;
+}
+.peopleFloor.list .personCard .person[aria-pressed='true'] .personPortrait {
+  outline: none;
+}
+.peopleFloor.list .personAwardsButton {
+  top: 12px;
+  left: 12px;
+}
+.peopleFloor.list .personPost {
+  top: 12px;
+  right: 12px;
+  left: auto;
+}
 .peopleFloor.list .contender:first-child .personNode {
   --arena-person-size: 80px;
 }
@@ -1203,9 +1221,7 @@
 }
 @media (max-width: 639px) {
   .peopleFloor.list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 20px 8px;
-    padding-top: 24px;
+    margin-top: 24px;
   }
   .personStats {
     gap: 5px;
@@ -1217,15 +1233,6 @@
   }
 }
 
-.postAward {
-  position: absolute;
-  top: -16px;
-  right: 8px;
-  z-index: 10;
-  width: 32px;
-  height: 32px;
-  cursor: pointer;
-}
 .personAwardsButton {
   position: absolute;
   top: 0;
@@ -1270,6 +1277,9 @@
 }
 
 @media (min-width: 1024px) {
+  .graphSurface {
+    --arena-graph-spacing: 16px;
+  }
   .conversationTarget {
     scroll-margin-top: calc(var(--header-height) + 16px);
   }

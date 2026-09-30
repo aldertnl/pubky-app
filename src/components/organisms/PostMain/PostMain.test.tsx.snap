@@ -27,7 +27,7 @@ exports[`PostMain - Mobile Snapshots > matches snapshot on mobile viewport 1`] =
         post-123
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -40,7 +40,7 @@ exports[`PostMain - Mobile Snapshots > matches snapshot on mobile viewport 1`] =
           post-123
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
@@ -74,9 +74,15 @@ exports[`PostMain - Snapshots > matches snapshot for quote repost by current use
     data-testid="card"
   >
     <div
+      data-collection-share="false"
       data-testid="repost-header"
+      data-time-ago="12m"
+      data-undoing="false"
     >
       You reposted
+      <button>
+        Undo
+      </button>
     </div>
     <div
       data-class-name="flex min-w-0 flex-col @max-xl/grid:flex-1 gap-4 p-6"
@@ -95,7 +101,7 @@ exports[`PostMain - Snapshots > matches snapshot for quote repost by current use
         me:quote-repost-1
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -108,7 +114,7 @@ exports[`PostMain - Snapshots > matches snapshot for quote repost by current use
           me:quote-repost-1
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
@@ -158,7 +164,7 @@ exports[`PostMain - Snapshots > matches snapshot for repost by another user 1`] 
         other-user:repost-1
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -171,7 +177,7 @@ exports[`PostMain - Snapshots > matches snapshot for repost by another user 1`] 
           other-user:repost-1
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
@@ -205,9 +211,15 @@ exports[`PostMain - Snapshots > matches snapshot for simple repost by current us
     data-testid="card"
   >
     <div
+      data-collection-share="false"
       data-testid="repost-header"
+      data-time-ago="12m"
+      data-undoing="false"
     >
       You reposted
+      <button>
+        Undo
+      </button>
     </div>
     <div
       data-class-name="flex min-w-0 flex-col @max-xl/grid:flex-1 gap-4 p-6"
@@ -220,7 +232,7 @@ exports[`PostMain - Snapshots > matches snapshot for simple repost by current us
         me:simple-repost-1
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -233,7 +245,7 @@ exports[`PostMain - Snapshots > matches snapshot for simple repost by current us
           me:simple-repost-1
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
@@ -392,7 +404,7 @@ exports[`PostMain - Snapshots > matches snapshot with isReply false 1`] = `
         post-no-reply-456
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -405,7 +417,7 @@ exports[`PostMain - Snapshots > matches snapshot with isReply false 1`] = `
           post-no-reply-456
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
@@ -468,7 +480,7 @@ exports[`PostMain - Snapshots > matches snapshot with isReply true 1`] = `
         post-reply-123
       </div>
       <div
-        data-class-name="flex-col items-start gap-3 md:flex-row md:justify-between md:gap-4 @max-xl/grid:mt-auto @max-xl/grid:flex-col! @max-xl/grid:items-start! @max-xl/grid:gap-3! md:items-start"
+        data-class-name="flex-col items-start gap-3 @max-xl/grid:mt-auto"
         data-testid="container"
       >
         <div
@@ -481,7 +493,7 @@ exports[`PostMain - Snapshots > matches snapshot with isReply true 1`] = `
           post-reply-123
         </div>
         <div
-          data-class-name="w-full shrink-0 justify-start sm:w-auto md:justify-end @max-xl/grid:w-full! @max-xl/grid:justify-start!"
+          data-class-name="w-full shrink-0 justify-start"
           data-testid="post-actions"
         >
           Actions 
