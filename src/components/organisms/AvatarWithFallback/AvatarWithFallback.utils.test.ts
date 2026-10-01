@@ -220,6 +220,11 @@ describe('resolveAvatarFallbackSeed', () => {
 });
 
 describe('resolveAvatarFallbackInitial', () => {
+  it.each(['😀', '👩‍💻', '🇨🇭', 'E\u0301'])('preserves the complete %s initial', (initial) => {
+    expect(resolveAvatarFallbackInitial({ name: `${initial} Person`, seed: 'seed' })).toBe(initial);
+    expect(resolveAvatarFallbackInitial({ name: '', seed: `${initial} seed` })).toBe(initial);
+  });
+
   it('uses name initial when name exists', () => {
     expect(resolveAvatarFallbackInitial({ name: 'John Doe', seed: 'abc' })).toBe('J');
   });

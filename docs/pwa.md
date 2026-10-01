@@ -35,6 +35,11 @@ How the installed-app layer works, what the service worker is allowed to do, and
 
 ## Update flow
 
+Arena disables this prompt flow by calling `useServiceWorkerUpdate(false)` in `PwaManager`.
+It shows neither "Update available" nor "Update installed" notifications and does not request activation or reload.
+Registration stays enabled; a waiting worker activates normally after all tabs controlled by the previous worker close.
+The flow below describes the shared hook when enabled.
+
 1. `@serwist/next` injects `window.serwist` into the client bundle but does not register it (`register: false`). `ServiceWorkerRegistrationProvider` wraps the whole tree and calls `window.serwist.register()` in its own effect; a rejected registration is logged with `Logger.warn`, never thrown (#2556).
 2. `useServiceWorkerUpdate` (mounted by `PwaManager`) works off the browser's registration, not the Serwist window client: it waits for `navigator.serviceWorker.ready`, listens for `updatefound` and `controllerchange`, and re-reads `registration.waiting` whenever the tab becomes visible. (The Serwist client stops reporting updates found more than a minute after registration and freezes its `isUpdate` flag at register time, so it cannot drive a long-lived tab.)
 3. A new build installs and waits (`skipWaiting: false`). The hook shows one persistent, dismissible "Update available" toast per waiting worker. Persistent toasts do not count toward the toast limit, so later transient toasts stack next to it instead of evicting it. Dismissing it means "later": the same worker is not re-prompted in this page lifetime, a newer one is.

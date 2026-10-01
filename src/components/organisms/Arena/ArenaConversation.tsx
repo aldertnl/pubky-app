@@ -17,6 +17,7 @@ import { isArticleContent } from '@/libs/post/articleContent';
 import { cn, isPostDeleted } from '@/libs/utils/utils';
 import { parseCompositeId } from '@/models/models.utils';
 import { buildPostReplyStreamId } from '@/models/stream/post/postStream.types';
+import { ArenaConversationSkeleton } from '@/organisms/ArenaConversationSkeleton/ArenaConversationSkeleton';
 import { AwardPostContext } from '@/organisms/Awards/AwardPostContext';
 import { PostAwards } from '@/organisms/Awards/PostAwards';
 import { PostArticleDetail } from '@/organisms/PostArticleDetail/PostArticleDetail';
@@ -55,11 +56,8 @@ export function ArenaConversation(props: ArenaConversationProps) {
   }, [ready, props.eager]);
   if (ready || props.eager) return <ArenaConversationContent {...props} />;
   return (
-    <div ref={placeholderRef} className={styles.dock}>
-      <div className={cn(styles.reader, styles.conversationReader)} role="status" aria-label="Loading conversation">
-        <Skeleton className="h-64 w-full rounded-md" />
-        <Skeleton className="h-48 w-full rounded-md" />
-      </div>
+    <div ref={placeholderRef}>
+      <ArenaConversationSkeleton />
     </div>
   );
 }
@@ -145,7 +143,7 @@ function ArenaConversationContent({
               <div className={canReply ? styles.readerReplyBranch : undefined}>
                 {rankingLoading ? (
                   <div role="status" aria-label="Finding most popular reply" className="ml-3">
-                    <Skeleton className="h-48 w-full rounded-md" />
+                    <Skeleton className="h-8 w-44 max-w-full rounded-full" />
                     <span className="sr-only">Finding most popular reply…</span>
                   </div>
                 ) : replyError ? (
@@ -157,7 +155,11 @@ function ArenaConversationContent({
                   </p>
                 ) : showLeadingReply ? (
                   <div key={leadingReply.id} className={cn(styles.readerContent, styles.readerReplyContent)}>
-                    <Typography as="h3" size="lg" className="mb-4 ml-3 text-xl/[1.4] sm:text-2xl/[1.333]">
+                    <Typography
+                      as="h3"
+                      size="xs"
+                      className="mb-3 ml-3 leading-4 tracking-widest whitespace-nowrap text-muted-foreground uppercase"
+                    >
                       Leading Reply
                     </Typography>
                     <PostMain
@@ -170,12 +172,7 @@ function ArenaConversationContent({
                     />
                   </div>
                 ) : leadingReply ? (
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="ml-3"
-                    onClick={() => setExpandedReply(leadingReply.id)}
-                  >
+                  <Button variant="ghost" size="sm" className="ml-3" onClick={() => setExpandedReply(leadingReply.id)}>
                     <MessageCircle aria-hidden="true" />
                     Show leading reply
                   </Button>
@@ -190,7 +187,7 @@ function ArenaConversationContent({
                 )}
                 {showLeadingReply && !rankingLoading && !replyError && (
                   <div className="mt-3 ml-3">
-                    <Button asChild variant="secondary">
+                    <Button asChild variant="ghost">
                       <Link href={getPostHref(rootId)}>
                         Show all {postCounts ? `${postCounts.replies} ` : ''}replies
                       </Link>

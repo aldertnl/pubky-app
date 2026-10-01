@@ -60,48 +60,66 @@ export function ArenaFilterMenu<T extends string>({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-70" aria-label={label}>
         <Container overrideDefaults className="flex w-full flex-col gap-3">
-          {options.map(({ value: optionValue, label: optionLabel, icon: Icon, indicators, disabled, nested }) => (
-            <Fragment key={optionValue}>
-              <DropdownMenuItem
-                disabled={disabled}
-                aria-current={optionValue === value ? 'true' : undefined}
-                aria-description={
-                  indicators ? `Available for ${indicators.map(({ label }) => label).join(' and ')}` : undefined
-                }
-                className={cn(
-                  'w-full gap-2 p-0 font-medium text-muted-foreground',
-                  nested ? 'pl-6 text-sm' : 'text-base',
-                )}
-                onSelect={() => {
-                  setOpen(false);
-                  if (optionValue !== value) onChange(optionValue);
-                }}
-              >
-                <Icon className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true" />
-                <Typography as="span" overrideDefaults className="min-w-0 flex-1 truncate">
-                  {optionLabel}
-                </Typography>
-                {indicators && (
-                  <span
-                    className="flex shrink-0 items-center gap-1 text-muted-foreground opacity-50"
-                    aria-hidden="true"
-                  >
-                    {indicators.map(({ label, icon: IndicatorIcon }) => (
-                      <span key={label} title={`Available for ${label}`}>
-                        <IndicatorIcon className="size-3.5" />
-                      </span>
-                    ))}
-                  </span>
-                )}
-                {(indicators || optionValue === value) && (
-                  <span className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true">
-                    {optionValue === value && <Check className={cn('text-brand', nested ? 'size-3.5' : 'size-4')} />}
-                  </span>
-                )}
-              </DropdownMenuItem>
-              {optionValue === separatorAfter && <DropdownMenuSeparator className="m-0 bg-border" />}
-            </Fragment>
-          ))}
+          {options.map(
+            ({ value: optionValue, label: optionLabel, icon: Icon, indicators, disabled, nested }, index) => (
+              <Fragment key={optionValue}>
+                <DropdownMenuItem
+                  disabled={disabled}
+                  aria-current={optionValue === value ? 'true' : undefined}
+                  aria-description={
+                    indicators ? `Available for ${indicators.map(({ label }) => label).join(' and ')}` : undefined
+                  }
+                  className={cn(
+                    'relative w-full gap-2 p-0 font-medium text-muted-foreground',
+                    nested ? 'pl-6 text-sm' : 'text-base',
+                  )}
+                  onSelect={() => {
+                    setOpen(false);
+                    if (optionValue !== value) onChange(optionValue);
+                  }}
+                >
+                  {nested && (
+                    <>
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'pointer-events-none absolute left-2 border-l border-border',
+                          options[index - 1]?.nested ? '-top-3' : '-top-4',
+                          options[index + 1]?.nested ? 'bottom-0' : 'bottom-1/2',
+                        )}
+                      />
+                      <span
+                        aria-hidden="true"
+                        className="pointer-events-none absolute top-1/2 left-2 w-3 border-t border-border"
+                      />
+                    </>
+                  )}
+                  <Icon className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true" />
+                  <Typography as="span" overrideDefaults className="min-w-0 flex-1 truncate">
+                    {optionLabel}
+                  </Typography>
+                  {indicators && (
+                    <span
+                      className="flex shrink-0 items-center gap-1 text-muted-foreground opacity-50"
+                      aria-hidden="true"
+                    >
+                      {indicators.map(({ label, icon: IndicatorIcon }) => (
+                        <span key={label} title={`Available for ${label}`}>
+                          <IndicatorIcon className="size-3.5" />
+                        </span>
+                      ))}
+                    </span>
+                  )}
+                  {(indicators || optionValue === value) && (
+                    <span className={cn('shrink-0', nested ? 'size-3.5' : 'size-4')} aria-hidden="true">
+                      {optionValue === value && <Check className={cn('text-brand', nested ? 'size-3.5' : 'size-4')} />}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+                {optionValue === separatorAfter && <DropdownMenuSeparator className="m-0 bg-border" />}
+              </Fragment>
+            ),
+          )}
         </Container>
       </DropdownMenuContent>
     </DropdownMenu>

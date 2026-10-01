@@ -9,7 +9,10 @@ export function useArenaGraphHeight(container: RefObject<HTMLElement | null>, is
     if (isFullscreen) return;
     const element = container.current;
     if (!element) return;
-    const resize = () => setHeight(Math.max(0, window.innerHeight - element.getBoundingClientRect().top - 24));
+    const resize = () => {
+      const bottomInset = window.innerWidth < 640 ? 96 : 24;
+      setHeight(Math.max(0, window.innerHeight - element.getBoundingClientRect().top - bottomInset));
+    };
     resize();
     const observer = new ResizeObserver(resize);
     if (element.parentElement) observer.observe(element.parentElement);

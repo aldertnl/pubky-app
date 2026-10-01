@@ -201,7 +201,7 @@ describe('Arena graph', () => {
       ).toBe(false);
     }
     await matchVrtFrameScreenshot('arena-graph-tags');
-    await page.getByRole('button', { name: 'Top #10 tags' }).click();
+    await page.getByRole('button', { name: 'Top 10' }).click();
     await page.getByRole('button', { name: 'self-custody tag (13 posts)' }).click();
     expect(onTopic).not.toHaveBeenCalled();
     await expect.element(page.getByRole('dialog', { name: 'Rank 2 details' })).toBeVisible();
@@ -328,7 +328,7 @@ describe('Arena graph', () => {
     Date.now = realNow;
     await expect.poll(() => document.querySelector('canvas')?.width ?? 0).toBeGreaterThan(0);
     await expect.element(page.getByRole('region', { name: 'Arena graph' })).toHaveAttribute('aria-busy', 'false');
-    await page.getByRole('button', { name: 'Top #10 content' }).click();
+    await page.getByRole('button', { name: 'Top 10' }).click();
     await page.getByRole('button', { name: 'Rank 1, A shared view of ideas, 34 points' }).click();
     await expect.element(page.getByRole('dialog', { name: 'Rank 1 details' })).toBeVisible();
     await matchVrtFrameScreenshot('arena-graph-post-popup');
@@ -366,7 +366,7 @@ describe('Arena graph', () => {
     Date.now = realNow;
     await expect.poll(() => document.querySelector('canvas')?.width ?? 0).toBeGreaterThan(0);
     await expect.element(page.getByRole('region', { name: 'Arena graph' })).toHaveAttribute('aria-busy', 'false');
-    await page.getByRole('button', { name: 'Top #10 people' }).click();
+    await page.getByRole('button', { name: 'Top 10' }).click();
     await page.getByRole('button', { name: 'Rank 1, alice, 90 followers' }).click();
     await expect.element(page.getByRole('dialog', { name: 'Rank 1 details' })).toBeVisible();
     await matchVrtFrameScreenshot('arena-graph-people');

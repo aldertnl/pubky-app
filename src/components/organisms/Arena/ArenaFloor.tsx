@@ -15,7 +15,7 @@ import {
 import { arenaPostStats } from '@/libs/arena/stats';
 import { cn, generateRandomColor } from '@/libs/utils/utils';
 import { GAP_CLASS_BY_HEADER_SIZE } from '@/molecules/PostHeaderUserInfo/PostHeaderUserInfo.utils';
-import { ARENA_PLACEMENTS } from './Arena.constants';
+import { ARENA_PLACEMENTS, getArenaPlacementStyle } from './Arena.constants';
 import styles from './Arena.module.css';
 import { ArenaPostCard } from './ArenaPostCard';
 import { ArenaStandings } from './ArenaStandings';
@@ -29,8 +29,8 @@ const ARENA_POST_PLACEMENTS = ARENA_PLACEMENTS.map((placement) => ({
   y: 50 + (placement.y - 50) * 0.96,
 }));
 
-export function ArenaFloorSkeleton({ isList = false }: { isList?: boolean }) {
-  const count = isList ? ARENA_GRID_IDEAS : ARENA_POST_PLACEMENTS.length;
+export function ArenaFloorSkeleton({ isList = false, renderLimit }: { isList?: boolean; renderLimit?: number }) {
+  const count = renderLimit ?? (isList ? ARENA_GRID_IDEAS : ARENA_POST_PLACEMENTS.length);
   const stats = arenaPostStats({ tags: 0, replies: 0, reposts: 0 }, 'popular');
   return (
     <ArenaStandings
@@ -38,6 +38,7 @@ export function ArenaFloorSkeleton({ isList = false }: { isList?: boolean }) {
       itemIds={Array.from({ length: count }, (_, index) => `post-skeleton-${index}`)}
       className={styles.skeletonFloor}
       aria-hidden="true"
+      data-arena-visible-count={count}
     >
       {Array.from({ length: count }, (_, index) => {
         const placement = ARENA_POST_PLACEMENTS[index % ARENA_POST_PLACEMENTS.length];
@@ -49,7 +50,7 @@ export function ArenaFloorSkeleton({ isList = false }: { isList?: boolean }) {
             style={
               isList
                 ? undefined
-                : { left: `${placement.x}%`, top: `${placement.y}%`, zIndex: ARENA_PLACEMENTS.length - index }
+                : { ...getArenaPlacementStyle(placement, index, count), zIndex: ARENA_PLACEMENTS.length - index }
             }
           >
             <Card
@@ -63,11 +64,11 @@ export function ArenaFloorSkeleton({ isList = false }: { isList?: boolean }) {
             >
               <div className={cn(styles.idea, styles.skeletonCard)}>
                 <div className={cn(styles.ideaHeader, GAP_CLASS_BY_HEADER_SIZE.normal)}>
-                  <span className={cn('relative size-6 shrink-0 sm:size-8', styles.postAvatar)}>
+                  <span className={cn('relative size-8 shrink-0', styles.postAvatar)}>
                     <Skeleton className="size-full rounded-full" />
                   </span>
                   <div className={cn('min-w-0 flex-1', styles.ideaAuthor)}>
-                    <Skeleton className="hidden h-5 w-2/3 sm:block" />
+                    <Skeleton className="h-5 w-2/3" />
                     <span className={styles.stats}>
                       <Skeleton className="h-3.5 w-5" />
                       {stats.map((stat) => (
@@ -96,6 +97,7 @@ export function ArenaFloor({
   onExpand,
   onAwards,
   isList,
+  renderLimit,
   metric,
   topic = '',
   contentLabel = 'Content',
@@ -107,6 +109,7 @@ export function ArenaFloor({
   onSelect: (id: string) => void;
   onExpand?: () => void;
   isList: boolean;
+  renderLimit?: number;
   metric: ArenaMetric;
   topic?: ArenaTopicFilter;
   contentLabel?: string;
@@ -128,7 +131,9 @@ export function ArenaFloor({
     return () => cancelAnimationFrame(frame);
   }, [rotationKey, metric, isList]);
 
-  const visible = isList ? ideas.slice(0, ARENA_GRID_IDEAS) : getArenaVisibleIdeas(ideas, selectedId);
+  const visible = isList
+    ? ideas.slice(0, ARENA_GRID_IDEAS)
+    : getArenaVisibleIdeas(ideas.slice(0, renderLimit), selectedId);
   const postImages = useArenaPostImages(visible);
   const shouldReduceMotion = useReducedMotion();
   const { usersMap } = useBulkUserAvatars(visible.map((idea) => idea.author));
@@ -141,6 +146,7 @@ export function ArenaFloor({
       style={{ '--arena-topic-color': topicColor } as CSSProperties}
       aria-label="Idea standings"
       data-arena-floor
+      data-arena-visible-count={visible.length}
     >
       {visible.map((idea, index) => {
         const user = usersMap.get(idea.author);
@@ -166,8 +172,7 @@ export function ArenaFloor({
               isList
                 ? undefined
                 : {
-                    left: `${placement.x}%`,
-                    top: `${placement.y}%`,
+                    ...getArenaPlacementStyle(placement, index, visible.length),
                     zIndex: spotlight ? visible.length + 1 : visible.length - index,
                   }
             }

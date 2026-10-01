@@ -1,10 +1,11 @@
 import { forwardRef, type ReactElement, type ReactNode, useImperativeHandle } from 'react';
 import { fireEvent, render, type RenderOptions, screen, waitFor, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { TooltipProvider } from '@/atoms/Tooltip/Tooltip';
 import { rankArenaIdeas } from '@/libs/arena/arena';
 import type { SocialGraphHandle, SocialGraphProps } from '@/organisms/SocialGraph/SocialGraph.types';
 import { TIMEFRAME } from '@/stores/hot/hot.types';
+import { resetViewport, setMobileViewport } from '@/test-utils/viewport';
 import { ArenaPeopleGraph, ArenaPostGraph, ArenaTagsGraph } from './ArenaGraph';
 
 const mocks = vi.hoisted(() => ({
@@ -98,6 +99,8 @@ const ideas = rankArenaIdeas(
   'popular',
 );
 
+afterEach(resetViewport);
+
 beforeEach(() => {
   mocks.stream.mockReset();
   mocks.ideas.mockReset();
@@ -124,7 +127,7 @@ beforeEach(() => {
 });
 
 async function renderGraph(ui: ReactElement, options?: RenderOptions) {
-  const result = render(ui, options);
+  const result = render(ui, { wrapper: TooltipProvider, ...options });
   await waitFor(() =>
     expect(screen.getByRole('region', { name: 'Arena graph' })).toHaveAttribute('aria-busy', 'false'),
   );
@@ -132,7 +135,25 @@ async function renderGraph(ui: ReactElement, options?: RenderOptions) {
 }
 
 describe('Arena graph interaction', () => {
-  it.each(['Posts', 'Articles'])('labels the top ten %s menu for the selected content type', async (contentLabel) => {
+  it('renders only the top three posts and menu entries for the mobile limit', async () => {
+    await renderGraph(
+      <ArenaPostGraph
+        ideas={ideas}
+        metric="popular"
+        topic="pubky"
+        onSelect={vi.fn()}
+        onTopic={vi.fn()}
+        renderLimit={3}
+        selectedId={ideas[10].id}
+      />,
+    );
+    const canvas = screen.getByTestId('canvas');
+    expect(within(canvas).getAllByRole('button', { name: /^post:/ })).toHaveLength(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Top 3' }));
+    expect(within(screen.getByRole('list', { name: 'Graph standings' })).getAllByRole('button')).toHaveLength(3);
+    expect(ideas).toHaveLength(12);
+  });
+  it.each(['Posts', 'Articles'])('uses the short Top 10 label for %s', async (contentLabel) => {
     await renderGraph(
       <ArenaPostGraph
         ideas={ideas}
@@ -143,8 +164,38 @@ describe('Arena graph interaction', () => {
         onTopic={vi.fn()}
       />,
     );
-    fireEvent.click(screen.getByRole('button', { name: `Top #10 ${contentLabel.toLowerCase()}` }));
+    fireEvent.click(screen.getByRole('button', { name: 'Top 10' }));
     expect(within(screen.getByRole('list', { name: 'Graph standings' })).getAllByRole('listitem')).toHaveLength(10);
+  });
+
+  it('opens the large post directly from the Top 3 list on mobile', async () => {
+    setMobileViewport();
+    const renderLimit = 3;
+    const onSelect = vi.fn();
+    await renderGraph(
+      <ArenaPostGraph
+        ideas={ideas}
+        metric="popular"
+        topic="pubky"
+        renderLimit={renderLimit}
+        onSelect={onSelect}
+        onTopic={vi.fn()}
+      />,
+    );
+    const menu = screen.getByRole('button', { name: `Top ${renderLimit}` });
+    fireEvent.click(menu);
+    fireEvent.click(screen.getByRole('button', { name: 'Rank 2, Idea 1, 19 points' }));
+    expect(screen.getByRole('dialog', { name: 'Original Post' })).toHaveTextContent(
+      'Conversation author:p1, selected author:p1',
+    );
+    expect(screen.queryByRole('dialog', { name: 'Rank 2 details' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: 'Graph standings' })).not.toBeInTheDocument();
+    expect(onSelect).toHaveBeenCalledWith('author:p1');
+    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.fit).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(menu).toHaveFocus());
   });
 
   it('lists the top ten people and opens the tenth profile from the standings menu', async () => {
@@ -161,7 +212,7 @@ describe('Arena graph interaction', () => {
     await renderGraph(
       <ArenaPeopleGraph users={users} metric="popular" topic={null} onSelect={onSelect} onTopic={vi.fn()} />,
     );
-    fireEvent.click(screen.getByRole('button', { name: 'Top #10 people' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Top 10' }));
     const standings = screen.getByRole('list', { name: 'Graph standings' });
     expect(within(standings).getAllByRole('listitem')).toHaveLength(10);
     expect(within(standings).queryByRole('button', { name: /Rank 11/ })).not.toBeInTheDocument();
@@ -189,12 +240,12 @@ describe('Arena graph interaction', () => {
     expect(graph.tagRanks?.get('topic0')).toBe(1);
     expect(graph.tagRanks?.get('topic9')).toBe(10);
     expect(graph.tagRanks?.get('topic10')).toBeUndefined();
-    fireEvent.click(screen.getByRole('button', { name: 'Top #10 tags' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Top 10' }));
     const standings = screen.getByRole('list', { name: 'Graph standings' });
     expect(within(standings).getAllByRole('listitem')).toHaveLength(10);
     const tenthTag = within(standings).getByRole('listitem', { name: 'Rank 10: topic9' });
     fireEvent.click(within(tenthTag).getByRole('button', { name: 'topic9 tag (21 posts)' }));
-    expect(screen.getByRole('dialog', { name: 'Rank 10 details' })).toHaveTextContent("Top #10 posts for 'topic9'");
+    expect(screen.getByRole('dialog', { name: 'Rank 10 details' })).toHaveTextContent("Top 10 posts for 'topic9'");
   });
 
   it('opens top-tag posts in an overlay without changing filters or fitting the graph', async () => {
@@ -358,14 +409,14 @@ describe('Arena graph interaction', () => {
         onTopic={vi.fn()}
       />,
     );
-    expect(screen.getByText('Top #10 content')).toBeInTheDocument();
+    expect(screen.getByText('Top 10')).toBeInTheDocument();
     expect(mocks.metadata).toHaveBeenCalledWith(
       ideas.slice(0, 10).map((idea) => idea.id),
       Array(10).fill('author'),
       false,
     );
     expect(screen.queryByText('post:author:p10')).not.toBeInTheDocument();
-    const contenderMenu = screen.getByRole('button', { name: 'Top #10 content' });
+    const contenderMenu = screen.getByRole('button', { name: 'Top 10' });
     fireEvent.click(contenderMenu);
     expect(within(screen.getByRole('list', { name: 'Graph standings' })).getAllByRole('listitem')).toHaveLength(10);
     const contender = screen.getByRole('button', { name: 'Rank 2, Idea 1, 19 points' });
@@ -463,7 +514,7 @@ describe('Arena graph interaction', () => {
     expect(screen.getByText('Feed profile Alice')).toBeInTheDocument();
     expect(mocks.profile).toHaveBeenCalledWith(expect.objectContaining({ userId: 'person', userName: 'Alice' }));
     expect(screen.queryByText('Lines: shared profile tags')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Graph information' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Ranking summary' }));
     expect(screen.getByText('Ranks follow the selected sorting option.')).toBeInTheDocument();
     expect(screen.getByText('Some connections unavailable.')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Retry connections' }));

@@ -1,15 +1,19 @@
 'use client';
-import { useState } from 'react';
+import { type ComponentProps, useState } from 'react';
 import { Trophy } from 'lucide-react';
 import { Badge } from '@/atoms/Badge/Badge';
 import { Button } from '@/atoms/Button/Button';
 import { useAwards } from '@/hooks/useAwards/useAwards';
 import { isAwardNew } from '@/libs/awards/visibility';
+import { cn } from '@/libs/utils/utils';
 import { DialogNewPost } from '@/organisms/DialogNewPost/DialogNewPost';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { AwardsDialog } from './AwardsDialog';
 
-export function AwardsEntry() {
+export function AwardsEntry({
+  size = 'sm',
+  className,
+}: Pick<ComponentProps<typeof Button>, 'size' | 'className'> = {}) {
   const [open, setOpen] = useState(false);
   const [newPostOpen, setNewPostOpen] = useState(false);
   const user = useAuthStore((state) => state.currentUserPubky);
@@ -17,8 +21,8 @@ export function AwardsEntry() {
   const count = awards.state?.awards.filter((award) => isAwardNew(award, awards.state)).length ?? 0;
   return (
     <>
-      <Button variant="secondary" size="sm" className="shrink-0 gap-2" onClick={() => setOpen(true)}>
-        <Trophy className="size-4" />
+      <Button variant="secondary" size={size} className={cn('shrink-0 gap-2', className)} onClick={() => setOpen(true)}>
+        <Trophy className={size === 'lg' ? 'size-5' : 'size-4'} />
         <span>Awards</span>
         {count > 0 && (
           <Badge

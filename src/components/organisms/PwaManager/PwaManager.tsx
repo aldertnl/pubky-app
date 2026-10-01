@@ -18,7 +18,8 @@ import { useServiceWorkerUpdate } from '@/hooks/useServiceWorkerUpdate/useServic
  * See `docs/pwa.md`.
  */
 export function PwaManager() {
-  useServiceWorkerUpdate();
+  // Arena updates activate when all tabs close, without update/reload prompts.
+  useServiceWorkerUpdate(false);
   useNetworkStatusToasts();
   useAppBadge();
   useInstallPromptLifecycle();

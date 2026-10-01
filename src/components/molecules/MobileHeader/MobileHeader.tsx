@@ -60,7 +60,7 @@ export function MobileHeader({
       >
         <SideSlot>
           {showLeftIcon ? (
-            <Button variant="ghost" size="icon" onClick={onLeftIconClick}>
+            <Button variant="ghost" size="icon" onClick={onLeftIconClick} aria-label="Open filters">
               <SlidersHorizontal className="size-6" />
             </Button>
           ) : null}

@@ -72,6 +72,13 @@ describe('Arena floor', () => {
     expect(screen.getByRole('list', { name: 'Idea standings' }).children).toHaveLength(12);
     rerender(<ArenaFloor ideas={ranked} onSelect={vi.fn()} isList={false} metric="tags" />);
     expect(screen.getByRole('list', { name: 'Idea standings' }).children).toHaveLength(10);
+    rerender(
+      <ArenaFloor ideas={ranked} onSelect={vi.fn()} isList={false} metric="tags" renderLimit={3} selectedId="a:10" />,
+    );
+    expect(screen.getByRole('list', { name: 'Idea standings' }).children).toHaveLength(3);
+    expect(screen.queryByRole('button', { name: /Rank 11,/ })).not.toBeInTheDocument();
+    rerender(<ArenaFloor ideas={ranked} onSelect={vi.fn()} isList metric="tags" renderLimit={3} />);
+    expect(screen.getByRole('list', { name: 'Idea standings' }).children).toHaveLength(12);
   }, 15_000);
 
   it.each([false, true])('selects and opens a post in one click (isList: %s)', (isList) => {

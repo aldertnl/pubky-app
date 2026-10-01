@@ -89,7 +89,7 @@ export function ArenaPostCard({
         aria-label={`${metric === 'newest' ? 'Position' : 'Rank'} ${idea.rank}, ${name}: ${getArenaPreviewLabel(idea.preview)}. ${idea.tags} tags, ${idea.replies} replies${showAllStats ? `, ${idea.reposts} reposts, ${popularityScore} popularity points` : ''}${leading && lead ? `. ${lead}` : ''}`}
       >
         <span className={cn(styles.ideaHeader, GAP_CLASS_BY_HEADER_SIZE.normal)}>
-          <span className={cn('relative size-6 shrink-0 sm:size-8', styles.postAvatar)}>
+          <span className={cn('relative size-8 shrink-0', styles.postAvatar)}>
             <AvatarWithFallback
               name={name}
               fallbackSeed={idea.author}
@@ -102,7 +102,7 @@ export function ArenaPostCard({
             <Typography
               as="span"
               overrideDefaults
-              className={cn('hidden truncate font-bold text-foreground sm:block', USERNAME_CLASS_BY_HEADER_SIZE.normal)}
+              className={cn('block truncate font-bold text-foreground', USERNAME_CLASS_BY_HEADER_SIZE.normal)}
             >
               {name}
             </Typography>

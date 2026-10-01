@@ -72,7 +72,7 @@ describe('awards UI', () => {
   it('renders the embedded profile view without a dialog provider', () => {
     render(<AwardsContent open embedded user={mocks.user} />);
     expect(screen.queryByRole('heading', { name: 'Awards' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Discover (7)' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Discover' })).not.toBeInTheDocument();
     expect(screen.queryByText('ACHIEVEMENTS')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Catalyst' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Built on This' })).not.toBeInTheDocument();
@@ -95,7 +95,7 @@ describe('awards UI', () => {
     mocks.awards.mockReturnValue({ ...mocks.awards(), state: { ...structuredClone(state), awards: [] } });
 
     render(<AwardsDialog open onOpenChange={vi.fn()} onCreatePost={onCreatePost} />);
-    fireEvent.click(screen.getByRole('button', { name: 'My awards (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'My awards' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create a post' }));
 
     expect(onCreatePost).toHaveBeenCalledOnce();
@@ -106,11 +106,11 @@ describe('awards UI', () => {
 
     render(<AwardsEntry />);
     fireEvent.click(screen.getByRole('button', { name: 'Awards' }));
-    fireEvent.click(screen.getByRole('button', { name: 'My awards (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'My awards' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create a post' }));
 
     expect(screen.getByTestId('new-post-dialog')).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'My awards (0)' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'My awards' })).not.toBeInTheDocument();
   });
 
   it('lists given recognitions and remaining allowance without recipient controls', () => {
@@ -119,7 +119,7 @@ describe('awards UI', () => {
     snapshot.remaining = 2;
     mocks.awards.mockReturnValue({ ...mocks.awards(), state: snapshot });
     render(<AwardsDialog open onOpenChange={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Given (1)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Given' }));
     expect(screen.getByText('(2 remaining)').parentElement).toHaveTextContent(
       'You can hand out 3 recognition awards each week (2 remaining).',
     );
@@ -136,7 +136,7 @@ describe('awards UI', () => {
     mocks.awards.mockReturnValue({ ...mocks.awards(), state: snapshot });
 
     render(<AwardsDialog open onOpenChange={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Given (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Given' }));
 
     expect(screen.getByText('No recognitions awarded yet.')).toBeInTheDocument();
     expect(screen.getByText('No recognitions awarded yet.').parentElement).toHaveTextContent('(3 remaining)');
@@ -360,7 +360,7 @@ it('shows a signed-out Given empty state instead of loading indefinitely', () =>
   mocks.awards.mockReturnValue({ ...mocks.awards(), state: undefined, isOwn: false });
   try {
     render(<AwardsDialog open onOpenChange={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Given (0)' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Given' }));
     expect(screen.getByText('Recognize a contribution that mattered to you.')).toBeInTheDocument();
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Give awards' })).toBeInTheDocument();

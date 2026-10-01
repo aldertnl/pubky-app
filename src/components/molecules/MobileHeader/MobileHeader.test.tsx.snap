@@ -2,6 +2,7 @@
 
 exports[`MobileHeader - Snapshots > matches snapshot for left button 1`] = `
 <button
+  aria-label="Open filters"
   class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\\"size-\\"])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/40 aria-invalid:border-destructive font-semibold cursor-pointer rounded-full border shadow-xs hover:text-accent-foreground hover:bg-accent/50 border-none size-9"
   data-size="icon"
   data-slot="button"
@@ -107,6 +108,7 @@ exports[`MobileHeader - Snapshots > matches snapshot with custom onLeftIconClick
       data-testid="container"
     >
       <button
+        aria-label="Open filters"
         class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\\"size-\\"])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/40 aria-invalid:border-destructive font-semibold cursor-pointer rounded-full border shadow-xs hover:text-accent-foreground hover:bg-accent/50 border-none size-9"
         data-size="icon"
         data-slot="button"
@@ -209,6 +211,7 @@ exports[`MobileHeader - Snapshots > matches snapshot with default props 1`] = `
       data-testid="container"
     >
       <button
+        aria-label="Open filters"
         class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\\"size-\\"])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/40 aria-invalid:border-destructive font-semibold cursor-pointer rounded-full border shadow-xs hover:text-accent-foreground hover:bg-accent/50 border-none size-9"
         data-size="icon"
         data-slot="button"
@@ -311,6 +314,7 @@ exports[`MobileHeader - Snapshots > matches snapshot with fixed positioning 1`] 
       data-testid="container"
     >
       <button
+        aria-label="Open filters"
         class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\\"size-\\"])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/40 aria-invalid:border-destructive font-semibold cursor-pointer rounded-full border shadow-xs hover:text-accent-foreground hover:bg-accent/50 border-none size-9"
         data-size="icon"
         data-slot="button"
@@ -413,6 +417,7 @@ exports[`MobileHeader - Snapshots > matches snapshot with solid background (hasG
       data-testid="container"
     >
       <button
+        aria-label="Open filters"
         class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*=\\"size-\\"])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/40 aria-invalid:border-destructive font-semibold cursor-pointer rounded-full border shadow-xs hover:text-accent-foreground hover:bg-accent/50 border-none size-9"
         data-size="icon"
         data-slot="button"

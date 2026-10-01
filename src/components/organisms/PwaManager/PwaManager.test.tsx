@@ -18,6 +18,7 @@ describe('PwaManager', () => {
     const { container } = render(<PwaManager />);
 
     expect(useServiceWorkerUpdate).toHaveBeenCalledTimes(1);
+    expect(useServiceWorkerUpdate).toHaveBeenCalledWith(false);
     expect(useNetworkStatusToasts).toHaveBeenCalledTimes(1);
     expect(useAppBadge).toHaveBeenCalledTimes(1);
     expect(useInstallPromptLifecycle).toHaveBeenCalledTimes(1);

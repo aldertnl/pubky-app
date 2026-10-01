@@ -1,6 +1,8 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render as rtlRender, type RenderOptions, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { TooltipProvider } from '@/atoms/Tooltip/Tooltip';
 import type { useArenaPeople } from '@/hooks/useArenaPeople/useArenaPeople';
 import type { useArenaPersonPost } from '@/hooks/useArenaPersonPost/useArenaPersonPost';
 import type { UseBulkUserAvatarsResult } from '@/hooks/useBulkUserAvatars/useBulkUserAvatars.types';
@@ -13,6 +15,8 @@ import { useHotStore } from '@/stores/hot/hot.store';
 import { TIMEFRAME } from '@/stores/hot/hot.types';
 import { Arena } from './Arena';
 
+const render = (ui: ReactNode, options?: RenderOptions) => rtlRender(ui, { wrapper: TooltipProvider, ...options });
+
 const mocks = vi.hoisted(() => ({
   personPost: vi.fn<typeof useArenaPersonPost>(),
   people: vi.fn<() => ReturnType<typeof useArenaPeople>>(),
@@ -23,6 +27,7 @@ const mocks = vi.hoisted(() => ({
   avatars: vi.fn<(ids: string[]) => UseBulkUserAvatarsResult>(),
   ideas: vi.fn<() => { ideas: ArenaIdea[]; error: string | null; loading?: boolean }>(),
   isMuted: vi.fn<(id: string) => boolean>(),
+  isMobile: vi.fn<() => boolean>(),
 }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
@@ -38,7 +43,7 @@ vi.mock('@/hooks/useArenaPersonPost/useArenaPersonPost', () => ({ useArenaPerson
 vi.mock('@/hooks/useArenaPeople/useArenaPeople', () => ({ useArenaPeople: mocks.people }));
 vi.mock('@/hooks/useArenaRecentPeople/useArenaRecentPeople', () => ({ useArenaRecentPeople: mocks.recentPeople }));
 vi.mock('@/hooks/useArenaIdeas/useArenaIdeas', () => ({ useArenaIdeas: mocks.ideas }));
-vi.mock('@/hooks/useIsMobile/useIsMobile', () => ({ useIsMobile: () => false }));
+vi.mock('@/hooks/useIsMobile/useIsMobile', () => ({ useIsMobile: mocks.isMobile }));
 vi.mock('./ArenaGraph', () => ({
   ArenaPostGraph: ({
     ideas,
@@ -80,6 +85,7 @@ function chooseAll() {
 describe('Arena filters and topic standings', () => {
   afterEach(() => vi.unstubAllGlobals());
   beforeEach(() => {
+    mocks.isMobile.mockReturnValue(false);
     vi.stubGlobal(
       'matchMedia',
       vi.fn((media: string) => ({
@@ -211,6 +217,95 @@ describe('Arena filters and topic standings', () => {
     );
   }, 15_000);
 
+  it.each(['arena', 'list', 'graph'])('honors the requested %s layout on mobile', async (view) => {
+    const previousUrl = window.location.href;
+    const previousState = window.history.state;
+    window.history.replaceState(null, '', `/arena?content=people&view=${view}`);
+    mocks.isMobile.mockReturnValue(true);
+    mocks.people.mockReturnValue({
+      users: Array.from({ length: 5 }, (_, index) => ({
+        id: `person-${index}`,
+        name: `Person ${index}`,
+        avatarUrl: null,
+        image: null,
+        bio: '',
+        status: null,
+      })),
+      loading: false,
+      error: null,
+      retry: vi.fn(),
+    });
+    try {
+      render(<Arena />);
+      if (view === 'graph') {
+        expect(await screen.findByText('People graph')).toBeInTheDocument();
+        expect(screen.queryByRole('list', { name: 'People standings' })).not.toBeInTheDocument();
+      } else {
+        const standings = screen.getByRole('list', { name: 'People standings' });
+        expect(within(standings).queryAllByTestId('card')).toHaveLength(view === 'list' ? 5 : 0);
+        expect(standings.children).toHaveLength(view === 'list' ? 5 : 3);
+      }
+      expect(screen.queryByRole('radiogroup', { name: 'Layout' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('group', { name: 'Arena filters' })).not.toBeInTheDocument();
+    } finally {
+      window.history.replaceState(previousState, '', previousUrl);
+    }
+  });
+
+  it('opens the mobile sidebar from Ranking settings below the standings', async () => {
+    mocks.isMobile.mockReturnValue(true);
+    const onOpenChange = vi.fn();
+    render(<Arena onMobileFiltersOpenChange={onOpenChange} />);
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Ranking settings' }));
+    expect(onOpenChange).toHaveBeenCalledWith(true);
+  });
+
+  it('summarizes the selected mobile filters without reach and follows dropdown changes', async () => {
+    mocks.isMobile.mockReturnValue(true);
+    const user = userEvent.setup();
+    render(<Arena mobileFiltersOpen />);
+    expect(screen.getByText('Most popular pubky content this month')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Content: Content' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Posts' }));
+    expect(screen.getByText('Most popular pubky posts this month')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Timeframe: This month' }));
+    await user.click(screen.getByRole('menuitem', { name: 'This week' }));
+    await user.click(screen.getByRole('button', { name: 'Ranking: Most popular' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Most replied' }));
+    expect(screen.getByText('Most replied pubky posts this week')).toBeInTheDocument();
+    chooseAll();
+    expect(screen.getByText('Most replied all posts this week')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Content: Posts' }));
+    await user.click(screen.getByRole('menuitem', { name: 'Tags' }));
+    expect(screen.getByText('Most popular tags this week')).toBeInTheDocument();
+  });
+
+  it('configures mobile filters in the shared drawer and closes via the backdrop', async () => {
+    mocks.isMobile.mockReturnValue(true);
+    const onOpenChange = vi.fn();
+    const user = userEvent.setup();
+    const { container, rerender } = render(<Arena mobileFiltersOpen onMobileFiltersOpenChange={onOpenChange} />);
+    const results = container.querySelector('[data-arena-results]');
+    expect(results).toHaveAttribute('inert');
+    const drawer = screen.getByRole('region', { name: 'Arena configuration' });
+    expect(within(drawer).getByRole('button', { name: 'Ranking: Most popular' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: 'Choose tag' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: 'Reach: From everyone' })).toBeInTheDocument();
+    expect(within(drawer).getByRole('button', { name: 'Timeframe: This month' })).toBeInTheDocument();
+    await user.click(within(drawer).getByRole('button', { name: 'Content: Content' }));
+    await user.click(screen.getByRole('menuitem', { name: 'People' }));
+    expect(within(drawer).getByRole('button', { name: 'Content: People' })).toBeInTheDocument();
+    const layout = within(drawer).getByLabelText('Layout');
+    await user.click(within(layout).getByRole('radio', { name: 'Graph' }));
+    expect(within(layout).getByRole('radio', { name: 'Graph' })).toHaveAttribute('aria-checked', 'true');
+    expect(window.location.search).toContain('view=graph');
+    expect(results).toHaveAttribute('inert');
+    await user.click(document.querySelector('.fixed.inset-0 > .absolute.inset-0')!);
+    expect(onOpenChange).toHaveBeenCalledWith(false);
+    rerender(<Arena mobileFiltersOpen={false} onMobileFiltersOpenChange={onOpenChange} />);
+    expect(results).not.toHaveAttribute('inert');
+  });
+
   it('shows top tags in grid cards and graph without loading posts', async () => {
     const user = userEvent.setup();
     mocks.hotTags.mockReturnValue({
@@ -229,17 +324,17 @@ describe('Arena filters and topic standings', () => {
 
     await user.click(screen.getByLabelText('Cards'));
     expect(within(screen.getByRole('list', { name: 'Tag standings' })).getAllByTestId('card')).toHaveLength(10);
-    await user.click(screen.getByLabelText('In graph'));
+    await user.click(screen.getByLabelText('Graph'));
     expect(await screen.findByTestId('tags-graph')).toHaveTextContent('topic0');
     expect(mocks.stream).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'topic0' }));
     expect(screen.getByRole('group', { name: 'Selected tag' })).toHaveTextContent('topic0');
-    expect(screen.getByLabelText('In arena')).toHaveAttribute('data-state', 'on');
+    expect(screen.getByLabelText('Arena')).toHaveAttribute('data-state', 'on');
     expect(mocks.stream).toHaveBeenCalled();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   }, 15_000);
 
-  it.each(['In arena', 'Cards'])(
+  it.each(['Arena', 'Cards'])(
     'keeps %s visible and paused behind the post dialog',
     async (layout) => {
       const user = userEvent.setup();
@@ -289,7 +384,7 @@ describe('Arena filters and topic standings', () => {
       error: null,
     });
     render(<Arena />);
-    await user.click(screen.getByLabelText('In graph'));
+    await user.click(screen.getByLabelText('Graph'));
     const graph = await screen.findByTestId('graph-projection');
     await user.click(within(graph).getByRole('button', { name: 'Second idea' }));
     expect(graph).toHaveAttribute('data-selected', 'second:post');
@@ -298,7 +393,7 @@ describe('Arena filters and topic standings', () => {
     expect(screen.getByRole('button', { name: /Rank 2,.*Second idea/ })).not.toHaveAttribute('aria-pressed');
     expect(screen.getByRole('button', { name: 'Ranking: Most popular' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Timeframe: This month' })).toBeInTheDocument();
-    await user.click(screen.getByLabelText('In graph'));
+    await user.click(screen.getByLabelText('Graph'));
     expect(await screen.findByTestId('graph-projection')).toHaveAttribute('data-selected', 'second:post');
   });
 
@@ -426,9 +521,8 @@ describe('Arena filters and topic standings', () => {
     for (const label of ['4 tags', '12 posts', '23 followers'])
       expect(within(floor).getByLabelText(label)).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    await user.click(within(floor).getByRole('button', { name: 'Rank 2, Second person. Show most popular post' }));
+    await user.click(screen.getByRole('button', { name: 'Open most popular post by Second person' }));
     expect(first).toHaveAttribute('aria-pressed', 'false');
-    await user.click(screen.getByRole('button', { name: 'Open most popular post' }));
     expect(screen.getByRole('dialog', { name: 'Popular post by Second person' })).toBeInTheDocument();
     expect(mocks.personPost).toHaveBeenLastCalledWith(
       'second',
@@ -689,7 +783,7 @@ describe('Arena filters and topic standings', () => {
       includeMuted: true,
     });
     await user.click(screen.getByRole('button', { name: 'Reach: From everyone' }));
-    await user.click(screen.getByRole('menuitem', { name: 'From my network' }));
+    await user.click(screen.getByRole('radio', { name: 'My network' }));
     expect(mocks.stream).toHaveBeenLastCalledWith({
       streamId: 'total_engagement:wot:all',
       limit: 24,

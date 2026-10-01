@@ -1,5 +1,6 @@
 import { getCdnUrl } from '@/config/nexus';
-import { extractInitials, isUserDeleted } from '@/libs/utils/utils';
+import { sliceGraphemes } from '@/libs/utils/truncate';
+import { isUserDeleted } from '@/libs/utils/utils';
 import type { ResolveAvatarFallbackInitialProps, ResolveAvatarFallbackSeedProps } from './AvatarWithFallback.types';
 
 /**
@@ -62,10 +63,12 @@ export function resolveAvatarFallbackInitial({
   defaultInitial = 'U',
 }: ResolveAvatarFallbackInitialProps): string {
   // `[DELETED]` is a label, not a name: taking its initial would render a bare `[`.
-  const nameInitial = isUserDeleted({ name }) ? '' : extractInitials({ name: name ?? '', maxLength: 1 });
+  const nameInitial = isUserDeleted({ name })
+    ? ''
+    : sliceGraphemes(typeof name === 'string' ? name.trim().toUpperCase() : '', 1).text;
   if (nameInitial) return nameInitial;
 
-  const seedInitial = typeof seed === 'string' ? seed.trim().charAt(0).toUpperCase() : '';
+  const seedInitial = typeof seed === 'string' ? sliceGraphemes(seed.trim().toUpperCase(), 1).text : '';
   if (seedInitial) return seedInitial;
 
   return defaultInitial;

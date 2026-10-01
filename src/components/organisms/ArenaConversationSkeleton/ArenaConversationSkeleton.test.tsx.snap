@@ -1,0 +1,193 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`ArenaConversationSkeleton > matches the post, reply button, and composer layout 1`] = `
+<div
+  aria-busy="true"
+  aria-label="Loading conversation"
+  class="_dock_dc37da"
+  role="status"
+>
+  <div
+    aria-hidden="true"
+    class="_reader_dc37da _conversationReader_dc37da"
+  >
+    <div
+      class="flex flex-col bg-card text-card-foreground shadow-sm min-w-0 flex-1 gap-0 rounded-md py-0"
+      data-slot="card"
+      data-testid="card"
+    >
+      <div
+        class="flex min-w-0 flex-col gap-4 p-6"
+        data-slot="card-content"
+      >
+        <div
+          class="flex w-full min-w-0 items-start justify-between gap-3"
+          data-testid="container"
+        >
+          <div
+            class="flex min-w-0 items-center gap-3"
+            data-testid="container"
+          >
+            <div
+              class="animate-pulse bg-muted size-10 shrink-0 rounded-full"
+              data-slot="skeleton"
+            />
+            <div
+              class="flex flex-col gap-1.5"
+              data-testid="container"
+            >
+              <div
+                class="animate-pulse bg-muted h-4 w-24 rounded-md"
+                data-slot="skeleton"
+              />
+              <div
+                class="animate-pulse bg-muted h-3 w-16 rounded-md"
+                data-slot="skeleton"
+              />
+            </div>
+          </div>
+          <div
+            class="animate-pulse bg-muted h-3 w-12 rounded-md"
+            data-slot="skeleton"
+          />
+        </div>
+        <div
+          class="flex min-w-0 flex-col gap-y-1"
+          data-post-content-pending="true"
+          data-testid="container"
+        >
+          <div
+            class="animate-pulse bg-muted h-4 w-full rounded-md"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse bg-muted h-4 w-4/5 rounded-md"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse bg-muted h-4 w-3/5 rounded-md"
+            data-slot="skeleton"
+          />
+        </div>
+        <div
+          class="mx-auto w-full flex flex-col items-start gap-3 @max-xl/grid:mt-auto"
+          data-testid="container"
+        >
+          <div
+            class="flex flex-wrap items-center gap-2"
+            data-testid="container"
+          >
+            <div
+              class="animate-pulse bg-muted h-8 rounded-md w-24"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 rounded-md w-20"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 w-8 rounded-md"
+              data-slot="skeleton"
+            />
+          </div>
+          <div
+            class="flex flex-wrap gap-2 w-full shrink-0 justify-start"
+            data-testid="container"
+          >
+            <div
+              class="animate-pulse bg-muted h-8 rounded-full w-12"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 rounded-full w-12"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 rounded-full w-12"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 rounded-full w-9"
+              data-slot="skeleton"
+            />
+            <div
+              class="animate-pulse bg-muted h-8 rounded-full w-9"
+              data-slot="skeleton"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="_readerReplies_dc37da"
+    >
+      <div
+        class="_readerReplyBranch_dc37da"
+      >
+        <div
+          class="animate-pulse bg-muted ml-3 h-8 w-44 max-w-full rounded-full"
+          data-slot="skeleton"
+        />
+      </div>
+      <div
+        class="relative flex min-w-0"
+      >
+        <div
+          class="w-3 shrink-0"
+        >
+          <div
+            class="flex w-3 flex-col items-start"
+            data-testid="container"
+            data-variant="last"
+            style="height: 96px;"
+          >
+            <div
+              class="relative flex min-h-px w-full min-w-px shrink-0 grow basis-0 flex-col items-start"
+              data-testid="container"
+            >
+              <div
+                class="min-h-px w-full min-w-px shrink-0 grow basis-0 border-l border-border"
+                data-testid="container"
+              />
+              <div
+                class="relative size-3 shrink-0"
+                data-testid="container"
+              >
+                <svg
+                  class="block size-full fill-secondary"
+                  fill="none"
+                  height="12"
+                  preserveAspectRatio="none"
+                  viewBox="0 0 12 12"
+                  width="12"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M1 0C1 6.07513 5.92487 11 12 11V12C5.37258 12 0 6.62742 0 0H1Z"
+                  />
+                </svg>
+              </div>
+            </div>
+            <div
+              class="h-[28px] w-3 shrink-0"
+              data-testid="container"
+            />
+          </div>
+        </div>
+        <div
+          class="flex min-w-0 flex-1 items-center gap-3 rounded-md border border-dashed border-input p-6"
+        >
+          <div
+            class="animate-pulse bg-muted size-10 shrink-0 rounded-full"
+            data-slot="skeleton"
+          />
+          <div
+            class="animate-pulse rounded-md bg-muted h-4 w-40 max-w-full"
+            data-slot="skeleton"
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

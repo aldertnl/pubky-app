@@ -27,6 +27,7 @@ import {
   type VisualGraphNode,
 } from '@/libs/graph/graph.utils';
 import { canonicalizeTagLabel, cn, generateRandomColor, hexToRgba } from '@/libs/utils/utils';
+import { resolveAvatarFallbackInitial } from '@/organisms/AvatarWithFallback/AvatarWithFallback.utils';
 import {
   ANNOTATION_LINE_HEIGHT,
   ANNOTATION_TITLE_FONT,
@@ -349,7 +350,9 @@ export const SocialGraph = forwardRef<SocialGraphHandle, SocialGraphProps>(funct
   // collision force so chips never stack over avatars.
   // Canvas tracking and live queries often supply new Maps with identical
   // values. Configure forces only when their actual geometry inputs change.
+  const portraitArena = Boolean(annotations && width > 0 && width < 640 && height > width);
   const forceLayoutKey = JSON.stringify([
+    portraitArena,
     [...(annotations ?? [])].sort(([a], [b]) => a.localeCompare(b)),
     [...sizeTiers].sort(([a], [b]) => a.localeCompare(b)),
     [...(tagRanks ?? [])].sort(([a], [b]) => a.localeCompare(b)),
@@ -410,8 +413,8 @@ export const SocialGraph = forwardRef<SocialGraphHandle, SocialGraphProps>(funct
         // holds them in one readable cloud; a neighborhood is a single
         // component and keeps its designed spacing untouched.
         const pull = isFragmented(graphData.nodes, edges) ? CENTER_PULL : 0;
-        fg.d3Force('x', forceX(0).strength(annotations ? 0.015 : pull) as never);
-        fg.d3Force('y', forceY(0).strength(annotations ? 0.12 : pull) as never);
+        fg.d3Force('x', forceX(0).strength(annotations ? (portraitArena ? 0.12 : 0.015) : pull) as never);
+        fg.d3Force('y', forceY(0).strength(annotations ? (portraitArena ? 0.015 : 0.12) : pull) as never);
         fg.d3Force(
           'collide',
           forceCollide((nodeObj: unknown) => {
@@ -433,6 +436,12 @@ export const SocialGraph = forwardRef<SocialGraphHandle, SocialGraphProps>(funct
             return POST_RADIUS + 6;
           }) as never,
         );
+        // Apply the portrait layout even when a cached graph has already cooled.
+        if (annotations) {
+          settledRef.current = false;
+          didInitialFit.current = false;
+          fg.d3ReheatSimulation();
+        }
       } catch {
         // Collision is a nicety; the layout still works from charge + distance
       }
@@ -661,7 +670,7 @@ export const SocialGraph = forwardRef<SocialGraphHandle, SocialGraphProps>(funct
           ctx.font = `600 ${Math.max(MIN_GRAPH_FONT_SIZE, r)}px "Inter Tight", sans-serif`;
           ctx.textAlign = 'center';
           ctx.textBaseline = 'middle';
-          ctx.fillText((node.name || node.pubky).charAt(0).toUpperCase(), x, y + 1);
+          ctx.fillText(resolveAvatarFallbackInitial({ name: node.name, seed: node.pubky }), x, y + 1);
         }
 
         // The design's single lime focus ring: 2px, flush inside the edge

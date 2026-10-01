@@ -20,7 +20,7 @@ describe('Arena tag picker', () => {
     const onTopic = vi.fn();
     const { rerender } = render(<ArenaTagPicker {...pickerProps} onTopic={onTopic} />);
     fireEvent.click(screen.getByRole('button', { name: 'Choose tag' }));
-    expect(screen.getByRole('heading')).toHaveTextContent('Top #10 tags this month');
+    expect(screen.getByRole('heading')).toHaveTextContent('Top 10 tags this month');
     const columns = screen.getAllByRole('list');
     expect(
       within(columns[0])
@@ -36,7 +36,7 @@ describe('Arena tag picker', () => {
     expect(screen.queryByRole('button', { name: 'extra tag (90 posts)' })).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'pubky tag (100 posts)' })).toHaveAttribute('aria-pressed', 'true');
     rerender(<ArenaTagPicker {...pickerProps} timeframeLabel="All time" onTopic={onTopic} />);
-    expect(screen.getByRole('heading')).toHaveTextContent('Top #10 tags all time');
+    expect(screen.getByRole('heading')).toHaveTextContent('Top 10 tags all time');
     fireEvent.click(screen.getByRole('button', { name: 'bitcoin tag (99 posts)' }));
     expect(onTopic).toHaveBeenCalledWith('bitcoin');
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();

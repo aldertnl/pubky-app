@@ -42,10 +42,20 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
             }
             aria-label="Choose tag"
           >
+            {hasSelection && (
+              <TagIcon
+                className="pointer-events-none absolute top-1/2 left-3.5 z-10 size-4 -translate-y-1/2"
+                aria-hidden="true"
+              />
+            )}
             {isAll ? (
-              <Tag name="all" className="pr-9" style={{ backgroundColor: '#000', border: '1px solid var(--border)' }} />
+              <Tag
+                name="all"
+                className="pr-9 pl-9 [&_p]:text-xs"
+                style={{ backgroundColor: '#000', border: '1px solid var(--border)' }}
+              />
             ) : topic ? (
-              <Tag name={topic} maxLabelLength={14} className="pr-9" />
+              <Tag name={topic} maxLabelLength={14} className="pr-9 pl-9 [&_p]:text-xs" />
             ) : (
               <>
                 <TagIcon className="size-4" aria-hidden="true" />
@@ -53,7 +63,9 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
               </>
             )}
             <ChevronDown
-              className={hasSelection ? 'pointer-events-none absolute top-2.5 right-2.5 size-3.5' : 'size-3.5'}
+              className={
+                hasSelection ? 'pointer-events-none absolute top-1/2 right-3.5 size-3.5 -translate-y-1/2' : 'size-3.5'
+              }
               aria-hidden="true"
             />
           </Button>
@@ -70,8 +82,13 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
         >
           <div className="mb-3 space-y-6">
             <div className="flex flex-wrap items-center gap-3">
-              <Typography as="h3" overrideDefaults className="text-base leading-6 font-medium text-muted-foreground">
-                Top #{ARENA_TOPIC_LIMIT} tags {timeframeLabel.toLowerCase()}
+              <Typography
+                as="h3"
+                overrideDefaults
+                className="flex items-center gap-2 text-base leading-6 font-medium text-muted-foreground"
+              >
+                <TagIcon className="size-4 shrink-0" aria-hidden="true" />
+                Top {ARENA_TOPIC_LIMIT} tags {timeframeLabel.toLowerCase()}
               </Typography>
             </div>
             <div className="grid w-fit max-w-full grid-cols-[max-content_max-content] gap-x-4 gap-y-6">
@@ -113,12 +130,12 @@ export function ArenaTagPicker({ topic, topics, timeframeLabel, onTopic }: Arena
                 type="button"
                 variant="secondary"
                 size="sm"
-                className="shrink-0 gap-2 self-center justify-self-end"
+                className="w-full gap-2 self-center"
                 aria-label="Reset tag filter to all"
                 onClick={() => selectTag(null)}
               >
                 <RotateCcw className="size-4" aria-hidden="true" />
-                Reset to &apos;all&apos;
+                All tags
               </Button>
             </div>
           </div>

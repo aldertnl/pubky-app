@@ -10,16 +10,18 @@ import {
   useState,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { ChevronDown, Focus, IdCard, Info, Maximize, Minimize, X, ZoomIn, ZoomOut } from 'lucide-react';
+import { ChevronDown, CircleHelp, Maximize, Minimize, SquareUserRound, X, ZoomIn, ZoomOut } from 'lucide-react';
 import { getUserProfileUrl } from '@/app/routes';
 import { Button } from '@/atoms/Button/Button';
 import { Link } from '@/atoms/Link/Link';
 import { Popover, PopoverContent, PopoverTrigger } from '@/atoms/Popover/Popover';
 import { Spinner } from '@/atoms/Spinner/Spinner';
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from '@/atoms/Tooltip/Tooltip';
 import { Typography } from '@/atoms/Typography/Typography';
 import { useArenaGraphMetadata } from '@/hooks/useArenaGraphMetadata/useArenaGraphMetadata';
 import { useBulkUserAvatars } from '@/hooks/useBulkUserAvatars/useBulkUserAvatars';
 import { useFullscreenToggle } from '@/hooks/useFullscreenToggle/useFullscreenToggle';
+import { useIsMobile } from '@/hooks/useIsMobile/useIsMobile';
 import { useMutedUsers } from '@/hooks/useMutedUsers/useMutedUsers';
 import { useRelativeTime } from '@/hooks/useRelativeTime/useRelativeTime';
 import { useResolvedMentions } from '@/hooks/useResolvedMentions/useResolvedMentions';
@@ -106,15 +108,9 @@ function useArenaStackHeight(contentRef: RefObject<HTMLElement | null>, enabled:
 }
 
 function ArenaGraphStandings({ children, showTagRanks }: { children: ReactNode; showTagRanks: boolean }) {
-  const standings = useRef<HTMLOListElement>(null);
-  useArenaStackHeight(standings, true, ':scope > li');
   return (
     <div className={cn('overflow-y-auto', styles.graphStandings)}>
-      <ol
-        ref={standings}
-        aria-label="Graph standings"
-        className={cn('relative', showTagRanks ? 'space-y-2' : 'space-y-1.5')}
-      >
+      <ol aria-label="Graph standings" className={cn('relative', showTagRanks ? 'space-y-2' : 'space-y-1.5')}>
         {children}
       </ol>
     </div>
@@ -122,6 +118,7 @@ function ArenaGraphStandings({ children, showTagRanks }: { children: ReactNode; 
 }
 
 type SharedProps = {
+  renderLimit?: number;
   graphInfo?: { details: ReactNode };
   contentLabel?: string;
   topTags?: NexusHotTag[];
@@ -138,7 +135,7 @@ export function ArenaPostGraph({
   metric,
   ...props
 }: SharedProps & { ideas: RankedArenaIdea[]; metric: ArenaMetric }) {
-  const visible = getArenaVisibleIdeas(ideas, props.selectedId);
+  const visible = getArenaVisibleIdeas(ideas.slice(0, props.renderLimit), props.selectedId);
   const resolvedMentions = useResolvedMentions(visible.map((idea) => idea.preview));
   const metadata = useArenaGraphMetadata(
     visible.map((idea) => idea.id),
@@ -190,7 +187,7 @@ export function ArenaPeopleGraph({
   metric,
   ...props
 }: SharedProps & { users: UserStreamUser[]; metric: ArenaPeopleMetric }) {
-  const visible = users.slice(0, ARENA_PEOPLE_LIMIT);
+  const visible = users.slice(0, props.renderLimit ?? ARENA_PEOPLE_LIMIT);
   const metadata = useArenaGraphMetadata(
     [],
     visible.map((user) => user.id),
@@ -218,7 +215,7 @@ export function ArenaPeopleGraph({
 }
 
 export function ArenaTagsGraph({ topics, ...props }: SharedProps & { topics: NexusHotTag[] }) {
-  const visible = topics.slice(0, ARENA_TOPIC_LIMIT);
+  const visible = topics.slice(0, props.renderLimit ?? ARENA_TOPIC_LIMIT);
   const { isMuted } = useMutedUsers();
   const taggers = visible.map((tag) => [...new Set(tag.taggers_id)].filter((id) => !isMuted(id)).slice(0, 3));
   const ids = [...new Set(taggers.flat())];
@@ -278,6 +275,7 @@ export function ArenaTagsGraph({ topics, ...props }: SharedProps & { topics: Nex
 
 function ArenaGraph({
   graphInfo,
+  renderLimit = CONTENDERS_MENU_LIMIT,
   contentLabel = 'Content',
   topTags,
   showTagRanks = false,
@@ -304,7 +302,8 @@ function ArenaGraph({
   showTagRanks?: boolean;
   connectionStatus?: { loading: boolean; error: boolean; retry: () => void };
 } & SharedProps) {
-  const contendersLabel = `Top #${CONTENDERS_MENU_LIMIT} ${contentLabel.toLowerCase()}`;
+  const isPhone = useIsMobile({ breakpoint: 'sm' });
+  const contendersLabel = `Top ${renderLimit}`;
   const renderer = useRef<SocialGraphHandle>(null);
   const tagRanks = new Map(
     showTagRanks
@@ -312,6 +311,7 @@ function ArenaGraph({
       : [],
   );
   const container = useRef<HTMLElement>(null);
+  const [canvasBoundary, setCanvasBoundary] = useState<HTMLElement | null>(null);
   const returnFocus = useRef<HTMLElement | null>(null);
   const contenderTrigger = useRef<HTMLButtonElement>(null);
   const [openPanel, setOpenPanel] = useState<'contenders' | 'info' | 'connection' | null>(null);
@@ -395,7 +395,10 @@ function ArenaGraph({
   }
   const canvas = (
     <section
-      ref={container}
+      ref={(element) => {
+        container.current = element;
+        setCanvasBoundary(element);
+      }}
       style={isFullscreen ? undefined : { height }}
       aria-label="Arena graph"
       aria-busy={!layoutReady}
@@ -410,14 +413,24 @@ function ArenaGraph({
         <div className="flex flex-wrap items-center gap-1">
           <Popover open={openPanel === 'contenders'} onOpenChange={(open) => togglePanel('contenders', open)}>
             <PopoverTrigger asChild>
-              <Button ref={contenderTrigger} variant="ghost" size="sm" className="text-xs" data-arena-no-grow>
+              <Button
+                ref={contenderTrigger}
+                variant="ghost"
+                size="sm"
+                className="text-xs"
+                aria-description={contentLabel}
+                data-arena-no-grow
+              >
                 {contendersLabel}
                 <ChevronDown aria-hidden="true" />
               </Button>
             </PopoverTrigger>
             <PopoverContent
               align="start"
+              side="bottom"
               sideOffset={8}
+              collisionBoundary={canvasBoundary}
+              collisionPadding={16}
               aria-label={contendersLabel}
               style={
                 { '--arena-topic-color': topic === null ? 'var(--brand)' : generateRandomColor(topic) } as CSSProperties
@@ -436,7 +449,7 @@ function ArenaGraph({
               }}
             >
               <ArenaGraphStandings showTagRanks={showTagRanks}>
-                {contenders.slice(0, CONTENDERS_MENU_LIMIT).map(([id, annotation]) => {
+                {contenders.slice(0, renderLimit).map(([id, annotation]) => {
                   const tag = showTagRanks ? topTags?.find((tag) => `tag:${tag.label}` === id) : undefined;
                   if (tag) {
                     return (
@@ -469,7 +482,14 @@ function ArenaGraph({
                         aria-pressed={id === selectedNodeId}
                         onClick={() => {
                           setOpenPanel(null);
-                          selectNode(id, contenderTrigger.current ?? undefined);
+                          const idea = ideas.find((idea) => `post:${idea.id}` === id);
+                          if (isPhone && idea) {
+                            setPopupId(null);
+                            setUserSelection(null);
+                            onSelect(idea.id);
+                            setViewedPost(idea);
+                            setPostDialogOpen(true);
+                          } else selectNode(id, contenderTrigger.current ?? undefined);
                         }}
                       >
                         {user && (
@@ -513,20 +533,27 @@ function ArenaGraph({
           )}
           {(isFullscreen || !graphInfo) && (
             <Popover open={openPanel === 'info'} onOpenChange={(open) => togglePanel('info', open)}>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="size-8 text-muted-foreground"
-                  aria-label="Graph information"
-                >
-                  <Info aria-hidden="true" />
-                </Button>
-              </PopoverTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-8 text-muted-foreground"
+                      aria-label="Ranking summary"
+                    >
+                      <CircleHelp aria-hidden="true" />
+                    </Button>
+                  </PopoverTrigger>
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent variant="accent">Ranking summary</TooltipContent>
+                </TooltipPortal>
+              </Tooltip>
               <PopoverContent
                 align="start"
                 sideOffset={8}
-                aria-label="Graph information"
+                aria-label="Ranking summary"
                 className={cn(
                   'mx-0 max-h-96 w-80 space-y-2 overflow-y-auto text-xs font-medium text-muted-foreground',
                   styles.graphSurface,
@@ -560,9 +587,6 @@ function ArenaGraph({
           </Button>
           <Button variant="ghost" size="icon" aria-label="Zoom in" onClick={() => renderer.current?.zoomIn()}>
             <ZoomIn />
-          </Button>
-          <Button variant="ghost" size="icon" aria-label="Fit graph" onClick={() => renderer.current?.fit()}>
-            <Focus />
           </Button>
           <Button
             variant="ghost"
@@ -643,7 +667,13 @@ function ArenaGraph({
         <ArenaPostDialog
           idea={viewedPost}
           open={postDialogOpen}
-          onOpenChange={setPostDialogOpen}
+          onOpenChange={(open) => {
+            setPostDialogOpen(open);
+            if (!open && !popupId) {
+              // Restore focus after the dialog's own close-focus handler runs.
+              requestAnimationFrame(() => contenderTrigger.current?.focus({ preventScroll: true }));
+            }
+          }}
           postWindow={postWindow}
         />
       )}
@@ -659,9 +689,9 @@ function ArenaGraphProfileDetails({ userId }: { userId: string }) {
       <ArenaGraphProfileTags userId={userId} />
       <Button asChild variant="secondary" size="sm" className="w-full gap-2">
         <Link href={getUserProfileUrl(userId, currentUserPubky)} overrideDefaults>
-          <IdCard className="size-4" aria-hidden="true" />
+          <SquareUserRound className="size-4" aria-hidden="true" />
           <Typography as="span" className="text-xs leading-4 font-bold" overrideDefaults>
-            View profile
+            Profile details
           </Typography>
         </Link>
       </Button>
@@ -773,7 +803,7 @@ function ArenaGraphPopup({
         {node.kind === 'user' && <h3 className="text-base font-bold text-foreground">Profile</h3>}
         {node.kind === 'tag' && (loadTagPosts || ideas.length > 0) && (
           <h3 className="text-base font-bold text-foreground">
-            Top #{ARENA_VISIBLE_IDEAS} posts for &apos;{node.label}&apos;
+            Top {ARENA_VISIBLE_IDEAS} posts for &apos;{node.label}&apos;
           </h3>
         )}
         {peopleTagHeading && <h3 className="text-base font-bold text-foreground">{peopleTagHeading}</h3>}

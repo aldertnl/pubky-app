@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 // Contenders follow the ellipse clockwise, starting with #1 at the upper left.
 export const ARENA_PLACEMENTS = [
   { x: 29, y: 22, rotation: 0 },
@@ -11,3 +13,26 @@ export const ARENA_PLACEMENTS = [
   { x: 12, y: 64, rotation: 1.8 },
   { x: 8, y: 46, rotation: -2.2 },
 ] as const;
+
+/** Rotate the standings clockwise on phones, keeping their contents upright. */
+export function getArenaPlacementStyle(
+  { x, y }: { x: number; y: number },
+  index = 0,
+  count: number = ARENA_PLACEMENTS.length,
+): CSSProperties {
+  const compact =
+    count <= 3
+      ? [
+          { x: 50, y: 18 },
+          { x: 27, y: 82 },
+          { x: 73, y: 99 },
+        ][index]
+      : undefined;
+  return {
+    left: `var(--arena-responsive-x, ${x}%)`,
+    top: `var(--arena-responsive-y, ${y}%)`,
+    // Compress the horizontal radius so cards stay inside the narrow viewport.
+    '--arena-mobile-x': `${compact?.x ?? Math.max(27, Math.min(73, 100 - y))}%`,
+    '--arena-mobile-y': `${compact?.y ?? x}%`,
+  } as CSSProperties;
+}

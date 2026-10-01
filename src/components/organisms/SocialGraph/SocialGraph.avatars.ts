@@ -48,7 +48,8 @@ export function fallbackAvatarSprite(pubky: string, name: string): HTMLImageElem
   </svg>`;
   const image = new Image();
   image.onload = notifyGraphAssetReady;
-  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  // URI encoding rejects lone UTF-16 surrogates. The Unicode regex leaves valid emoji pairs intact.
+  image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg.replace(/[\uD800-\uDFFF]/gu, '\uFFFD'))}`;
   sprites.set(key, image);
   if (sprites.size > CACHE_CAP) sprites.delete(sprites.keys().next().value!);
   return null;

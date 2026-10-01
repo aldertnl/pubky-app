@@ -6,11 +6,11 @@ import {
   Activity,
   Calendar,
   CalendarRange,
+  CircleHelp,
   Clock,
   Eye,
   EyeOff,
   Flame,
-  Info,
   Layers,
   LayoutDashboard,
   type LucideIcon,
@@ -18,6 +18,7 @@ import {
   Orbit,
   Repeat,
   RotateCcw,
+  SlidersHorizontal,
   Star,
   StickyNote,
   Tag as TagIcon,
@@ -27,7 +28,9 @@ import {
 import { ToggleGroup } from 'radix-ui';
 import { Button } from '@/atoms/Button/Button';
 import { Card } from '@/atoms/Card/Card';
+import { FilterHeader } from '@/atoms/Filter/Filter';
 import { Popover, PopoverContent, PopoverTrigger } from '@/atoms/Popover/Popover';
+import { Tooltip, TooltipContent, TooltipPortal, TooltipTrigger } from '@/atoms/Tooltip/Tooltip';
 import { useArenaHistory } from '@/hooks/useArenaHistory/useArenaHistory';
 import type { ArenaHistoryState } from '@/hooks/useArenaHistory/useArenaHistory.types';
 import { useArenaIdeas } from '@/hooks/useArenaIdeas/useArenaIdeas';
@@ -60,13 +63,14 @@ import { AvatarGroup } from '@/molecules/AvatarGroup/AvatarGroup';
 import { CONTENT_FILTER_OPTIONS } from '@/molecules/Filters/FilterContent/FilterContent.constants';
 import { REACH_FILTER_META } from '@/molecules/Filters/FilterReach/FilterReach';
 import { PostTag } from '@/molecules/PostTag/PostTag';
+import { SideDrawer } from '@/molecules/SideDrawer/SideDrawer';
 import { AwardsEntry } from '@/organisms/Awards/AwardsEntry';
 import { type NexusHotTag, UserStreamReach } from '@/services/nexus/nexus.types';
 import { useAuthStore } from '@/stores/auth/auth.store';
 import { CONTENT, type ContentType, REACH, type ReachType } from '@/stores/home/home.types';
 import { useHotStore } from '@/stores/hot/hot.store';
 import { TIMEFRAME, type TimeframeType } from '@/stores/hot/hot.types';
-import { ARENA_PLACEMENTS } from './Arena.constants';
+import { ARENA_PLACEMENTS, getArenaPlacementStyle } from './Arena.constants';
 import styles from './Arena.module.css';
 import { ArenaAwardsSection } from './ArenaAwardsSection';
 import { ArenaFilterMenu } from './ArenaFilterMenu';
@@ -76,6 +80,7 @@ import { ArenaParticles } from './ArenaParticles';
 import { ArenaPeopleFloor } from './ArenaPeopleFloor';
 import { ArenaPersonConversation } from './ArenaPersonConversation';
 import { ArenaFullscreenLayer, ArenaPostDialog } from './ArenaPostDialog';
+import { ArenaReachPicker } from './ArenaReachPicker';
 import { ArenaStandings } from './ArenaStandings';
 import { ArenaTagConnectors } from './ArenaTagConnectors';
 import { ArenaTagPicker } from './ArenaTagPicker';
@@ -151,9 +156,9 @@ const CONTENT_RANKING_INFO: Partial<Record<ArenaRanking, string>> = {
 };
 
 const VIEW_OPTIONS = [
-  { value: 'arena' as const, label: 'In arena', icon: Orbit },
+  { value: 'arena' as const, label: 'Arena', icon: Orbit },
   { value: 'list' as const, label: 'Cards', icon: LayoutDashboard },
-  { value: 'graph' as const, label: 'In graph', icon: Waypoints },
+  { value: 'graph' as const, label: 'Graph', icon: Waypoints },
 ];
 const TOPIC_AVATAR_LIMIT = 3;
 const SMALL_NETWORK_MAX_CONNECTIONS = 2;
@@ -192,11 +197,18 @@ type StageProps = {
   onTopic: (topic: ArenaTopicFilter) => void;
   isList: boolean;
   isGraph: boolean;
+  renderLimit?: number;
   metric: ArenaRanking;
   content: ArenaContent;
 };
 
-export function Arena() {
+export function Arena({
+  mobileFiltersOpen = false,
+  onMobileFiltersOpenChange,
+}: {
+  mobileFiltersOpen?: boolean;
+  onMobileFiltersOpenChange?: (open: boolean) => void;
+} = {}) {
   const { reach, setReach, applyDefaultReach, timeframe, setTimeframe, hasUserSetReach } = useHotStore();
   const currentUserPubky = useAuthStore((state) => state.currentUserPubky);
   const { stats, isLoading: isLoadingProfileStats } = useProfileStats(currentUserPubky ?? '', {
@@ -212,11 +224,12 @@ export function Arena() {
         : REACH.ALL;
   const { requireAuth } = useRequireAuth();
   const isPhone = useIsMobile({ breakpoint: 'sm' });
-  const [view, setView] = useState<'arena' | 'list' | 'graph'>('arena');
+  const [chosenView, setView] = useState<'arena' | 'list' | 'graph'>();
+  const view = chosenView ?? (isPhone ? 'list' : 'arena');
   const [graphPositions] = useState(() => new Map<string, GraphPosition>());
   const [muteControlTarget, setMuteControlTarget] = useState<HTMLDivElement | null>(null);
-  const displayAsGrid = isPhone || view === 'list';
-  const displayAsGraph = !isPhone && view === 'graph';
+  const displayAsGrid = view === 'list';
+  const displayAsGraph = view === 'graph';
   const [resetCount, setResetCount] = useState(0);
   const [metric, setMetric] = useState<ArenaRanking>('popular');
   const [content, setContent] = useState<ArenaContent>(CONTENT.ALL);
@@ -304,7 +317,7 @@ export function Arena() {
       content: CONTENT.ALL,
       reach: currentUserPubky ? REACH.NETWORK : REACH.ALL,
       defaultReach: true,
-      view: 'arena',
+      view: isPhone ? 'list' : 'arena',
     });
   }
   const rankingDetails = (
@@ -327,148 +340,220 @@ export function Arena() {
       </div>
     </div>
   );
-  return (
-    <div className={styles.arena}>
-      <div className={styles.toolbar}>
-        <div className={cn(styles.filters, 'font-medium')} role="group" aria-label="Arena filters">
-          <div className={styles.filterClause}>
-            <ArenaFilterMenu label="Ranking" value={metric} options={rankOptions} onChange={changeMetric} />
-          </div>{' '}
-          <div className={styles.filterClause} hidden={content === ARENA_TAGS}>
-            <ArenaTagPicker
-              key={topic}
-              topic={topic}
-              topics={topics.rawTags}
-              timeframeLabel={WINDOWS.find((window) => window.value === timeframe)?.contextLabel ?? timeframe}
-              onTopic={(label) => navigateArena({ topic: label })}
-            />
-          </div>{' '}
+  const filterControls = (
+    <div className={styles.toolbar}>
+      <div className={cn(styles.filters, 'font-medium')} role="group" aria-label="Arena filters">
+        <div className={styles.filterClause}>
+          <ArenaFilterMenu label="Ranking" value={metric} options={rankOptions} onChange={changeMetric} />
+        </div>{' '}
+        <div className={styles.filterClause} hidden={content === ARENA_TAGS}>
+          <ArenaTagPicker
+            key={topic}
+            topic={topic}
+            topics={topics.rawTags}
+            timeframeLabel={WINDOWS.find((window) => window.value === timeframe)?.contextLabel ?? timeframe}
+            onTopic={(label) => navigateArena({ topic: label })}
+          />
+        </div>{' '}
+        <div className={styles.filterClause}>
+          <ArenaFilterMenu
+            label="Content"
+            value={content}
+            options={CONTENT_OPTIONS}
+            onChange={changeContent}
+            lowercase
+          />
+        </div>{' '}
+        <div className={styles.viewActions}>
           <div className={styles.filterClause}>
             <ArenaFilterMenu
-              label="Content"
-              value={content}
-              options={CONTENT_OPTIONS}
-              onChange={changeContent}
+              label="Timeframe"
+              value={timeframe}
+              options={WINDOWS.map((window) => ({
+                ...window,
+                disabled: content === ARENA_PEOPLE && metric === 'popular' && window.value !== TIMEFRAME.ALL_TIME,
+              }))}
+              onChange={(value) => navigateArena({ timeframe: value })}
               lowercase
             />
           </div>{' '}
-          <div className={styles.viewActions}>
-            <div className={styles.filterClause}>
-              <ArenaFilterMenu
-                label="Reach"
-                value={effectiveReach}
-                options={
-                  content === ARENA_PEOPLE
-                    ? REACH_MENU_OPTIONS.map((option) => ({ ...option, label: option.label.replace(/^From /, '') }))
-                    : REACH_MENU_OPTIONS
-                }
-                onChange={changeReach}
-                lowercase
-              />
-            </div>{' '}
-            <div className={styles.filterClause}>
-              <ArenaFilterMenu
-                label="Timeframe"
-                value={timeframe}
-                options={WINDOWS.map((window) => ({
-                  ...window,
-                  disabled: content === ARENA_PEOPLE && metric === 'popular' && window.value !== TIMEFRAME.ALL_TIME,
-                }))}
-                onChange={(value) => navigateArena({ timeframe: value })}
-                lowercase
-              />
-            </div>{' '}
-            <div className={cn(styles.filterClause, styles.mobileHidden)}>
-              <ToggleGroup.Root
-                type="single"
-                value={view}
-                onValueChange={(value) => {
-                  if (value === 'arena' || value === 'list' || value === 'graph') navigateArena({ view: value });
-                }}
-                aria-label="Layout"
-                className="mr-2 inline-flex h-8 items-stretch overflow-hidden rounded-full border border-border bg-secondary/30"
-              >
-                {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
-                  <ToggleGroup.Item key={value} value={value} asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      aria-label={label}
-                      title={label}
-                      className="h-full rounded-none text-muted-foreground first:rounded-l-full last:rounded-r-full data-[state=on]:bg-secondary data-[state=on]:text-foreground"
-                    >
-                      <Icon className="size-4" aria-hidden="true" />
-                    </Button>
+          <div className={styles.filterClause}>
+            <ArenaReachPicker
+              value={effectiveReach}
+              options={
+                content === ARENA_PEOPLE
+                  ? REACH_MENU_OPTIONS.map((option) => ({
+                      ...option,
+                      label: option.label.replace(/^From /, '').replace(/^./, (initial) => initial.toUpperCase()),
+                    }))
+                  : REACH_MENU_OPTIONS
+              }
+              onChange={changeReach}
+            />
+          </div>{' '}
+          <div className={styles.filterClause}>
+            <ToggleGroup.Root
+              type="single"
+              value={view}
+              onValueChange={(value) => {
+                if (value === 'arena' || value === 'list' || value === 'graph') navigateArena({ view: value });
+              }}
+              aria-label="Layout"
+              className={cn(
+                'inline-flex items-stretch overflow-hidden rounded-full border border-border bg-secondary/30',
+                isPhone ? 'h-10 w-full [&_button]:flex-1' : 'mr-2 h-8',
+              )}
+            >
+              {VIEW_OPTIONS.map(({ value, label, icon: Icon }) => (
+                <Tooltip key={value}>
+                  <ToggleGroup.Item value={value} asChild>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        aria-label={label}
+                        className="h-full rounded-none text-muted-foreground first:rounded-l-full last:rounded-r-full data-[state=on]:bg-secondary data-[state=on]:text-foreground"
+                      >
+                        <Icon className="size-4" aria-hidden="true" />
+                      </Button>
+                    </TooltipTrigger>
                   </ToggleGroup.Item>
-                ))}
-              </ToggleGroup.Root>
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
+                  <TooltipPortal>
+                    <TooltipContent variant="accent">{label}</TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
+              ))}
+            </ToggleGroup.Root>
+          </div>
+        </div>
+        <div className={styles.toolbarUtilityRow}>
+          <div className={styles.toolbarUtilityGroup}>
+            <div className={cn(styles.toolbarUtilityControls, 'flex shrink-0 items-center gap-2')}>
               <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-muted-foreground"
-                    aria-label="Arena information"
-                    title="Arena information"
-                  >
-                    <Info className="size-4" aria-hidden="true" />
-                  </Button>
-                </PopoverTrigger>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-muted-foreground"
+                        aria-label="Ranking summary"
+                      >
+                        <CircleHelp className="size-4" aria-hidden="true" />
+                      </Button>
+                    </PopoverTrigger>
+                  </TooltipTrigger>
+                  <TooltipPortal>
+                    <TooltipContent variant="accent">Ranking summary</TooltipContent>
+                  </TooltipPortal>
+                </Tooltip>
                 <PopoverContent
                   align="end"
                   sideOffset={8}
-                  aria-label="Arena information"
+                  aria-label="Ranking summary"
                   className="max-h-96 w-80 space-y-2 overflow-y-auto rounded-xl text-xs font-medium text-muted-foreground"
                 >
                   {rankingDetails}
                 </PopoverContent>
               </Popover>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground"
-                aria-label="Reset filters"
-                title="Reset filters"
-                onClick={resetFilters}
-              >
-                <RotateCcw className="size-3.5" aria-hidden="true" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground"
+                    aria-label="Reset filters"
+                    onClick={resetFilters}
+                  >
+                    <RotateCcw className="size-3.5" aria-hidden="true" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipPortal>
+                  <TooltipContent variant="accent">Reset filters</TooltipContent>
+                </TooltipPortal>
+              </Tooltip>
             </div>
             <div className={styles.toolbarActions}>
               <div ref={setMuteControlTarget} />
             </div>
           </div>
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <AwardsEntry />
-          </div>
+          {!isPhone && (
+            <div className={cn(styles.toolbarAwards, 'ml-auto flex shrink-0 items-center gap-2')}>
+              <AwardsEntry />
+            </div>
+          )}
         </div>
       </div>
-      <ArenaTopics
-        graphInfo={{ details: rankingDetails }}
-        graphPositions={graphPositions}
-        muteControlTarget={muteControlTarget}
-        key={`${scope}:${resetCount}`}
-        reach={effectiveReach}
-        timeframe={timeframe}
-        onReach={changeReach}
-        data={topics}
-        topic={topic}
-        onTopic={(label) => {
-          navigateArena({
-            topic: label,
-            ...(content === ARENA_TAGS ? { content: CONTENT.ALL, view: 'arena' } : {}),
-          });
-        }}
-        isList={displayAsGrid}
-        isGraph={displayAsGraph}
-        metric={metric}
-        content={content}
-      />
+    </div>
+  );
+  const mobileSummary = [
+    rankOptions.find((option) => option.value === metric)?.label,
+    content !== ARENA_TAGS ? (topic === null ? 'all' : topic) : undefined,
+    CONTENT_OPTIONS.find((option) => option.value === content)?.label.toLowerCase(),
+    WINDOWS.find((window) => window.value === timeframe)?.label.toLowerCase(),
+  ]
+    .filter(Boolean)
+    .join(' ');
+  return (
+    <div className={styles.arena}>
+      {!isPhone && filterControls}
+      <SideDrawer
+        open={isPhone && mobileFiltersOpen}
+        onOpenChangeAction={(open) => onMobileFiltersOpenChange?.(open)}
+        position="left"
+      >
+        <section id="arena-mobile-filters" aria-label="Arena configuration" className={styles.mobileFilters}>
+          <div className="mb-6">
+            <FilterHeader title="Ranking" />
+          </div>
+          {filterControls}
+          <div className="mt-auto flex shrink-0 justify-start pt-6">
+            <AwardsEntry size="lg" className="w-full" />
+          </div>
+        </section>
+      </SideDrawer>
+      <div data-arena-results inert={isPhone && mobileFiltersOpen}>
+        {isPhone && (
+          <p className="mb-4 text-center text-sm font-medium break-words text-muted-foreground">{mobileSummary}</p>
+        )}
+        <ArenaTopics
+          graphInfo={{ details: rankingDetails }}
+          graphPositions={graphPositions}
+          muteControlTarget={muteControlTarget}
+          key={`${scope}:${resetCount}`}
+          reach={effectiveReach}
+          timeframe={timeframe}
+          onReach={changeReach}
+          data={topics}
+          topic={topic}
+          onTopic={(label) => {
+            navigateArena({
+              topic: label,
+              ...(content === ARENA_TAGS ? { content: CONTENT.ALL, view: 'arena' } : {}),
+            });
+          }}
+          isList={displayAsGrid}
+          isGraph={displayAsGraph}
+          renderLimit={isPhone && !displayAsGrid ? 3 : undefined}
+          metric={metric}
+          content={content}
+        />
+        {isPhone && onMobileFiltersOpenChange && (
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className={cn('mt-6 w-full', !displayAsGrid && !displayAsGraph && 'mt-24')}
+            onClick={() => onMobileFiltersOpenChange(true)}
+          >
+            <SlidersHorizontal className="size-6" aria-hidden="true" />
+            Ranking settings
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
@@ -485,9 +570,10 @@ function ArenaTagsView({ topics, postWindow, ...props }: StageProps) {
           topic={null}
           onSelect={props.onTopic}
           onTopic={props.onTopic}
+          renderLimit={props.renderLimit}
         />
       ) : (
-        <ArenaTagsFloor topics={topics} onTopic={props.onTopic} isList={props.isList} />
+        <ArenaTagsFloor topics={topics} onTopic={props.onTopic} isList={props.isList} renderLimit={props.renderLimit} />
       )}
     </ArenaStage>
   );
@@ -510,7 +596,7 @@ function ArenaTopics({
   onReach: (reach: ReachType) => void;
 } & Pick<
   StageProps,
-  'isList' | 'isGraph' | 'metric' | 'content' | 'muteControlTarget' | 'graphPositions' | 'graphInfo'
+  'isList' | 'isGraph' | 'metric' | 'content' | 'muteControlTarget' | 'graphPositions' | 'graphInfo' | 'renderLimit'
 >) {
   // The parent remounts this scope when its shared timeframe changes.
   const [now] = useState(Date.now);
@@ -523,7 +609,7 @@ function ArenaTopics({
         Loading tags…
       </div>
     ) : (
-      <ArenaLoading isList={display.isList} />
+      <ArenaLoading isList={display.isList} renderLimit={display.renderLimit} />
     );
   if (error && (topic === undefined || display.content === ARENA_TAGS))
     return (
@@ -579,8 +665,13 @@ function ArenaTopics({
   );
 }
 
-function ArenaTagsFloor({ topics, onTopic, isList }: Pick<StageProps, 'topics' | 'onTopic' | 'isList'>) {
-  const visible = topics.slice(0, ARENA_TOPIC_LIMIT);
+function ArenaTagsFloor({
+  topics,
+  onTopic,
+  isList,
+  renderLimit,
+}: Pick<StageProps, 'topics' | 'onTopic' | 'isList' | 'renderLimit'>) {
+  const visible = topics.slice(0, renderLimit ?? ARENA_TOPIC_LIMIT);
   const { isMuted } = useMutedUsers();
   const previews = visible.map((tag) =>
     [...new Set(tag.taggers_id)].filter((id) => !isMuted(id)).slice(0, TOPIC_AVATAR_LIMIT),
@@ -593,6 +684,7 @@ function ArenaTagsFloor({ topics, onTopic, isList }: Pick<StageProps, 'topics' |
       className={styles.tagsFloor}
       aria-label="Tag standings"
       data-arena-floor
+      data-arena-visible-count={visible.length}
     >
       {visible.map((tag, index) => {
         const placement = ARENA_PLACEMENTS[index];
@@ -602,7 +694,7 @@ function ArenaTagsFloor({ topics, onTopic, isList }: Pick<StageProps, 'topics' |
           <li
             key={tag.label}
             className={cn(styles.orbitTag, isList && styles.gridTagCard)}
-            style={isList ? undefined : { left: `${placement.x}%`, top: `${placement.y}%` }}
+            style={isList ? undefined : getArenaPlacementStyle(placement, index, visible.length)}
             aria-label={`Rank ${index + 1}`}
           >
             <TagContainer className={isList ? styles.gridTagCardInner : undefined}>
@@ -669,6 +761,7 @@ function ArenaStage({
   children: React.ReactNode;
   paused?: boolean;
 }) {
+  const isPhone = useIsMobile({ breakpoint: 'sm' });
   const rankingLabel = RANK_OPTIONS.find((option) => option.value === metric)?.label ?? 'Most popular';
   const typeLabel = CONTENT_OPTIONS.find((option) => option.value === content)?.label ?? 'Content';
   const stageRef = useRef<HTMLDivElement>(null);
@@ -747,7 +840,7 @@ function ArenaStage({
                 <div className={cn(styles.topicTagGroup, styles.selectedTopicControl)} data-arena-selected-topic>
                   <div className={styles.topicLabel}>
                     <PostTag
-                      label={`${rankingLabel} ${typeLabel.toLowerCase()}`}
+                      label={isPhone ? 'All tags' : `${rankingLabel} ${typeLabel.toLowerCase()}`}
                       color={tagColor}
                       className={cn('max-w-none shrink-0 rounded-md!', styles.topicTag)}
                       selectedStyle={{ borderColor: tagColor, boxShadow: `inset 0 0 8px 0 ${tagColor}` }}
@@ -858,6 +951,7 @@ function ArenaPeopleResults({
               topTags={props.topics}
               positions={props.graphPositions}
               users={users}
+              renderLimit={props.renderLimit}
               metric={metric}
               topic={props.topic}
               onTopic={props.onTopic}
@@ -868,12 +962,16 @@ function ArenaPeopleResults({
         ) : (
           <ArenaPeopleFloor
             users={users}
+            renderLimit={props.renderLimit}
             isList={props.isList}
             metric={metric}
             loading={loading}
             selectedId={selected?.id}
             onSelect={setChosen}
-            onExpand={() => setConversationOpen(true)}
+            onExpand={(id) => {
+              setChosen(id);
+              setConversationOpen(true);
+            }}
           />
         )}
       </ArenaStage>
@@ -974,7 +1072,7 @@ function ArenaTopic(
           props.isGraph ? (
             <ArenaGraphLoading />
           ) : (
-            <ArenaLoading compact isList={props.isList} />
+            <ArenaLoading compact isList={props.isList} renderLimit={props.renderLimit} />
           )
         ) : stream.error || error ? (
           <div className={styles.status} role="alert">
@@ -1007,6 +1105,7 @@ function ArenaTopic(
             topTags={props.topics}
             positions={props.graphPositions}
             ideas={ranked}
+            renderLimit={props.renderLimit}
             metric={props.metric}
             topic={props.topic}
             onTopic={props.onTopic}
@@ -1024,6 +1123,7 @@ function ArenaTopic(
               setAwardTarget((previous) => ({ user, postId, request: (previous?.request ?? 0) + 1 }));
             }}
             ideas={ranked}
+            renderLimit={props.renderLimit}
             selectedId={selected?.id}
             onSelect={setChosen}
             onExpand={() => setConversationOpen(true)}
@@ -1049,14 +1149,22 @@ function ArenaTopic(
   );
 }
 
-function ArenaLoading({ compact = false, isList = false }: { compact?: boolean; isList?: boolean }) {
+function ArenaLoading({
+  compact = false,
+  isList = false,
+  renderLimit,
+}: {
+  compact?: boolean;
+  isList?: boolean;
+  renderLimit?: number;
+}) {
   return (
     <div
       className={cn(styles.arenaLoading, !compact && styles.initialArenaLoading)}
       role="status"
       aria-label="Loading Arena"
     >
-      <ArenaFloorSkeleton isList={isList} />
+      <ArenaFloorSkeleton isList={isList} renderLimit={renderLimit} />
       <span className="sr-only">Loading Arena…</span>
     </div>
   );

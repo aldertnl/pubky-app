@@ -1,9 +1,9 @@
 'use client';
 
 import { Button } from '@/atoms/Button/Button';
-import { Skeleton } from '@/atoms/Skeleton/Skeleton';
 import { useArenaPersonPost } from '@/hooks/useArenaPersonPost/useArenaPersonPost';
 import { formatPublicKey } from '@/libs/utils/utils';
+import { ArenaConversationSkeleton } from '@/organisms/ArenaConversationSkeleton/ArenaConversationSkeleton';
 import { TIMEFRAME, type TimeframeType } from '@/stores/hot/hot.types';
 import styles from './Arena.module.css';
 import { ArenaConversation } from './ArenaConversation';
@@ -24,12 +24,7 @@ export function ArenaPersonConversation({
     return (
       <>
         {loading ? (
-          <div className={styles.dock} role="status" aria-label="Finding most popular post">
-            <div className={styles.reader}>
-              <Skeleton className="h-64 w-full rounded-md" />
-              <Skeleton className="h-48 w-full rounded-md" />
-            </div>
-          </div>
+          <ArenaConversationSkeleton label="Finding most popular post" />
         ) : error ? (
           <div className={styles.status} role="alert">
             Could not load this person’s most popular post.{' '}

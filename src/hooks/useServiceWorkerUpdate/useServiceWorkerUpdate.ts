@@ -26,11 +26,12 @@ import { toast, type ToastHandle, type ToastOptions } from '@/molecules/Toaster/
  *   and `registration.update()` is requested at most once per `SW_UPDATE_CHECK_MIN_INTERVAL_MS`.
  *
  * No-op when Serwist is disabled (dev without `SERWIST_DEV`) or the browser has no service
- * worker support: `window.serwist` is undefined in both cases.
+ * worker support: `window.serwist` is undefined in both cases. Passing `false`
+ * disables update prompts and their listeners.
  */
-export function useServiceWorkerUpdate() {
+export function useServiceWorkerUpdate(enabled = true) {
   useEffect(() => {
-    if (!window.serwist || !('serviceWorker' in navigator)) return;
+    if (!enabled || !window.serwist || !('serviceWorker' in navigator)) return;
     const container = navigator.serviceWorker;
 
     let disposed = false;
@@ -142,6 +143,7 @@ export function useServiceWorkerUpdate() {
       registration?.removeEventListener('updatefound', onUpdateFound);
       workerListeners.forEach((remove) => remove());
       workerListeners.clear();
+      prompt?.dismiss();
     };
-  }, []);
+  }, [enabled]);
 }

@@ -94,8 +94,8 @@ export function ArenaTagConnectors({ stageRef, topic }: { stageRef: RefObject<HT
       const origin = stage.getBoundingClientRect();
 
       const next: Connection[] = [];
-      // Compact layouts use the existing grid, without decorative connections.
-      if (tag && floor && window.matchMedia('(min-width: 901px)').matches) {
+      // Tablet grids omit connections; phones use the vertical Arena.
+      if (tag && floor && window.matchMedia('(min-width: 901px), (max-width: 639px)').matches) {
         const source = tag.getBoundingClientRect();
         const floorBox = floor.getBoundingClientRect();
         if (source.width && source.height && floorBox.width) {

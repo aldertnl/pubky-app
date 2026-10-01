@@ -25,10 +25,57 @@
 .viewActions {
   display: contents;
 }
+.toolbarUtilityRow {
+  display: contents;
+}
+.toolbarUtilityGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .toolbarActions {
   display: flex;
   align-items: center;
   align-self: center;
+}
+.mobileFilters {
+  display: flex;
+  min-height: 100%;
+  flex-direction: column;
+}
+.mobileFilters .filters {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+}
+.mobileFilters .filterClause {
+  width: 100%;
+}
+.mobileFilters .toolbarUtilityGroup {
+  gap: 0;
+}
+.mobileFilters .toolbarUtilityControls {
+  flex: 1;
+  justify-content: space-between;
+}
+.mobileFilters .filterClause > button,
+.mobileFilters [data-arena-tag-picker],
+.mobileFilters [data-arena-tag-picker] > button,
+.mobileFilters [data-arena-tag-picker] > button > div {
+  width: 100%;
+  height: 40px;
+  margin-inline: 0;
+  justify-content: flex-start;
+}
+.mobileFilters .filterClause > button > span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+}
+.mobileFilters .filterClause > button > svg:last-child {
+  margin-left: auto;
 }
 .filterClause {
   display: inline-block;
@@ -325,6 +372,9 @@
   font-size: 14px;
   line-height: 20px;
 }
+.topicTagGroup > .topicLabel:first-child .topicTag {
+  border-radius: 6px;
+}
 .topicTag > div {
   height: 100%;
 }
@@ -419,11 +469,14 @@
   transform: rotate(var(--arena-post-rotation, 0deg)) scale(var(--arena-post-scale, 1));
   transform-origin: center;
 }
-.ideaCard {
+.ideaCard,
+.peopleFloor.list .personCard {
   --arena-card-shadow: var(--tw-shadow);
   --arena-selection-border: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 64%, transparent);
   --arena-selection-glow: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 32%, transparent);
   --arena-selection-inset: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 32%, transparent);
+}
+.ideaCard {
   --arena-post-padding: 16px;
   --arena-expand-size: 32px;
   --arena-expand-gap: 12px;
@@ -440,6 +493,9 @@
 }
 .ideaCard.leader {
   --arena-card-shadow: 0 8px 16px rgb(0 0 0 / 72%), 0 24px 48px 8px rgb(0 0 0 / 85%);
+}
+.list .ideaCard {
+  --arena-post-padding: 24px;
 }
 .idea {
   display: flex;
@@ -492,7 +548,8 @@
   .topicControl:hover {
     scale: 1.1;
   }
-  .ideaCard:hover {
+  .ideaCard:hover,
+  .peopleFloor.list .personCard:hover {
     background-color: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 16%, var(--background));
     outline-color: var(--arena-selection-border);
     box-shadow:
@@ -509,7 +566,8 @@
   outline: none;
   box-shadow: inset 0 0 0 1px var(--ring);
 }
-.ideaCard:has(> .idea:focus-visible) {
+.ideaCard:has(> .idea:focus-visible),
+.peopleFloor.list .personCard:has(:focus-visible) {
   background-color: color-mix(in srgb, var(--arena-topic-color, var(--brand)) 16%, var(--background));
   outline-color: var(--arena-selection-border);
   box-shadow:
@@ -644,11 +702,11 @@
 .graphProfileCard > div {
   gap: var(--arena-graph-spacing);
 }
+.graphProfileCard > div > [data-slot='button'] + [data-slot='button'] {
+  margin-top: calc(var(--arena-graph-spacing) / -2);
+}
 .graphStandings {
-  max-height: min(
-    var(--arena-stack-height, var(--radix-popover-content-available-height)),
-    calc(var(--radix-popover-content-available-height) - 2 * var(--arena-graph-spacing) - 2px)
-  );
+  max-height: calc(var(--radix-popover-content-available-height) - 2 * var(--arena-graph-spacing) - 2px);
   overscroll-behavior: contain;
 }
 .graphTagStack {
@@ -668,7 +726,7 @@
   font-weight: 500;
 }
 .ideaCard.popupPost {
-  --arena-card-shadow: none;
+  --arena-card-shadow: 0 0 0 transparent;
 }
 .popupPost .ideaHeader {
   display: flex;
@@ -767,6 +825,16 @@
   text-align: center;
   color: var(--muted-foreground);
 }
+.stage:has(> .status) .topics {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  padding-block: 16px 0;
+}
+.stage:has(> .status) .topic {
+  position: static;
+  transform: none;
+}
 .arena > .status {
   padding-top: calc(80px + var(--arena-stage-gap));
 }
@@ -847,20 +915,19 @@
   .filters {
     flex-basis: 100%;
     width: 100%;
-    column-gap: 0;
+    column-gap: 8px;
     row-gap: 12px;
   }
   .filterClause > a,
   .filterClause > [data-arena-tag-picker],
   .filterClause > button,
   .filterClause > [data-slot='skeleton'] {
-    margin-inline: 0 8px;
+    margin-inline: 0;
   }
-  .viewActions {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    row-gap: 12px;
+  .toolbarAwards {
+    margin-left: 0;
+    flex-basis: 100%;
+    width: 100%;
   }
   .topic {
     font-size: 12px;
@@ -869,53 +936,102 @@
   .stage {
     min-height: auto;
   }
+  .stage:not(.listStage):has(.floor:not(.list)) {
+    padding-top: 0;
+    margin-inline: -16px;
+    padding-inline: 16px;
+    overflow-x: clip;
+  }
   .bowl {
     top: 0;
     height: 100%;
   }
-  .floor:not(.list) {
-    grid-template-columns: minmax(0, 1fr);
-    padding-top: 48px;
+  .floor:not(.list),
+  .floor.tagsFloor:not(.list) {
+    display: block;
+    height: clamp(2000px, 540vw, 2800px);
+    padding: 0;
   }
-  .ideaCard {
-    --arena-post-padding: 12px;
-    --arena-expand-size: 24px;
-    --arena-expand-gap: 8px;
+  .floor.peopleFloor:not(.list),
+  .floor.tagsFloor:not(.list) {
+    height: clamp(1100px, 340vw, 1600px);
   }
-  .ideaHeader {
-    gap: 8px;
+  .floor:not(.list)[data-arena-visible-count='3'],
+  .floor:not(.list)[data-arena-visible-count='2'],
+  .floor:not(.list)[data-arena-visible-count='1'] {
+    height: clamp(560px, 150vw, 720px);
   }
-  .list {
-    height: auto;
-    /* Leave 32px above the post controls, which sit 16px above the card. */
-    margin-top: 48px;
+  .floor:not(.list) .contender,
+  .floor:not(.list) .orbitTag {
+    --arena-responsive-x: var(--arena-mobile-x);
+    --arena-responsive-y: var(--arena-mobile-y);
+    position: absolute;
+    translate: -50% -50%;
   }
-  .floor:not(.peopleFloor):not(.list) {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    column-gap: 12px;
+  .tagsFloor:not(.list) .topicControl {
+    zoom: var(--arena-tag-scale, 1);
   }
-  .floor:not(.peopleFloor):not(.list) > .contender:nth-child(n + 7) {
-    display: none;
+  .tagsFloor:not(.list) .orbitTag:first-child .topicControl {
+    rotate: 2deg;
   }
-  .ideaHeader {
+  .tagsFloor:not(.list) .orbitTag:nth-child(3) .topicControl {
+    rotate: 5deg;
+  }
+  .floor:not(.list) .contender {
+    width: 56%;
+  }
+  .floor:not(.peopleFloor):not(.list) .contender {
+    width: 64%;
+  }
+  .floor.peopleFloor:not(.list) .contender {
+    width: 58%;
+  }
+  .floor:not(.list) .ideaCard {
+    transform: rotate(var(--arena-post-rotation, 0deg)) scale(var(--arena-post-scale, 1));
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='0'] .ideaCard {
+    transform: rotate(2deg);
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='1'] {
+    --arena-responsive-x: calc((100% - 100vw) / 2);
+    translate: 0 -50%;
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='2'] {
+    --arena-responsive-x: calc((100% + 100vw) / 2);
+    translate: -100% -50%;
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='1'] .ideaCard,
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='2'] .ideaCard {
+    transform: none;
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='1'] .ideaCard {
+    transform: rotate(-4deg);
+    transform-origin: left center;
+  }
+  .floor:not(.peopleFloor):not(.list) .contender[data-position='2'] .ideaCard {
+    transform: rotate(5deg);
+    transform-origin: right center;
+  }
+  .stage:not(.listStage):has(.floor:not(.list)) > .topics {
+    position: absolute;
+    inset: 0;
+    display: block;
+    padding: 0;
+    pointer-events: none;
+  }
+  .stage:not(.listStage):has(.floor:not(.list)) > .topics .topic {
+    position: absolute;
+    transform: translate(-50%, -50%);
+  }
+  .tagConnectors {
     display: block;
   }
-  .idea {
-    padding-top: calc(var(--arena-post-padding) + 8px);
-    gap: 8px;
+  .orbitField {
+    inset-inline: 0;
+    inset-block: -8%;
   }
-  .ideaAuthor {
-    display: contents;
-  }
-  .ideaHeader .stats {
-    flex-wrap: nowrap;
-    gap: 4px;
-    margin-top: 0;
-  }
-  .postAvatar {
-    position: absolute;
-    top: -12px;
-    left: var(--arena-post-padding);
+  .orbit {
+    rotate: 0deg;
   }
   .floor:not(.list) .contender[data-position] .ideaCard:not(.leader) .rank {
     right: auto;
@@ -1098,12 +1214,11 @@
   border-radius: 50%;
   box-shadow: 0 8px 24px rgb(0 0 0 / 50%);
 }
-.person[aria-pressed='true'] .personPortrait,
-.person:focus-visible .personPortrait {
+.peopleFloor:not(.list) .personNode:has(:focus-visible) .personPortrait {
   outline: 2px solid var(--arena-topic-color, var(--brand));
   outline-offset: 5px;
 }
-.person[aria-pressed='true'] .personAvatar {
+.personNode:has(:focus-visible) .personAvatar {
   opacity: 1;
 }
 .personAvatar {
@@ -1131,14 +1246,25 @@
   cursor: pointer;
   pointer-events: auto;
 }
-.personPost:focus-visible {
+.personProfile {
+  position: absolute;
+  z-index: 10;
+  top: calc(8px + var(--arena-person-size) * 0.15 - 16px);
+  left: calc(50% + var(--arena-person-size) * 0.35 - 16px);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  pointer-events: auto;
+}
+.personPost:focus-visible,
+.personProfile:focus-visible {
   outline: none;
   border-color: white;
 }
 .peopleFloor .contender:first-child .personNode {
   --arena-person-size: 104px;
 }
-.peopleFloor .contender:first-child .person[aria-pressed='true'] .personPortrait {
+.peopleFloor:not(.list) .contender:first-child .personNode:has(:focus-visible) .personPortrait {
   outline: 2px solid var(--arena-topic-color);
   outline-offset: 3px;
   box-shadow: 0 0 32px color-mix(in srgb, var(--arena-topic-color) 30%, transparent);
@@ -1167,13 +1293,31 @@
   outline: none;
 }
 @media (hover: hover) and (pointer: fine) {
+  .personAction {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .personNode:hover .personAction,
+  .personNode:has(:focus-visible) .personAction {
+    opacity: 1;
+    pointer-events: auto;
+  }
   .peopleFloor .personNode:hover {
     transform: scale(1.08);
   }
   .peopleFloor .personNode:hover .personAvatar {
     opacity: 1;
   }
-  .personPost:hover {
+  .peopleFloor:not(.list) .personNode:hover .personPortrait {
+    outline: 2px solid var(--arena-topic-color, var(--brand));
+    outline-offset: 5px;
+  }
+  .peopleFloor:not(.list) .contender:first-child .personNode:hover .personPortrait {
+    outline-offset: 3px;
+    box-shadow: 0 0 32px color-mix(in srgb, var(--arena-topic-color, var(--brand)) 30%, transparent);
+  }
+  .personPost:hover,
+  .personProfile:hover {
     border-color: white;
     color: white;
   }
@@ -1186,27 +1330,26 @@
   align-items: stretch;
   min-height: 0;
   height: auto;
-  padding: 20px 12px;
+  padding: 24px;
   background: var(--card);
   outline: 1px solid transparent;
-}
-.peopleFloor.list .personCard:has(.person[aria-pressed='true']) {
-  outline-color: var(--arena-topic-color, var(--brand));
-  box-shadow: 0 0 24px color-mix(in srgb, var(--arena-topic-color, var(--brand)) 24%, transparent);
 }
 .peopleFloor.list .personCard .person {
   height: auto;
   justify-content: center;
   gap: 10px;
 }
-.peopleFloor.list .personCard .person[aria-pressed='true'] .personPortrait {
-  outline: none;
-}
 .peopleFloor.list .personAwardsButton {
+  top: auto;
+  right: 12px;
+  bottom: 12px;
+  left: auto;
+}
+.peopleFloor.list .personPost {
   top: 12px;
   left: 12px;
 }
-.peopleFloor.list .personPost {
+.peopleFloor.list .personProfile {
   top: 12px;
   right: 12px;
   left: auto;

@@ -88,21 +88,21 @@ export function AwardsContent({
                 {
                   key: 'all',
                   icon: Compass,
-                  label: `Discover (${badges.length})`,
+                  label: 'Discover',
                   isActive: tab === 'all',
                   onSelect: () => setTab('all'),
                 },
                 {
                   key: 'collection',
                   icon: Trophy,
-                  label: `${awards.isOwn ? 'My awards' : 'Awards'} (${visibleAwards.length})`,
+                  label: awards.isOwn ? 'My awards' : 'Awards',
                   isActive: tab === 'collection',
                   onSelect: () => setTab('collection'),
                 },
                 {
                   key: 'awarded',
                   icon: Gift,
-                  label: `Given (${awards.state?.issued.length ?? 0})`,
+                  label: 'Given',
                   isActive: tab === 'awarded',
                   onSelect: () => setTab('awarded'),
                 },
@@ -241,36 +241,36 @@ export function AwardsContent({
             tab !== 'all' &&
             !isEmptyGivenState &&
             (tab === 'awarded' ? !!currentUser : !awards.isOwn && !currentUser) && (
-            <div className="pt-4 text-base leading-6 text-muted-foreground">
-              {awards.isOwn ? (
-                <p>
-                  {tab !== 'collection' && (
-                    <>
-                      You can hand out 3 recognition awards each week
-                      {awards.state && (
-                        <>
-                          {' '}
-                          <span className="text-foreground">({awards.state.remaining} remaining)</span>
-                        </>
-                      )}
-                      .
-                    </>
-                  )}
-                </p>
-              ) : (
-                !currentUser &&
-                owner &&
-                (tab !== 'collection' || visibleAwards.length > 0) && (
-                  <Button variant="secondary" size="sm" onClick={() => requireAuth(() => {})}>
-                    Earn awards
-                  </Button>
-                )
-              )}
-              {!awards.isOwn && tab === 'awarded' && (
-                <p className={!currentUser ? 'mt-2' : undefined}>You can hand out 3 recognition awards each week.</p>
-              )}
-            </div>
-          )}
+              <div className="pt-4 text-base leading-6 text-muted-foreground">
+                {awards.isOwn ? (
+                  <p>
+                    {tab !== 'collection' && (
+                      <>
+                        You can hand out 3 recognition awards each week
+                        {awards.state && (
+                          <>
+                            {' '}
+                            <span className="text-foreground">({awards.state.remaining} remaining)</span>
+                          </>
+                        )}
+                        .
+                      </>
+                    )}
+                  </p>
+                ) : (
+                  !currentUser &&
+                  owner &&
+                  (tab !== 'collection' || visibleAwards.length > 0) && (
+                    <Button variant="secondary" size="sm" onClick={() => requireAuth(() => {})}>
+                      Earn awards
+                    </Button>
+                  )
+                )}
+                {!awards.isOwn && tab === 'awarded' && (
+                  <p className={!currentUser ? 'mt-2' : undefined}>You can hand out 3 recognition awards each week.</p>
+                )}
+              </div>
+            )}
         </>
       )}
     </div>

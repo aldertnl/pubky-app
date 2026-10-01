@@ -96,6 +96,40 @@ describe('useServiceWorkerUpdate', () => {
     Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'visible' });
   });
 
+  it('does not prompt, listen, activate or reload when disabled', async () => {
+    const registration = createRegistration();
+    const waiting = createWorker('installed');
+    registration.waiting = waiting;
+    const container = installServiceWorker({ controlled: true, registration });
+
+    renderHook(() => useServiceWorkerUpdate(false));
+    await flushReady();
+    container.emit('controllerchange');
+    setVisibility('visible');
+
+    expect(toast).not.toHaveBeenCalled();
+    expect(container.addEventListener).not.toHaveBeenCalled();
+    expect(registration.addEventListener).not.toHaveBeenCalled();
+    expect(registration.update).not.toHaveBeenCalled();
+    expect(waiting.postMessage).not.toHaveBeenCalled();
+    expect(reload).not.toHaveBeenCalled();
+  });
+
+  it('dismisses an existing prompt when disabled', async () => {
+    const registration = createRegistration();
+    registration.waiting = createWorker('installed');
+    const container = installServiceWorker({ controlled: true, registration });
+    const { rerender } = renderHook((enabled) => useServiceWorkerUpdate(enabled), { initialProps: true });
+    await flushReady();
+    const handle = toastHandle(0);
+
+    rerender(false);
+
+    expect(handle.dismiss).toHaveBeenCalledTimes(1);
+    expect(container.listenerCount('controllerchange')).toBe(0);
+    expect(registration.listenerCount('updatefound')).toBe(0);
+  });
+
   it('is a no-op when window.serwist is undefined', async () => {
     const registration = createRegistration();
     registration.waiting = createWorker('installed');

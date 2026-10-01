@@ -156,6 +156,17 @@ describe('MobileHeader', () => {
     expect(onRightIconClick).toHaveBeenCalledTimes(1);
   });
 
+  it('opens page filters on the left for guests on explore routes', () => {
+    mockCurrentUserPubky = null;
+    mockIsPublicExploreRoute = true;
+    const configure = vi.fn();
+    render(<MobileHeader showRightButton={false} onLeftIconClick={configure} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Open filters' }));
+    expect(configure).toHaveBeenCalledOnce();
+    expect(mockSetShowSignInDialog).not.toHaveBeenCalled();
+    expect(screen.queryByRole('button', { name: 'Join Pubky' })).not.toBeInTheDocument();
+  });
+
   it('labels the right button by its authenticated action', () => {
     render(<MobileHeader />);
 
